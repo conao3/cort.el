@@ -1,0 +1,13 @@
+#+author: conao
+#+date: <2018-10-25 Thu>
+# readme.org
+
+* [WIP]srt.el
+[[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
+[[https://travis-ci.org/conao3/srt.el][https://img.shields.io/travis/conao3/srt.el/master.svg?style=flat-square]]
+[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square]]
+
+
+** What is it?
+~srt.el~ is simplify unit test framework and works with Emacs-22 or above.
+
