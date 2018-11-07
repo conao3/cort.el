@@ -27,6 +27,11 @@
 (defvar srt-errorp nil
   "When test fail, this frag will be t.")
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  support functions
+;;
+
 (defun srt-testpass (name key form expect)
   (let* ((mesheader  (format "[PASSED]  %s" (symbol-name name)))
 	 (message    (format "%s\n" mesheader)))
@@ -55,7 +60,17 @@ Example:
 	(funcall funcsym form expect))
     nil))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  support macros
+;;
+
 (defmacro srt-match-expansion (form expect)
   `'(:equal
        ',(macroexpand-1 form)
        ,expect))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  main macro
+;;
