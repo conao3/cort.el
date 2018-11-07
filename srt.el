@@ -74,3 +74,15 @@ Example:
 ;;
 ;;  main macro
 ;;
+
+(defmacro srt-deftest (name value)
+  (declare (indent 1))
+  `(let* ((value   ,value)
+	  (key     (pop value))
+	  (form    (pop value))
+	  (expect  (pop value))
+	  (special (if value (pop value) nil))
+	  (passp   (et-test key form expect special)))
+     (if passp
+	 (et-testpass ',name key form expect)
+       (et-testfail ',name key form expect))))
