@@ -5,7 +5,7 @@ EMACS     ?= emacs
 LOAD_PATH := -L $(TOP)
 BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
 
-ELS   := leaf.el
+ELS   := srt.el
 ELCS  := $(ELS:.el=.elc)
 
 all: git-hook build

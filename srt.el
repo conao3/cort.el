@@ -1,4 +1,4 @@
-;;; leaf.el ---                                      -*- lexical-binding: t; -*-
+;;; srt.el ---                                       -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Naoya Yamashita
 
@@ -24,8 +24,10 @@
 
 ;;; Code:
 
+(require 'srt-util)
+
 (defvar srt-errorp nil
-  "When test fail, this frag will be t.")
+  "When test fail, this flag will be t.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -33,8 +35,8 @@
 ;;
 
 (defun srt-testpass (name key form expect)
-  (let* ((mesheader  (format "[PASSED]  %s" (symbol-name name)))
-	 (message    (format "%s\n" mesheader)))
+  (let* ((mesheader  (format "[PASSED]  %s\n" (symbol-name name)))
+	 (message    (concat mesheader)))
     (princ message)))
 
 (defun srt-testfail (name key form expect)
@@ -44,7 +46,7 @@
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
 	 (message   (concat mesheader meskey mesform mesexpect)))
     (princ message)
-    (setq et-errorp t)))
+    (setq srt-errorp t)))
 
 (defun srt-test (key form expect &optional special)
   "Basically, KEY is a symbol of a function name, 
@@ -86,3 +88,10 @@ Example:
      (if passp
 	 (et-testpass ',name key form expect)
        (et-testfail ',name key form expect))))
+
+(defun srt-run-tests-batch-and-exit ()
+  (message (format "\n%s" (emacs-version)))
+  )
+
+(provide 'srt)
+;;; srt.el ends here
