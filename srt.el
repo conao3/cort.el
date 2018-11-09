@@ -50,7 +50,12 @@
 			   "\e[31mFAILED\e[m"
 			 "[FAILED]")
   "Fail label.")
-			     
+
+(defvar ert-error-message (if srt-enable-color
+			      "\n\e[31m===== Failed test(s) =====\e[m"
+			    "\n===== Failed test(s) =====")
+  "Error message")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  for old Emacs
@@ -118,7 +123,9 @@
 	    (if (srt-test key form expect special)
 		(srt-testpass name key form expect)
 	      (srt-testfail name key form expect))))
-	srt-test-cases))
+	srt-test-cases)
+  (when srt-errorp
+    (error ert-error-message)))
 
 (provide 'srt)
 ;;; srt.el ends here
