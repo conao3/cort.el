@@ -36,6 +36,11 @@
 (defvar srt-enable-color t ;; (when window-system)
   "If non nil, enable color message to output with meta character.")
 
+(defvar srt-header-message (if srt-enable-color
+			       "\n\e[33mRunning %d tests...\e[m\n"
+			     "\nRunning %d tests...\n")
+  "Header message")
+
 (defvar srt-passed-label (if srt-enable-color
 			     "\e[36mPASSED\e[m"
 			   "[PASSED]")
@@ -91,6 +96,7 @@
   `(add-to-list 'srt-test-cases '(',name ,value) t))
 
 (defun srt-run-tests-batch-and-exit ()
+  (princ (format srt-header-message (length srt-test-cases)))
   (princ (format "%s\n" (emacs-version)))
   (mapc (lambda (x)
 	  (let* ((name    (pop x))
