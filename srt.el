@@ -51,7 +51,7 @@
 			 "[FAILED]")
   "Fail label.")
 
-(defvar ert-error-message (if srt-enable-color
+(defvar srt-error-message (if srt-enable-color
 			      "\e[31m===== Failed test(s) =====\e[m"
 			    "===== Failed test(s) =====")
   "Error message")
@@ -126,7 +126,7 @@
 	srt-test-cases)
   (princ "\n\n")
   (when srt-errorp
-    (error ert-error-message)))
+    (error srt-error-message)))
 
 (provide 'srt)
 ;;; srt.el ends here
