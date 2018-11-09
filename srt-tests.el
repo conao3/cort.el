@@ -25,6 +25,9 @@
 ;;; Code:
 (require 'srt)
 
+;; (srt-deftest test:eq
+;;   (:eq 'a 'a))
+
 (srt-deftest test:equal
   (:equal 'a 'a))
 
