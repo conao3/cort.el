@@ -28,5 +28,9 @@
 (srt-deftest test:equal
   (:equal 'a 'a))
 
+
+(srt-deftest test:=
+  (:= 100 100))
+
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
