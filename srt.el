@@ -24,10 +24,11 @@
 
 ;;; Code:
 
-(require 'srt-util)
-
 (defvar srt-errorp nil
   "When test fail, this flag will be t.")
+
+(defvar srt-test-cases nil
+  "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -35,26 +36,20 @@
 ;;
 
 (defun srt-testpass (name key form expect)
-  (let* ((mesheader  (format "[PASSED]  %s\n" (symbol-name name)))
-	 (message    (concat mesheader)))
-    (princ message)))
+  (let* ((mesheader  (format "[PASSED]  %s\n" name))
+	 (mes        (concat mesheader)))
+    (princ mes)))
 
 (defun srt-testfail (name key form expect)
-  (let* ((mesheader (format "[ERROR]  %s\n" (symbol-name name)))
-	 (meskey    (format "<tested on %s>\n" key))
+  (let* ((mesheader (format "[ERROR]  %s\n" name))
+	 (meskey    (format "< tested on %s >\n" key))
 	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
-	 (message   (concat mesheader meskey mesform mesexpect)))
-    (princ message)
+	 (mes       (concat mesheader meskey mesform mesexpect)))
+    (princ mes)
     (setq srt-errorp t)))
 
 (defun srt-test (key form expect &optional special)
-  "Basically, KEY is a symbol of a function name, 
-but when SPECIAL is t, special process for KEY
-
-Example:
-(et-test :eq 'a 'a)
-  => t"
   (if (not special)
       (let* ((funcname
 	      (replace-regexp-in-string "^:+" "" (symbol-name key)))
@@ -64,34 +59,28 @@ Example:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  support macros
-;;
-
-(defmacro srt-match-expansion (form expect)
-  `'(:equal
-       ',(macroexpand-1 form)
-       ,expect))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;;  main macro
 ;;
 
 (defmacro srt-deftest (name value)
   (declare (indent 1))
-  `(let* ((value   ,value)
-	  (key     (pop value))
-	  (form    (pop value))
-	  (expect  (pop value))
-	  (special (if value (pop value) nil))
-	  (passp   (et-test key form expect special)))
-     (if passp
-	 (et-testpass ',name key form expect)
-       (et-testfail ',name key form expect))))
+  `(add-to-list 'srt-test-cases '(',name ,value) t))
 
 (defun srt-run-tests-batch-and-exit ()
-  (message (format "\n%s" (emacs-version)))
-  )
+  (princ (format "%s\n" (emacs-version)))
+  (mapc (lambda (x)
+	  (let* ((name    (pop x))
+		 (value   (pop x))
+		 (key     (pop value))
+		 (form    (pop value))
+		 (expect  (pop value))
+		 (special (pop value)))
+	    (princ (format "(%s %s %s %s %s %s)\n"
+			   name value key form expect special))
+	    (if (srt-test key form expect special)
+		(srt-testpass name key form expect)
+	      (srt-testfail name key form expect))))
+	srt-test-cases))
 
 (provide 'srt)
 ;;; srt.el ends here
