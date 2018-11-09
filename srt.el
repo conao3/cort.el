@@ -33,6 +33,19 @@
 (defvar srt-debug nil
   "If non nil, print debug messages")
 
+(defvar srt-enable-color t ;; (when window-system)
+  "If non nil, enable color message to output with meta character.")
+
+(defvar srt-passed-label (if srt-enable-color
+			     "\e[36mPASSED\e[m"
+			   "[PASSED]")
+  "Passed label.")
+
+(defvar srt-fail-label (if srt-enable-color
+			   "\e[31mFAILED\e[m"
+			 "[FAILED]")
+  "Fail label.")
+			     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  for old Emacs
@@ -47,12 +60,12 @@
 ;;
 
 (defun srt-testpass (name key form expect)
-  (let* ((mesheader  (format "[PASSED]  %s\n" name))
+  (let* ((mesheader  (format "%s  %s\n" srt-passed-label name))
 	 (mes        (concat mesheader)))
     (princ mes)))
 
 (defun srt-testfail (name key form expect)
-  (let* ((mesheader (format "[ERROR]  %s\n" name))
+  (let* ((mesheader (format "%s  %s\n" srt-fail-label name))
 	 (meskey    (format "< tested on %s >\n" key))
 	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
