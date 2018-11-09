@@ -28,7 +28,6 @@
 (srt-deftest test:equal
   (:equal 'a 'a))
 
-
 (srt-deftest test:=
   (:= 100 100))
 

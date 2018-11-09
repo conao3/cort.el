@@ -30,6 +30,17 @@
 (defvar srt-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
+(defvar srt-debug nil
+  "If non nil, print debug messages")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  for old Emacs
+;;
+
+(unless (fboundp 'pp-to-string)
+  (defalias 'pp-to-string 'print))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  support functions
@@ -75,8 +86,16 @@
 		 (form    (pop value))
 		 (expect  (pop value))
 		 (special (pop value)))
-	    (princ (format "(%s %s %s %s %s %s)\n"
-			   name value key form expect special))
+	    
+	    (if srt-debug
+		(princ (format "name: %s\nvalue: %s\nkey: %s\nform: %s\nexpect: %s\nspecial: %s\n"
+			       (pp-to-string name)
+			       (pp-to-string value)
+			       (pp-to-string key)
+			       (pp-to-string form)
+			       (pp-to-string expect)
+			       (pp-to-string special))))
+	    
 	    (if (srt-test key form expect special)
 		(srt-testpass name key form expect)
 	      (srt-testfail name key form expect))))
