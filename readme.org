@@ -1,6 +1,5 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
-# readme.org
 
 * [WIP]srt.el
 [[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
@@ -10,3 +9,18 @@
 ** What is it?
 ~srt.el~ is simplify unit test framework and works with Emacs-22 or above.
 
+~srt.el~ is one-file test package, there're so many merits.
+- Not need to download big package before testing.
+- You can test your package as close to vanilla's Emacs.
+
+** Why We support Emacs-22?
+Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
+
+** Japanese readme
+There're japanese readme(~readme-ja.org~).
+
+** Welcome PR
+We welcome PR. Please ~localtest~ before PR.
+
+After clone this repository, run ~make~ to copy githooks to local ~.git~ folder.
+Tests always run before commiting.

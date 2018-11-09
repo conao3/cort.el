@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+(defvar srt-version 0.5
+  "srt.el version")
+
 (defvar srt-errorp nil
   "When test fail, this flag will be t.")
 

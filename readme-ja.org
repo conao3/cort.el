@@ -1,0 +1,137 @@
+#+author: conao
+#+date: <2018-11-10 Sat>
+
+* [WIP]srt.el
+[[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
+[[https://travis-ci.org/conao3/srt.el][https://img.shields.io/travis/conao3/srt.el/master.svg?style=flat-square]]
+[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square]]
+
+** なにこれ?
+~srt.el~ は私が[[https://github.com/conao3/leaf.el][leaf.el]]というパッケージを書くために、
+Emacs-22でも完全に動作するテスターがほしいという動機で作成しました。
+
+(余談ですが、[[https://github.com/conao3/leaf.el][leaf.el]]は[[https://github.com/jwiegley/use-package][use-package]], ~package.el~ に代わるパッケージ設定、ダウンロードパッケージです。
+~use-package~ はEmacs-24からしか動作しませんが、 
+~leaf.el~ はレガシーEmacsでも ~use-package~ 調のDSLで設定を書きたいという動機で作成されています。)
+
+** メリット
+我々は自分の書いてるパッケージがちゃんと動くか、そしてその動作はパッケージが上手にS式を変換できるか、
+上手にEmacsのバッファなどが操作できるかでテストでき、それはそんなに難しくないはずなのです。
+
+しかしすでにいろいろな人によって書かれているテスターは「複雑」で「必要以上に分割」されており、
+Emacs-22で動作させるために ~package.el~ を使わない縛りをしていると、
+gitによるサブモジュールで管理せざるを得ない状況です。
+
+また、Emacs標準添付テスターである、 ~ert.el~ はEmacs-24からの添付であり、
+Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/leaf.el/builds/449134718][変なバグ]]も踏む）
+
+そもそも ~ert.el~ は[[https://travis-ci.org/conao3/leaf.el/jobs/449134720][詳細なバックトレース]]を出力してくれますが、
+つまりどういう入力を与えて、どういう出力を期待しているのに、
+変な結果を返してきた！ということを知りたいのに、
+その希望は満たしてくれず、デバックのために知りたい情報を得られません。
+
+結果として
+- Emacs-22から動作する。
+- テストに失敗したら、まともなエラー出力をしてくれる。
+- 1ファイルで完結しており、自分のレポジトリに放り込むだけで使える。
+ことを目標に新しいテスターを開発しました。
+
+** どうやって使うねん
+~srt.el~ の開発動機からわかるようにこのレポジトリの ~srt.el~ を
+自分のレポジトリに放り込むだけで使えます。この動作は変える予定はありません。
+
+まずMakefileを用意し、最低限以下の内容を記述します。
+#+begin_src makefile-bsdmake
+  TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
+
+  EMACS     ?= emacs
+
+  LOAD_PATH := -L $(TOP)
+  BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
+
+  ELS   := srt.el
+  ELCS  := $(ELS:.el=.elc)
+
+  all: build
+
+  build: $(ELCS)
+
+  %.elc: %.el
+	  @printf "Compiling $<\n"
+	  -@$(BATCH) -f batch-byte-compile $<
+
+  test: build
+  # If byte compile for specific emacs,
+  # set EMACS such as `EMACS=26.1 make`.
+	  $(BATCH) -l srt-tests.el -f srt-run-tests-batch-and-exit
+
+  localtest:
+  # Clean all of .elc, compile .el, and run test.
+
+	  $(call ECHO_MAGENTA, "test by emacs-22.1")
+	  make clean
+	  EMACS=emacs-22.1 make test
+
+	  @echo "\n"
+	  $(call ECHO_MAGENTA, "test by emacs-24.5")
+	  make clean
+	  EMACS=emacs-24.5 make test
+
+	  @echo "\n"
+	  $(call ECHO_MAGENTA, "test by emacs-26.1")
+	  make clean
+	  EMACS=emacs-26.1 make test
+
+	  @echo "\n"
+	  $(call ECHO_CYAN, "localtest completed!!")
+	  @echo "\n"
+
+  clean:
+	  -find . -type f -name "*.elc" | xargs rm
+#+end_src
+
+もちろんMakefileを用意しなくてもいいですが、テスト書くなら
+trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に書きたいので
+用意したほうが良いと思います。
+
+ちなみに.travis.ymlはこんな感じ。
+#+begin_src fundamental
+  language: generic
+  sudo: false
+
+  env:
+    global:
+      - CURL="curl -fsSkL --retry 9 --retry-delay 9"
+    matrix:
+    - EMACS_VERSION=23.4
+    - EMACS_VERSION=24.5
+    - EMACS_VERSION=25.3
+    - EMACS_VERSION=26.1
+    - EMACS_VERSION=master
+  install:
+    - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
+    - tar xf emacs-bin-${EMACS_VERSION}.tar.gz -C /
+    - export EMACS=/tmp/emacs/bin/emacs
+
+  script:
+    - make
+    - make test
+#+end_src
+
+対象とするEmacsのバージョンごとに異なるコンテナでテストが走るので、
+走らせるテストは一つのEmacsのみを想定したテストコマンドを実行すれば良いことになります。
+
+「ローカルのテストをパスしないとコミットさせない」という運用を取るなら複数バージョンによる
+テストコマンドを記述することになります。書き方はこのレポジトリのMakefileを参考にしてください。
+
+** え。。Emacs-22とか古すぎ。。？
+macOS 10.13 (High Sierra)にバンドルされてるEmacsが22.1だからサポートすることにしました。
+普段使いするマシンにEmacs-21があればEmacs-21をサポートすることになります。(？)
+
+** PR
+PRを書いていただける方をお待ちしています！
+基本的に ~localtest~ に通ることをコミット条件にしているので、
+コミットする前に必ず ~make localtest~ を実行してください。
+
+なお、レポジトリをクローンして、 ~make~ すると、レポジトリローカルの ~.git/hooks~ に
+hookがコピーされ、コミット前にかならずテストが走るようにできます。
