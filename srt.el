@@ -52,8 +52,8 @@
   "Fail label.")
 
 (defvar ert-error-message (if srt-enable-color
-			      "\n\e[31m===== Failed test(s) =====\e[m"
-			    "\n===== Failed test(s) =====")
+			      "\e[31m===== Failed test(s) =====\e[m"
+			    "===== Failed test(s) =====")
   "Error message")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -124,6 +124,7 @@
 		(srt-testpass name key form expect)
 	      (srt-testfail name key form expect))))
 	srt-test-cases)
+  (princ "\n\n")
   (when srt-errorp
     (error ert-error-message)))
 
