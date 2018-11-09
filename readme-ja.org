@@ -23,7 +23,7 @@ Emacs-22で動作させるために ~package.el~ を使わない縛りをして�
 gitによるサブモジュールで管理せざるを得ない状況です。
 
 また、Emacs標準添付テスターである、 ~ert.el~ はEmacs-24からの添付であり、
-Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/leaf.el/builds/449134718][変なバグ]]も踏む）
+Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/leaf.el/builds/451882796][変なバグ]]も踏む（明らかにpassしてるのにfailする））
 
 そもそも ~ert.el~ は[[https://travis-ci.org/conao3/leaf.el/jobs/449134720][詳細なバックトレース]]を出力してくれますが、
 つまりどういう入力を与えて、どういう出力を期待しているのに、
