@@ -25,13 +25,21 @@
 ;;; Code:
 (require 'srt)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  temp functions, macros
+;;
+
 (defun quote-a ()
   'a)
 
 (defmacro sym (x)
   `',x)
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; define tests
+;;
 
 (srt-deftest simple:equal
   (:equal '(a b c) '(a b c)))
