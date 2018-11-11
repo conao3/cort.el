@@ -48,13 +48,13 @@ Default, enable color if run test on CUI.
 
 (defvar srt-passed-label
   (if srt-enable-color
-      "\e[36mPASSED\e[m"
+      "\e[36m[PASSED]\e[m"
     "[PASSED]")
   "Passed label.")
 
 (defvar srt-fail-label
   (if srt-enable-color
-      "\e[31mFAILED\e[m"
+      "\e[31m[FAILED]\e[m"
     "[FAILED]")
   "Fail label.")
 
@@ -83,7 +83,7 @@ Default, enable color if run test on CUI.
     (princ mes)))
 
 (defun srt-testfail (name key form expect)
-  (let* ((mesheader (format "%s  %s\n" srt-fail-label name))
+  (let* ((mesheader (format "%s  %s" srt-fail-label name))
 	 (meskey    (format "< tested on %s >\n" key))
 	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
@@ -105,7 +105,7 @@ Default, enable color if run test on CUI.
 
 (defmacro srt-deftest (name value)
   (declare (indent 1))
-  `(add-to-list 'srt-test-cases '(',name ,value) t))
+  `(add-to-list 'srt-test-cases '(,name ,value) t))
 
 (defun srt-run-tests-batch-and-exit ()
   (let ((errorp nil))
@@ -123,13 +123,13 @@ Default, enable color if run test on CUI.
 	(if (srt-test key form expect special)
 	    (srt-testpass name key form expect)
 	  (srt-testfail name key form expect)
-	  (setq errorp t)))
+	  (setq errorp t))))
 
     (princ "\n\n")
     (when errorp
       (if srt-debug
 	  (princ "Test failed!!\n")
-	(error srt-error-message))))))
+	(error srt-error-message)))))
 
 (provide 'srt)
 ;;; srt.el ends here
