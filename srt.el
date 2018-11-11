@@ -39,24 +39,28 @@
 (defvar srt-enable-color t ;; (when window-system)
   "If non nil, enable color message to output with meta character.")
 
-(defvar srt-header-message (if srt-enable-color
-			       "\n\e[33mRunning %d tests...\e[m\n"
-			     "\nRunning %d tests...\n")
+(defvar srt-header-message
+  (if srt-enable-color
+      "\n\e[33mRunning %d tests...\e[m\n"
+    "\nRunning %d tests...\n")
   "Header message")
 
-(defvar srt-passed-label (if srt-enable-color
-			     "\e[36mPASSED\e[m"
-			   "[PASSED]")
+(defvar srt-passed-label
+  (if srt-enable-color
+      "\e[36mPASSED\e[m"
+    "[PASSED]")
   "Passed label.")
 
-(defvar srt-fail-label (if srt-enable-color
-			   "\e[31mFAILED\e[m"
-			 "[FAILED]")
+(defvar srt-fail-label
+  (if srt-enable-color
+      "\e[31mFAILED\e[m"
+    "[FAILED]")
   "Fail label.")
 
-(defvar srt-error-message (if srt-enable-color
-			      "\e[31m===== Failed test(s) =====\e[m"
-			    "===== Failed test(s) =====")
+(defvar srt-error-message
+  (if srt-enable-color
+      "\e[31m===== Failed test(s) =====\e[m"
+    "===== Failed test(s) =====")
   "Error message")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -107,21 +111,12 @@
   (princ (format srt-header-message (length srt-test-cases)))
   (princ (format "%s\n" (emacs-version)))
   (mapc (lambda (x)
-	  (let* ((name    (pop x))
-		 (value   (pop x))
-		 (key     (pop value))
-		 (form    (pop value))
-		 (expect  (pop value))
-		 (special (pop value)))
-	    
-	    (if srt-debug
-		(princ (format "name: %s\nvalue: %s\nkey: %s\nform: %s\nexpect: %s\nspecial: %s\n"
-			       (pp-to-string name)
-			       (pp-to-string value)
-			       (pp-to-string key)
-			       (pp-to-string form)
-			       (pp-to-string expect)
-			       (pp-to-string special))))
+	  (let* ((name    (car x))
+		 (value   (cdar x))
+		 (key     (nth 0 value))
+		 (form    (nth 1 value))
+		 (expect  (nth 2 value))
+		 (special (nth 3 value)))
 	    
 	    (if (srt-test key form expect special)
 		(srt-testpass name key form expect)
