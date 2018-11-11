@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defvar srt-version 0.5
+(defvar srt-version 0.6
   "srt.el version")
 
 (defvar srt-test-cases nil
