@@ -38,8 +38,10 @@
 
 - don't throw annoying error when test fail, just output message.")
 
-(defvar srt-enable-color t ;; (when window-system)
-  "If non nil, enable color message to output with meta character.")
+(defvar srt-enable-color (not (null window-system))
+  "If non nil, enable color message to output with meta character.
+Default, enable color if run test on CUI.
+`window-system' returns nil on CUI")
 
 (defvar srt-header-message
   (if srt-enable-color
