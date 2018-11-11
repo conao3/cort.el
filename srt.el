@@ -38,7 +38,7 @@
 
 - don't throw annoying error when test fail, just output message.")
 
-(defvar srt-enable-color (not (null window-system))
+(defvar srt-enable-color (null window-system)
   "If non nil, enable color message to output with meta character.
 Default, enable color if run test on CUI.
 `window-system' returns nil on CUI")
@@ -99,7 +99,7 @@ Default, enable color if run test on CUI.
       (let* ((funcname
 	      (replace-regexp-in-string "^:+" "" (symbol-name key)))
 	     (funcsym (intern funcname)))
-	(funcall funcsym form expect))
+	(funcall funcsym (eval form) (eval expect)))
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -114,18 +114,19 @@ Default, enable color if run test on CUI.
 (defun srt-run-tests-batch-and-exit ()
   (princ (format srt-header-message (length srt-test-cases)))
   (princ (format "%s\n" (emacs-version)))
-  (mapc (lambda (x)
-	  (let* ((name    (car x))
-		 (value   (cdar x))
-		 (key     (nth 0 value))
-		 (form    (nth 1 value))
-		 (expect  (nth 2 value))
-		 (special (nth 3 value)))
-	    
-	    (if (srt-test key form expect special)
-		(srt-testpass name key form expect)
-	      (srt-testfail name key form expect))))
-	srt-test-cases)
+
+  (dolist (test srt-test-cases)
+    (let* ((name    (car test))
+	   (value   (cadr test))
+	   (key     (nth 0 value))
+	   (form    (nth 1 value))
+	   (expect  (nth 2 value))
+	   (special (nth 3 value)))
+      
+      (if (srt-test key form expect special)
+	  (srt-testpass name key form expect)
+	(srt-testfail name key form expect))))
+
   (princ "\n\n")
   (when srt-errorp
     (if srt-debug
