@@ -34,7 +34,9 @@
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
 (defvar srt-debug nil
-  "If non nil, print debug messages")
+  "If non nil, turn on debug mode.
+
+- don't throw annoying error when test fail, just output message.")
 
 (defvar srt-enable-color t ;; (when window-system)
   "If non nil, enable color message to output with meta character.")
@@ -124,7 +126,9 @@
 	srt-test-cases)
   (princ "\n\n")
   (when srt-errorp
-    (error srt-error-message)))
+    (if srt-debug
+	(princ "Test failed!!\n")
+      (error srt-error-message))))
 
 (provide 'srt)
 ;;; srt.el ends here
