@@ -25,14 +25,53 @@
 ;;; Code:
 (require 'srt)
 
-;; (srt-deftest test:eq
-;;   (:eq 'a 'a))
+(defun quote-a ()
+  'a)
 
-(srt-deftest test:equal
-  (:equal 'a 'a))
+(defmacro sym (x)
+  `',x)
 
-(srt-deftest test:=
+
+
+(srt-deftest simple:equal
+  (:equal '(a b c) '(a b c)))
+
+(srt-deftest simple:=
   (:= 100 100))
+
+(srt-deftest quote-a:0
+  (:eq 'a 'a))
+
+(srt-deftest quote-a:1
+  (:eq (quote-a) 'a))
+
+(srt-deftest quote-a:2
+  (:eq 'a (quote-a)))
+
+(srt-deftest quote-a:3
+  (:eq (quote-a) (quote-a)))
+
+(srt-deftest sym:0
+  (:eq 'a 'a))
+
+(srt-deftest sym:1
+  (:eq (sym a) 'a))
+
+(srt-deftest sym:2
+  (:eq 'a (sym a)))
+
+(srt-deftest sym:3
+  (:eq (sym a) (sym a)))
+
+(srt-deftest sym:4
+  (:equal (sym (a b c)) '(a b c)))
+
+(srt-deftest sym:5
+  (:equal '(a b c) (sym (a b c))))
+
+(srt-deftest sym:6
+  (:equal (sym (a b c)) (sym (a b c))))
+
 
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here

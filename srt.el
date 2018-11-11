@@ -83,7 +83,7 @@ Default, enable color if run test on CUI.
     (princ mes)))
 
 (defun srt-testfail (name key form expect)
-  (let* ((mesheader (format "%s  %s" srt-fail-label name))
+  (let* ((mesheader (format "%s  %s\n" srt-fail-label name))
 	 (meskey    (format "< tested on %s >\n" key))
 	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
