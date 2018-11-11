@@ -27,9 +27,6 @@
 (defvar srt-version 0.5
   "srt.el version")
 
-(defvar srt-errorp nil
-  "When test fail, this flag will be t.")
-
 (defvar srt-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
@@ -91,8 +88,7 @@ Default, enable color if run test on CUI.
 	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
 	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
 	 (mes       (concat mesheader meskey mesform mesexpect)))
-    (princ mes)
-    (setq srt-errorp t)))
+    (princ mes)))
 
 (defun srt-test (key form expect &optional special)
   (if (not special)
@@ -112,26 +108,28 @@ Default, enable color if run test on CUI.
   `(add-to-list 'srt-test-cases '(',name ,value) t))
 
 (defun srt-run-tests-batch-and-exit ()
-  (princ (format srt-header-message (length srt-test-cases)))
-  (princ (format "%s\n" (emacs-version)))
+  (let ((errorp nil))
+    (princ (format srt-header-message (length srt-test-cases)))
+    (princ (format "%s\n" (emacs-version)))
 
-  (dolist (test srt-test-cases)
-    (let* ((name    (car test))
-	   (value   (cadr test))
-	   (key     (nth 0 value))
-	   (form    (nth 1 value))
-	   (expect  (nth 2 value))
-	   (special (nth 3 value)))
-      
-      (if (srt-test key form expect special)
-	  (srt-testpass name key form expect)
-	(srt-testfail name key form expect))))
+    (dolist (test srt-test-cases)
+      (let* ((name    (car test))
+	     (value   (cadr test))
+	     (key     (nth 0 value))
+	     (form    (nth 1 value))
+	     (expect  (nth 2 value))
+	     (special (nth 3 value)))
+	
+	(if (srt-test key form expect special)
+	    (srt-testpass name key form expect)
+	  (srt-testfail name key form expect)
+	  (setq errorp t)))
 
-  (princ "\n\n")
-  (when srt-errorp
-    (if srt-debug
-	(princ "Test failed!!\n")
-      (error srt-error-message))))
+    (princ "\n\n")
+    (when errorp
+      (if srt-debug
+	  (princ "Test failed!!\n")
+	(error srt-error-message))))))
 
 (provide 'srt)
 ;;; srt.el ends here
