@@ -58,6 +58,12 @@ Default, enable color if run test on CUI.
     "[FAILED]")
   "Fail label.")
 
+(defvar srt-error-label
+  (if srt-enable-color
+      "\e[31m[ERROR] \e[m"
+    "[ERROR]")
+  "Fail label.")
+
 (defvar srt-error-message
   (if srt-enable-color
       "\e[31m===== Failed test(s) =====\e[m"
@@ -90,6 +96,15 @@ Default, enable color if run test on CUI.
 	 (mes       (concat mesheader meskey mesform mesexpect)))
     (princ mes)))
 
+(defun srt-testerror (name key form expect err)
+  (let* ((mesheader (format "%s  %s\n" srt-error-label name))
+	 (meserr    (format "Error: %s\n" err))
+	 (meskey    (format "< tested on %s >\n" key))
+	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
+	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
+	 (mes       (concat mesheader meserr meskey mesform mesexpect)))
+    (princ mes)))
+
 (defun srt-test (key form expect &optional special)
   (if (not special)
       (let* ((funcname
@@ -119,11 +134,15 @@ Default, enable color if run test on CUI.
 	     (form    (nth 1 value))
 	     (expect  (nth 2 value))
 	     (special (nth 3 value)))
-	
-	(if (srt-test key form expect special)
-	    (srt-testpass name key form expect)
-	  (srt-testfail name key form expect)
-	  (setq errorp t))))
+
+	(condition-case err
+	    (if (srt-test key form expect special)
+		(srt-testpass name key form expect)
+	      (srt-testfail name key form expect)
+	      (setq errorp t))
+	  (error
+	   (srt-testerror name key form expect err)
+	   (setq errorp t)))))
 
     (princ "\n\n")
     (when errorp

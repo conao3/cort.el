@@ -80,6 +80,5 @@
 (srt-deftest sym:6
   (:equal (sym (a b c)) (sym (a b c))))
 
-
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
