@@ -130,19 +130,26 @@ Default, enable color if run test on CUI.
     (dolist (test srt-test-cases)
       (let* ((name    (car test))
 	     (value   (cadr test))
-	     (key     (nth 0 value))
-	     (form    (nth 1 value))
-	     (expect  (nth 2 value))
-	     (special (nth 3 value)))
-
-	(condition-case err
-	    (if (srt-test key form expect special)
-		(srt-testpass name key form expect)
-	      (srt-testfail name key form expect)
-	      (setq errorp t))
-	  (error
-	   (srt-testerror name key form expect err)
-	   (setq errorp t)))))
+	     (keyc    (length value))
+	     (key1    (nth 0 value))
+	     (key2    (nth 1 value))
+	     (key3    (nth 2 value))
+	     (key4    (nth 3 value))
+	     (key5    (nth 4 value)))
+	(cond
+	 ((eq 3 keyc)
+	  (let ((key    key1)
+		(form   key2)
+		(expect key3))
+	    (condition-case err
+		(if (srt-test key form expect)
+		    (srt-testpass name key form expect)
+		  (srt-testfail name key form expect)
+		  (setq errorp t))
+	      (error
+	       (srt-testerror name key form expect err)
+	       (setq errorp t))))))))
+	
 
     (princ "\n\n")
     (when errorp
