@@ -60,8 +60,8 @@ Default, enable color if run test on CUI.
 
 (defvar srt-error-label
   (if srt-enable-color
-      "\e[31m[ERROR]  \e[m"
-    "[ERROR]  ")
+      "\e[31m<ERROR>  \e[m"
+    "<<ERROR>>")
   "Fail label.")
 
 (defvar srt-error-message
@@ -80,44 +80,69 @@ Default, enable color if run test on CUI.
 ;;  support functions
 ;;
 
-(defun srt-testpass (name key form expect)
-  (let* ((mesheader  (format "%s %s\n" srt-passed-label name))
-	 (mes        (concat mesheader)))
-    (princ mes)))
+(defun srt-test (keys)
+  (let ((keyc (length keys)))
+    (cond
+     ((eq 3 keyc)
+      (let ((key    (nth 0 keys))
+	    (form   (nth 1 keys))
+	    (expect (nth 2 keys)))
+	(let* ((funcname
+		(replace-regexp-in-string "^:+" "" (symbol-name key)))
+	       (funcsym (intern funcname)))
+	  (funcall funcsym (eval form) (eval expect)))))
+     (t nil))))
 
-(defun srt-testfail (name key form expect)
-  (let* ((mesheader (format "%s %s\n" srt-fail-label name))
-	 (meskey    (format "< tested on %s >\n" key))
-	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
-	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
-	 (mes       (concat mesheader meskey mesform mesexpect)))
-    (princ mes)))
+(defun srt-testpass (name keys)
+  (let ((mesheader (format "%s %s\n" srt-passed-label name)))
+    (princ (concat mesheader))))
 
-(defun srt-testerror (name key form expect err)
-  (let* ((mesheader (format "%s %s\n" srt-error-label name))
-	 (meserr    (format "Error: %s\n" err))
-	 (meskey    (format "< tested on %s >\n" key))
-	 (mesform   (format "form:\n%s\n" (pp-to-string form)))
-	 (mesexpect (format "expected:\n%s\n" (pp-to-string expect)))
-	 (mes       (concat mesheader meserr meskey mesform mesexpect)))
-    (princ mes)))
+(defun srt-testfail (name keys)
+  (let ((keyc (length keys))
+	(key) (form) (expect))
+    (cond
+     ((eq 3 keyc)
+      (setq key (nth 0 keys)
+	    form (nth 1 keys)
+	    expect (nth 2 keys))))
+    
+    (let ((mesheader (format "%s %s\n" srt-fail-label name))
+	  (meskey    (format "< tested on %s >\n" key))
+	  (mesform   (format "form:\n%s\n" (pp-to-string form)))
+	  (mesexpect (format "expected:\n%s\n" (pp-to-string expect))))
+      (princ (concat mesheader
+		     meskey
+		     mesform
+		     mesexpect)))))
 
-(defun srt-test (key form expect &optional special)
-  (if (not special)
-      (let* ((funcname
-	      (replace-regexp-in-string "^:+" "" (symbol-name key)))
-	     (funcsym (intern funcname)))
-	(funcall funcsym (eval form) (eval expect)))
-    nil))
+(defun srt-testerror (name keys err)
+  (let ((keyc (length keys))
+	(key) (form) (expect))
+    (cond
+     ((eq 3 keyc)
+      (setq key (nth 0 keys)
+	    form (nth 1 keys)
+	    expect (nth 2 keys))))
+    
+    (let ((mesheader (format "%s %s\n" srt-error-label name))
+	  (meserr    (format "Error: %s\n" err))
+	  (meskey    (format "< tested on %s >\n" key))
+	  (mesform   (format "form:\n%s\n" (pp-to-string form)))
+	  (mesexpect (format "expected:\n%s\n" (pp-to-string expect))))
+      (princ (concat mesheader
+		     meserr
+		     meskey
+		     mesform
+		     mesexpect)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  main macro
 ;;
 
-(defmacro srt-deftest (name value)
+(defmacro srt-deftest (name keys)
   (declare (indent 1))
-  `(add-to-list 'srt-test-cases '(,name ,value) t))
+  `(add-to-list 'srt-test-cases '(,name ,keys) t))
 
 (defun srt-prune-tests()
   (setq srt-test-cases nil)
@@ -129,27 +154,16 @@ Default, enable color if run test on CUI.
     (princ (format "%s\n" (emacs-version)))
 
     (dolist (test srt-test-cases)
-      (let* ((name    (car test))
-	     (value   (cadr test))
-	     (keyc    (length value))
-	     (key1    (nth 0 value))
-	     (key2    (nth 1 value))
-	     (key3    (nth 2 value))
-	     (key4    (nth 3 value))
-	     (key5    (nth 4 value)))
-	(cond
-	 ((eq 3 keyc)
-	  (let ((key    key1)
-		(form   key2)
-		(expect key3))
-	    (condition-case err
-		(if (srt-test key form expect)
-		    (srt-testpass name key form expect)
-		  (srt-testfail name key form expect)
-		  (setq errorp t))
-	      (error
-	       (srt-testerror name key form expect err)
-	       (setq errorp t))))))))
+      (let ((name (car test))
+	    (keys (cadr test)))
+	(condition-case err
+	    (if (srt-test keys)
+		(srt-testpass name keys)
+	      (srt-testfail name keys)
+	      (setq errorp t))
+	  (error
+	   (srt-testerror name keys err)
+	   (setq errorp t)))))
 
     (princ "\n\n")
     (when errorp
