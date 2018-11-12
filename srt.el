@@ -75,9 +75,6 @@ Default, enable color if run test on CUI.
 ;;  for old Emacs
 ;;
 
-(unless (fboundp 'pp-to-string)
-  (defalias 'pp-to-string 'print))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  support functions
