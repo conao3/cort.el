@@ -122,6 +122,10 @@ Default, enable color if run test on CUI.
   (declare (indent 1))
   `(add-to-list 'srt-test-cases '(,name ,value) t))
 
+(defun srt-prune-tests()
+  (setq srt-test-cases nil)
+  (message "prune tests completed."))
+
 (defun srt-run-tests-batch-and-exit ()
   (let ((errorp nil))
     (princ (format srt-header-message (length srt-test-cases)))
@@ -149,7 +153,6 @@ Default, enable color if run test on CUI.
 	      (error
 	       (srt-testerror name key form expect err)
 	       (setq errorp t))))))))
-	
 
     (princ "\n\n")
     (when errorp
