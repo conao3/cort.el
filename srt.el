@@ -108,36 +108,7 @@ Default, enable color if run test on CUI.
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
-(defun srt-testfail (name keys)
-  (let ((key (nth 0 keys))
-	(keyc (length keys))
-	(type) (form) (expect) (errtype))
-    (cond
-     ((eq keyc 3)
-      (cond
-       ((eq key :error)
-	(setq type    :error
-	      errtype (nth 1 keys)
-	      form    (nth 2 keys)))
-       (t
-	(setq type    :default
-	      form    (nth 1 keys)
-	      expect  (nth 2 keys))))))
-    
-    (let ((mesheader  (format "%s %s\n" srt-fail-label name))
-	  (meskey     (format "< tested on %s >\n" key))
-	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
-	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
-	  (meserrtype (format "expected error: %s\n" (pp-to-string errtype))))
-      (princ (concat mesheader
-		     (if (or (eq type :default)
-			     (eq type :error))
-			 meserrtype)
-		     (if (eq type :default) mesform)
-		     (if (eq type :default) mesexpect)
-		     )))))
-
-(defun srt-testerror (name keys err)
+(defun srt-testfail (name keys &optional err)
   (let ((key (nth 0 keys))
 	(keyc (length keys))
 	(type) (form) (expect) (errtype))
@@ -153,7 +124,11 @@ Default, enable color if run test on CUI.
 	      form    (nth 1 keys)
 	      expect  (nth 2 keys))))))
     
-    (let ((mesheader  (format "%s %s\n" srt-error-label name))
+    (let ((mesheader  (format "%s %s\n"
+			      (if err
+				  srt-error-label
+				srt-fail-label)
+			      name))
 	  (meserr     (format "Error: %s\n" err))
 	  (meskey     (format "< tested on %s >\n" key))
 	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
@@ -196,7 +171,7 @@ Default, enable color if run test on CUI.
 	      (srt-testfail name keys)
 	      (setq errorp t))
 	  (error
-	   (srt-testerror name keys err)
+	   (srt-testfail name keys err)
 	   (setq errorp t)))))
 
     (princ "\n\n")
