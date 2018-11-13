@@ -1,17 +1,146 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-* [WIP]srt.el
+* srt.el
 [[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
 [[https://travis-ci.org/conao3/srt.el][https://img.shields.io/travis/conao3/srt.el/master.svg?style=flat-square]]
-[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square]]
+[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/conao3/srt.el.svg?style=flat-square]]
+
+[[./imgs/capture.png]]
 
 ** What is it?
 ~srt.el~ is simplify unit test framework and works with Emacs-22 or above.
 
-~srt.el~ is one-file test package, there're so many merits.
-- Not need to download big package before testing.
+~srt.el~ is one-file simply test package, there're so many merits.
+- It works with Emacs-22 or above.
+- Not need to download big package, many files before testing. Only 1 file.
 - You can test your package as close to vanilla's Emacs.
+- Fail or error tests, output simple and intuitive error message.
+
+** How to use?
+1. Put ~srt.el~ your package root folder.
+2. Create ~Makefile~, ~.travis.yml~ if you need.
+3. Create testcase difinition file as ~[package-name]-tests.el~.
+
+(Please look at the file of this repository for a practical example.)
+
+*** Makefile
+~Makefile~ sumple as below.
+#+begin_src makefile-bsdmake
+  TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
+
+  EMACS     ?= emacs
+
+  LOAD_PATH := -L $(TOP)
+  BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
+
+  ELS   := srt.el         # compiling .el list
+  ELCS  := $(ELS:.el=.elc)
+
+  all: build
+
+  build: $(ELCS)
+
+  %.elc: %.el
+	   @printf "Compiling $<\n"
+	   -@$(BATCH) -f batch-byte-compile $<
+
+  test: build
+  # If byte compile for specific emacs,
+  # set EMACS such as `EMACS=26.1 make`.
+	   $(BATCH) -l srt-tests.el -f srt-run-tests-batch-and-exit
+
+  clean:
+	   -find . -type f -name "*.elc" | xargs rm
+#+end_src
+
+*** .travis.yml
+~.travis.yml~ sumple as below.
+#+begin_src fundamental
+  language: generic
+  sudo: false
+
+  env:
+    global:
+      - CURL="curl -fsSkL --retry 9 --retry-delay 9"
+    matrix:
+    - EMACS_VERSION=23.4
+    - EMACS_VERSION=24.5
+    - EMACS_VERSION=25.3
+    - EMACS_VERSION=26.1
+    - EMACS_VERSION=master
+  install:
+    - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
+    - tar xf emacs-bin-${EMACS_VERSION}.tar.gz -C /
+    - export EMACS=/tmp/emacs/bin/emacs
+
+  script:
+    - make
+    - make test
+#+end_src
+
+*** srt-test.el
+~srt-test.el~ sumple as below.
+#+begin_src emacs-lisp
+  ;; require depends package
+  (require 'srt)
+
+  ;; if you need temporary functions for test, define this.
+  (defun quote-a ()
+    'a)
+
+  (defmacro sym (x)
+    `',x)
+
+  ;; define test cases.
+  (srt-deftest simple:equal
+    (:equal '(a b c) '(a b c)))
+
+  (srt-deftest simple:=
+    (:= 100 100))
+
+  (srt-deftest quote-a:0
+    (:eq 'a 'a))
+
+  (srt-deftest quote-a:1
+    (:eq (quote-a) 'a))
+
+  (srt-deftest sym:1
+    (:eq (sym a) 'a))
+
+  (srt-deftest sym:4
+    (:equal (sym (a b c)) '(a b c)))
+
+  (srt-deftest error-test
+    (:= (+ 1 2) 5))
+
+  (srt-deftest err:1
+    (:error 'void-function
+	    (a 'a)))
+
+  (srt-deftest err:3
+    (:error 'arith-error
+	    (/ 1 0)))
+  ;; ...
+#+end_src
+~srt-deftest~ will receive ~test-name~ and ~test-configuration~, 
+and ~add-to-list~ to ~srt-test-cases~ defined at inside of ~srt.el~.
+
+Therefore, ~srt-deftest~ same testcase, not running test twice.
+~test-name~ shouldn't be unique name.
+
+**** Basic test case (Expected ~t~)
+~test-configuration~ accept list of the form ~(:key form expect)~,
+expect to return ~t~ when eval ~(key form expect)~.
+
+By defining like this, any comparison function can use that returns a boolean value
+such as ~eq~, ~equal~, or ~=~.
+
+This flexible test notation is one of the important merits of ~srt.el~.
+
+**** Error expected test case
+If you pass a list of the form ~(:error 'error-type form)~ to ~srt-deftest~,
+~'error-type~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and expects ~'error-type~ error to occur when evaluating ~(form)~.
 
 ** Why We support Emacs-22?
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
@@ -20,7 +149,9 @@ Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
 There're japanese readme(~readme-ja.org~).
 
 ** Welcome PR
-We welcome PR. Please ~localtest~ before PR.
+We welcome PR!
+travis CI test ~srt-test.el~ with oll Emacs version 22 or above.
 
-After clone this repository, run ~make~ to copy githooks to local ~.git~ folder.
-Tests always run before commiting.
+I think that it is difficult to prepare the environment locally, 
+so I think that it is good to throw PR and test travis for the time being!
+Feel free throw PR!
