@@ -135,9 +135,7 @@ Default, enable color if run test on CUI.
 	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
 	  (meserrtype (format "expected error type: %s\n" (pp-to-string errtype))))
       (princ (concat mesheader
-		     (if (or (eq type :default)
-			     (eq type :error))
-			 meserr)
+		     (if (member type '(:default :error)) meserr)
 		     (if (eq type :default) meskey)
 		     (if (eq type :default) mesform)
 		     (if (eq type :default) mesexpect)
