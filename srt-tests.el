@@ -41,6 +41,12 @@
 ;; define tests
 ;;
 
+;; (srt-deftest debug:fail
+;;   (:= (+ 1 3) 5))
+;; 
+;; (srt-deftest debug:error
+;;   (:equa 'a 'a))
+
 (srt-deftest simple:equal
   (:equal '(a b c) '(a b c)))
 
@@ -80,5 +86,24 @@
 (srt-deftest sym:6
   (:equal (sym (a b c)) (sym (a b c))))
 
+(srt-deftest err:1
+  (:error 'void-function
+	  (a 'a)))
+
+(srt-deftest err:2
+  (:error 'error
+	  (a 'a)))
+
+(srt-deftest err:3
+  (:error 'arith-error
+	  (/ 1 0)))
+
+(srt-deftest err:4
+  (:error 'void-variable
+	  (+ 1 a)))
+
+
+
+  
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here

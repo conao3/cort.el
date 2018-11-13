@@ -81,59 +81,93 @@ Default, enable color if run test on CUI.
 ;;
 
 (defun srt-test (keys)
-  (let ((keyc (length keys)))
+  (let ((key  (nth 0 keys))
+	(keyc (length keys)))
     (cond
      ((eq 3 keyc)
-      (let ((key    (nth 0 keys))
-	    (form   (nth 1 keys))
-	    (expect (nth 2 keys)))
-	(let* ((funcname
-		(replace-regexp-in-string "^:+" "" (symbol-name key)))
-	       (funcsym (intern funcname)))
-	  (funcall funcsym (eval form) (eval expect)))))
-     (t nil))))
+      (cond
+       ((eq key :error)
+	(let ((errtype (nth 1 keys))
+	      (form    (nth 2 keys)))
+	  (eval
+	   `(condition-case err
+		(eval ,form)
+	      (,errtype t)
+	      (error nil)))))
+       (t
+	(let (
+	      (form   (nth 1 keys))
+	      (expect (nth 2 keys)))
+	  (let* ((funcname
+		  (replace-regexp-in-string "^:+" "" (symbol-name key)))
+		 (funcsym (intern funcname)))
+	    (funcall funcsym (eval form) (eval expect)))))
+       (t nil))))))
 
 (defun srt-testpass (name keys)
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
 (defun srt-testfail (name keys)
-  (let ((keyc (length keys))
-	(key) (form) (expect))
+  (let ((key (nth 0 keys))
+	(keyc (length keys))
+	(type) (form) (expect) (errtype))
     (cond
-     ((eq 3 keyc)
-      (setq key (nth 0 keys)
-	    form (nth 1 keys)
-	    expect (nth 2 keys))))
+     ((eq keyc 3)
+      (cond
+       ((eq key :error)
+	(setq type    :error
+	      errtype (nth 1 keys)
+	      form    (nth 2 keys)))
+       (t
+	(setq type    :default
+	      form    (nth 1 keys)
+	      expect  (nth 2 keys))))))
     
-    (let ((mesheader (format "%s %s\n" srt-fail-label name))
-	  (meskey    (format "< tested on %s >\n" key))
-	  (mesform   (format "form:\n%s\n" (pp-to-string form)))
-	  (mesexpect (format "expected:\n%s\n" (pp-to-string expect))))
+    (let ((mesheader  (format "%s %s\n" srt-fail-label name))
+	  (meskey     (format "< tested on %s >\n" key))
+	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
+	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
+	  (meserrtype (format "expected error: %s\n" (pp-to-string errtype))))
       (princ (concat mesheader
-		     meskey
-		     mesform
-		     mesexpect)))))
+		     (if (or (eq type :default)
+			     (eq type :error))
+			 meserrtype)
+		     (if (eq type :default) mesform)
+		     (if (eq type :default) mesexpect)
+		     )))))
 
 (defun srt-testerror (name keys err)
-  (let ((keyc (length keys))
-	(key) (form) (expect))
+  (let ((key (nth 0 keys))
+	(keyc (length keys))
+	(type) (form) (expect) (errtype))
     (cond
      ((eq 3 keyc)
-      (setq key (nth 0 keys)
-	    form (nth 1 keys)
-	    expect (nth 2 keys))))
+      (cond
+       ((eq key :error)
+	(setq type    :error
+	      errtype (nth 1 keys)
+	      form    (nth 2 keys)))
+       (t
+	(setq type    :default
+	      form    (nth 1 keys)
+	      expect  (nth 2 keys))))))
     
-    (let ((mesheader (format "%s %s\n" srt-error-label name))
-	  (meserr    (format "Error: %s\n" err))
-	  (meskey    (format "< tested on %s >\n" key))
-	  (mesform   (format "form:\n%s\n" (pp-to-string form)))
-	  (mesexpect (format "expected:\n%s\n" (pp-to-string expect))))
+    (let ((mesheader  (format "%s %s\n" srt-error-label name))
+	  (meserr     (format "Error: %s\n" err))
+	  (meskey     (format "< tested on %s >\n" key))
+	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
+	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
+	  (meserrtype (format "expected error type: %s\n" (pp-to-string errtype))))
       (princ (concat mesheader
-		     meserr
-		     meskey
-		     mesform
-		     mesexpect)))))
+		     (if (or (eq type :default)
+			     (eq type :error))
+			 meserr)
+		     (if (eq type :default) meskey)
+		     (if (eq type :default) mesform)
+		     (if (eq type :default) mesexpect)
+		     (if (eq type :error) meserrtype)
+		     )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
