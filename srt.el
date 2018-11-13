@@ -92,8 +92,7 @@ Default, enable color if run test on CUI.
 	  (eval
 	   `(condition-case err
 		(eval ,form)
-	      (,errtype t)
-	      (error nil)))))
+	      (,errtype t)))))
        (t
 	(let (
 	      (form   (nth 1 keys))

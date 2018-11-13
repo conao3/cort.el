@@ -43,9 +43,13 @@
 
 ;; (srt-deftest debug:fail
 ;;   (:= (+ 1 3) 5))
-;; 
+
 ;; (srt-deftest debug:error
 ;;   (:equa 'a 'a))
+
+;; (srt-deftest debug:unexpected-error
+;;   (:error 'arith-error
+;; 	  (a 'a)))
 
 (srt-deftest simple:equal
   (:equal '(a b c) '(a b c)))
