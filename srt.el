@@ -142,6 +142,7 @@ Default, enable color if run test on CUI.
 		     (if (eq type :default) mesform)
 		     (if (eq type :default) mesexpect)
 		     (if (eq type :error) meserrtype)
+		     "\n"
 		     )))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +154,7 @@ Default, enable color if run test on CUI.
   (declare (indent 1))
   `(add-to-list 'srt-test-cases '(,name ,keys) t))
 
-(defun srt-prune-tests()
+(defun srt-prune-tests ()
   (setq srt-test-cases nil)
   (message "prune tests completed."))
 
