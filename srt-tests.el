@@ -43,10 +43,10 @@
 
 ;; (srt-deftest debug:fail
 ;;   (:= (+ 1 3) 5))
-
+;; 
 ;; (srt-deftest debug:error
 ;;   (:equa 'a 'a))
-
+;; 
 ;; (srt-deftest debug:unexpected-error
 ;;   (:error 'arith-error
 ;; 	  (a 'a)))
@@ -105,9 +105,6 @@
 (srt-deftest err:4
   (:error 'void-variable
 	  (+ 1 a)))
-
-
-
   
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here

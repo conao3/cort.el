@@ -66,14 +66,29 @@ Default, enable color if run test on CUI.
 
 (defvar srt-error-message
   (if srt-enable-color
-      "\e[31m===== Failed test(s) =====\e[m"
-    "===== Failed test(s) =====")
+      "\e[31m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\e[m"
+    "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n")
   "Error message")
 
+(defvar srt-passed-message
+  (if srt-enable-color
+      "\e[34m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n\e[m"
+    "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n")
+  "Error message")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  for old Emacs
 ;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  utility functions
+;;
+
+(defmacro srt-inc (var &optional step)
+  (if step
+      `(setq ,var (+ ,var ,step))
+    `(setq ,var (+ ,var 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -156,7 +171,9 @@ Default, enable color if run test on CUI.
   (message "prune tests completed."))
 
 (defun srt-run-tests ()
-  (let ((errorp nil))
+  (let ((testc  (length srt-test-cases))
+	(failc  0)
+	(errorc 0))
     (princ (format srt-header-message (length srt-test-cases)))
     (princ (format "%s\n" (emacs-version)))
 
@@ -167,16 +184,19 @@ Default, enable color if run test on CUI.
 	    (if (srt-test keys)
 		(srt-testpass name keys)
 	      (srt-testfail name keys)
-	      (setq errorp t))
+	      (srt-inc failc))
 	  (error
 	   (srt-testfail name keys err)
-	   (setq errorp t)))))
+	   (srt-inc errorc)))))
 
     (princ "\n\n")
-    (when errorp
-      (if srt-debug
-	  (princ "Test failed!!\n")
-	(error srt-error-message)))))
+    (if (or (< 0 failc) (< 0 errorc))
+	(if srt-debug
+	    (princ "Test failed!!\n")
+	  (error (format srt-error-message
+			 testc (- testc failc errorc) failc errorc)))
+      (princ (format srt-passed-message
+		     testc (- testc failc errorc) failc errorc)))))
 
 (provide 'srt)
 ;;; srt.el ends here
