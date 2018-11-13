@@ -157,7 +157,7 @@ Default, enable color if run test on CUI.
   (setq srt-test-cases nil)
   (message "prune tests completed."))
 
-(defun srt-run-tests-batch-and-exit ()
+(defun srt-run-tests ()
   (let ((errorp nil))
     (princ (format srt-header-message (length srt-test-cases)))
     (princ (format "%s\n" (emacs-version)))

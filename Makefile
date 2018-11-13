@@ -23,7 +23,7 @@ build: $(ELCS)
 test: build
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
-	$(BATCH) -l srt-tests.el -f srt-run-tests-batch-and-exit
+	$(BATCH) -l srt-tests.el -f srt-run-tests
 
 localtest:
 # Clean all of .elc, compile .el, and run test.
