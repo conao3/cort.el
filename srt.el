@@ -24,57 +24,78 @@
 
 ;;; Code:
 
-(defvar srt-version 0.6
+(defgroup srt nil
+  "Simplify elisp test framework."
+  :group 'lisp)
+
+(defconst srt-version 0.6
   "srt.el version")
 
 (defvar srt-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
-(defvar srt-debug nil
+(defcustom srt-debug nil
   "If non nil, turn on debug mode.
 
-- don't throw annoying error when test fail, just output message.")
+- don't throw annoying error when test fail, just output message."
+  :type 'boolean
+  :group 'srt)
 
-(defvar srt-enable-color (null window-system)
+(defcustom srt-enable-color (null window-system)
   "If non nil, enable color message to output with meta character.
 Default, enable color if run test on CUI.
-`window-system' returns nil on CUI")
+`window-system' returns nil on CUI"
+  :type 'boolean
+  :group 'srt)
 
-(defvar srt-header-message
+(defcustom srt-header-message
   (if srt-enable-color
       "\n\e[33mRunning %d tests...\e[m\n"
     "\nRunning %d tests...\n")
-  "Header message")
+  "Header message"
+  :type 'string
+  :group 'srt)
 
-(defvar srt-passed-label
+(defcustom srt-passed-label
   (if srt-enable-color
       "\e[36m[PASSED] \e[m"
     "[PASSED] ")
-  "Passed label.")
+  "Passed label."
+  :type 'string
+  :group 'srt)
 
-(defvar srt-fail-label
+(defcustom srt-fail-label
   (if srt-enable-color
       "\e[31m[FAILED] \e[m"
     "[FAILED] ")
-  "Fail label.")
+  "Fail label."
+  :type 'string
+  :group 'srt)
 
-(defvar srt-error-label
+(defcustom srt-error-label
   (if srt-enable-color
       "\e[31m<ERROR>  \e[m"
     "<<ERROR>>")
-  "Fail label.")
+  "Fail label."
+  :type 'string
+  :group 'srt)
 
-(defvar srt-error-message
+(defcustom srt-error-message
   (if srt-enable-color
       "\e[31m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\e[m"
     "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n")
-  "Error message")
+  "Error message"
+  :type 'string
+  :group 'srt)
 
-(defvar srt-passed-message
+(defcustom srt-passed-message
   (if srt-enable-color
       "\e[34m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n\e[m"
     "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n")
-  "Error message")
+  "Error message"
+  :type 'string
+  :group 'srt)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  for old Emacs
