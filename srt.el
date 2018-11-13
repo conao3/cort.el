@@ -28,7 +28,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 1.1
+(defconst srt-version 1.2
   "srt.el version")
 
 (defvar srt-test-cases nil
@@ -130,8 +130,7 @@ Default, enable color if run test on CUI.
 		(eval ,form)
 	      (,errtype t)))))
        (t
-	(let (
-	      (form   (nth 1 keys))
+	(let ((form   (nth 1 keys))
 	      (expect (nth 2 keys)))
 	  (let* ((funcname
 		  (replace-regexp-in-string "^:+" "" (symbol-name key)))
@@ -167,12 +166,14 @@ Default, enable color if run test on CUI.
 	  (meserr     (format "Error: %s\n" err))
 	  (meskey     (format "< tested on %s >\n" key))
 	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
+	  (mesreturn  (format "returned:\n%s\n" (pp-to-string (unless err (eval form)))))
 	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
 	  (meserrtype (format "expected error type: %s\n" (pp-to-string errtype))))
       (princ (concat mesheader
 		     (if (member type '(:default :error)) meserr)
 		     (if (eq type :default) meskey)
 		     (if (eq type :default) mesform)
+		     (if (and (eq type :default) (not err)) mesreturn)
 		     (if (eq type :default) mesexpect)
 		     (if (eq type :error) meserrtype)
 		     "\n"
