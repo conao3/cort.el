@@ -101,12 +101,9 @@ Default, enable color if run test on CUI.
 ;;  for old Emacs
 ;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  utility functions
-;;
-
 (defmacro srt-inc (var &optional step)
+  "increment VAR. If given STEP, increment VAR by STEP.
+Emacs-22 doesn't support `incf'."
   (if step
       `(setq ,var (+ ,var ,step))
     `(setq ,var (+ ,var 1))))
@@ -117,6 +114,8 @@ Default, enable color if run test on CUI.
 ;;
 
 (defun srt-test (keys)
+  "Actually execute FORM to check it matches EXPECT.
+If match, return t, otherwise return nil."
   (let ((key  (nth 0 keys))
 	(keyc (length keys)))
     (cond
@@ -139,10 +138,12 @@ Default, enable color if run test on CUI.
        (t nil))))))
 
 (defun srt-testpass (name keys)
+  "Output messages for test passed."
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
 (defun srt-testfail (name keys &optional err)
+  "Output messages for test failed."
   (let ((key (nth 0 keys))
 	(keyc (length keys))
 	(type) (form) (expect) (errtype))
@@ -185,14 +186,22 @@ Default, enable color if run test on CUI.
 ;;
 
 (defmacro srt-deftest (name keys)
+  "Define a test case with the name A.
+KEYS supported below form.
+
+basic: (:COMPFUN FORM EXPECT)
+error: (:error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
   `(add-to-list 'srt-test-cases '(,name ,keys) t))
 
 (defun srt-prune-tests ()
+  "Prune all the tests."
+  (interactive)
   (setq srt-test-cases nil)
   (message "prune tests completed."))
 
 (defun srt-run-tests ()
+  "Run all the tests."
   (let ((testc  (length srt-test-cases))
 	(failc  0)
 	(errorc 0))
