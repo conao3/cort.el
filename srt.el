@@ -110,75 +110,94 @@ Emacs-22 doesn't support `incf'."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;  small functions
+;;
+
+(defun srt-get-value (plist symbol)
+  "Get reasonable value from PLIST.
+Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
+  
+  (let ((element (plist-get plist symbol)))
+    (plist-get element :default)))
+
+(defun srt-pp (sexp)
+  "Return pretty printed sexp string."
+  (let ((pp-string (pp-to-string sexp)))
+    (replace-regexp-in-string "\n+$" "" pp-string)))
+
+(defmacro srt-aif (test-form then-form &optional else-form)
+  `(let ((it ,test-form))
+     (if it ,then-form ,else-form)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;;  support functions
 ;;
 
-(defun srt-test (keys)
-  "Actually execute FORM to check it matches EXPECT.
+(defun srt-test (plist)
+  "Actually execute GIVEN to check it matches EXPECT.
 If match, return t, otherwise return nil."
-  (let ((key  (nth 0 keys))
-	(keyc (length keys)))
-    (cond
-     ((eq 3 keyc)
-      (cond
-       ((eq key :error)
-	(let ((errtype (nth 1 keys))
-	      (form    (nth 2 keys)))
-	  (eval
-	   `(condition-case err
-		(eval ,form)
-	      (,errtype t)))))
-       (t
-	(let ((form   (nth 1 keys))
-	      (expect (nth 2 keys)))
-	  (let* ((funcname
-		  (replace-regexp-in-string "^:+" "" (symbol-name key)))
-		 (funcsym (intern funcname)))
-	    (funcall funcsym (eval form) (eval expect)))))
-       (t nil))))))
 
-(defun srt-testpass (name keys)
+  (let ((method   (srt-get-value plist :method))
+	(given    (srt-get-value plist :given))
+	(expect   (srt-get-value plist :expect))
+	(err-type (srt-get-value plist :err-type)))
+    (cond
+     ((eq method :error)
+      (eval
+       `(condition-case err
+	    (eval ,given)
+	  (,err-type t))))
+     (t
+      (let* ((funcname
+	      (replace-regexp-in-string "^:+" "" (symbol-name method)))
+	     (funcsym (intern funcname)))
+	(funcall funcsym (eval given) (eval expect)))))))
+
+(defun srt-testpass (name plist)
   "Output messages for test passed."
+  
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
-(defun srt-testfail (name keys &optional err)
+(defun srt-testfail (name plist &optional err)
   "Output messages for test failed."
-  (let ((key (nth 0 keys))
-	(keyc (length keys))
-	(type) (form) (expect) (errtype))
-    (cond
-     ((eq 3 keyc)
-      (cond
-       ((eq key :error)
-	(setq type    :error
-	      errtype (nth 1 keys)
-	      form    (nth 2 keys)))
-       (t
-	(setq type    :default
-	      form    (nth 1 keys)
-	      expect  (nth 2 keys))))))
-    
-    (let ((mesheader  (format "%s %s\n"
-			      (if err
-				  srt-error-label
-				srt-fail-label)
-			      name))
-	  (meserr     (format "Error: %s\n" err))
-	  (meskey     (format "< tested on %s >\n" key))
-	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
-	  (mesreturn  (format "returned:\n%s\n" (pp-to-string (unless err (eval form)))))
-	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
-	  (meserrtype (format "expected error type: %s\n" (pp-to-string errtype))))
-      (princ (concat mesheader
-		     (if (member type '(:default :error)) meserr)
-		     (if (eq type :default) meskey)
-		     (if (eq type :default) mesform)
-		     (if (and (eq type :default) (not err)) mesreturn)
-		     (if (eq type :default) mesexpect)
-		     (if (eq type :error) meserrtype)
-		     "\n"
-		     )))))
+
+  (let ((method   (srt-get-value plist :method))
+	(given    (srt-get-value plist :given))
+	(expect   (srt-get-value plist :expect))
+	(err-type (srt-get-value plist :err-type)))
+    (let* ((failp           (not err))
+	   (errorp          (not failp))
+	   (method-errorp   (eq method :error))
+	   (method-defaultp (not (or method-errorp))))
+      (let ((mesheader) (meserror) (mesmethod) (mesgiven) (mesreturned) (mesexpect))
+	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))	
+	(progn
+	  (when errorp
+	    (setq mesheader (format "%s %s\n" srt-error-label name))
+	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err))))
+	  (when failp
+	    (setq mesheader (format "%s %s\n" srt-fail-label name))))
+	
+	(progn
+	  (when method-defaultp
+	    (setq mesmethod (format "< Tested with %s >\n" method))
+	    (setq mesexpect (format "Expected:\n%s\n" (srt-pp expect)))
+	    (when failp
+	      (setq mesreturned (format "Returned:\n%s\n" (srt-pp (eval given))))))
+	  (when method-errorp
+	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err)))
+	    (setq mesexpect (format "Expected-error:   %s\n" (srt-pp err-type)))))
+	
+	(princ (concat mesheader
+		       (srt-aif mesmethod it)
+		       mesgiven
+		       (srt-aif meserror it)
+		       (srt-aif mesreturned it)
+		       mesexpect
+		       "\n"
+		       ))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -192,7 +211,26 @@ KEYS supported below form.
 basic: (:COMPFUN FORM EXPECT)
 error: (:error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
-  `(add-to-list 'srt-test-cases '(,name ,keys) t))
+  (cond
+   ((eq (nth 0 keys) :error)
+    (let ((err-type (nth 1 keys))
+	  (given    (nth 2 keys)))
+      `(add-to-list 'srt-test-cases
+		    '(,name (:srt-testcase
+			     :method (:default :error)
+			     :err-type (:default ,err-type)
+			     :given (:default ,given)))
+		    t)))
+   (t
+    (let ((method (nth 0 keys))
+	  (given  (nth 1 keys))
+	  (expect (nth 2 keys)))
+      `(add-to-list 'srt-test-cases
+		    '(,name (:srt-testcase
+			     :method (:default ,method)
+			     :given  (:default ,given)
+			     :expect (:default ,expect)))
+		    t)))))
 
 (defun srt-prune-tests ()
   "Prune all the tests."
@@ -209,15 +247,16 @@ error: (:error EXPECTED-ERROR-TYPE FORM)"
     (princ (format "%s\n" (emacs-version)))
 
     (dolist (test srt-test-cases)
-      (let ((name (car test))
-	    (keys (cadr test)))
+      (let* ((name  (car  test))
+	     (keys  (cadr test))
+	     (plist (cdr  keys)))	; remove :srt-testcase symbol
 	(condition-case err
-	    (if (srt-test keys)
-		(srt-testpass name keys)
-	      (srt-testfail name keys)
+	    (if (srt-test plist)
+		(srt-testpass name plist)
+	      (srt-testfail name plist)
 	      (srt-inc failc))
 	  (error
-	   (srt-testfail name keys err)
+	   (srt-testfail name plist err)
 	   (srt-inc errorc)))))
 
     (princ "\n\n")
