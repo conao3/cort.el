@@ -113,21 +113,21 @@ Emacs-22 doesn't support `incf'."
 ;;  small functions
 ;;
 
+(defmacro srt-aif (test-form then-form &optional else-form)
+  "Anaphoric if macro."
+  `(let ((it ,test-form))
+     (if it ,then-form ,else-form)))
+
 (defun srt-get-value (plist symbol)
   "Get reasonable value from PLIST.
 Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
-  
   (let ((element (plist-get plist symbol)))
     (plist-get element :default)))
 
 (defun srt-pp (sexp)
-  "Return pretty printed sexp string."
+  "Return pretty printed SEXP string."
   (let ((pp-string (pp-to-string sexp)))
     (replace-regexp-in-string "\n+$" "" pp-string)))
-
-(defmacro srt-aif (test-form then-form &optional else-form)
-  `(let ((it ,test-form))
-     (if it ,then-form ,else-form)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -191,11 +191,11 @@ If match, return t, otherwise return nil."
 	    (setq mesexpect (format "Expected-error:   %s\n" (srt-pp err-type)))))
 	
 	(princ (concat mesheader
-		       (srt-aif mesmethod it)
-		       mesgiven
-		       (srt-aif meserror it)
+		       (srt-aif mesmethod   it)
+		       (srt-aif mesgiven    it)
+		       (srt-aif meserror    it)
 		       (srt-aif mesreturned it)
-		       mesexpect
+		       (srt-aif mesexpect   it)
 		       "\n"
 		       ))))))
 
@@ -217,9 +217,9 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
 	  (given    (nth 2 keys)))
       `(add-to-list 'srt-test-cases
 		    '(,name (:srt-testcase
-			     :method (:default :srt-error)
+			     :method   (:default :srt-error)
 			     :err-type (:default ,err-type)
-			     :given (:default ,given)))
+			     :given    (:default ,given)))
 		    t)))
    (t
     (let ((method (nth 0 keys))
