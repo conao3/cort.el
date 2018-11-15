@@ -91,20 +91,20 @@
   (:equal (sym (a b c)) (sym (a b c))))
 
 (srt-deftest err:1
-  (:error 'void-function
-	  (a 'a)))
+  (:srt-error 'void-function
+	      (a 'a)))
 
 (srt-deftest err:2
-  (:error 'error
-	  (a 'a)))
+  (:srt-error 'error
+	      (a 'a)))
 
 (srt-deftest err:3
-  (:error 'arith-error
-	  (/ 1 0)))
+  (:srt-error 'arith-error
+	      (/ 1 0)))
 
 (srt-deftest err:4
-  (:error 'void-variable
-	  (+ 1 a)))
-  
+  (:srt-error 'void-variable
+	      (+ 1 a)))
+
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here

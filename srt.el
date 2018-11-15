@@ -143,7 +143,7 @@ If match, return t, otherwise return nil."
 	(expect   (srt-get-value plist :expect))
 	(err-type (srt-get-value plist :err-type)))
     (cond
-     ((eq method :error)
+     ((eq method :srt-error)
       (eval
        `(condition-case err
 	    (eval ,given)
@@ -169,7 +169,7 @@ If match, return t, otherwise return nil."
 	(err-type (srt-get-value plist :err-type)))
     (let* ((failp           (not err))
 	   (errorp          (not failp))
-	   (method-errorp   (eq method :error))
+	   (method-errorp   (eq method :srt-error))
 	   (method-defaultp (not (or method-errorp))))
       (let ((mesheader) (meserror) (mesmethod) (mesgiven) (mesreturned) (mesexpect))
 	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))	
@@ -209,15 +209,15 @@ If match, return t, otherwise return nil."
 KEYS supported below form.
 
 basic: (:COMPFUN FORM EXPECT)
-error: (:error EXPECTED-ERROR-TYPE FORM)"
+error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
   (cond
-   ((eq (nth 0 keys) :error)
+   ((eq (nth 0 keys) :srt-error)
     (let ((err-type (nth 1 keys))
 	  (given    (nth 2 keys)))
       `(add-to-list 'srt-test-cases
 		    '(,name (:srt-testcase
-			     :method (:default :error)
+			     :method (:default :srt-error)
 			     :err-type (:default ,err-type)
 			     :given (:default ,given)))
 		    t)))
