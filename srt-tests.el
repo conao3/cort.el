@@ -36,6 +36,12 @@
 (defmacro sym (x)
   `',x)
 
+(defmacro package-require (package)
+  `(require ,package))
+
+(defmacro match-expansion (form expect)
+  `(:equal (macroexpand ',form) ,expect))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; define tests
@@ -50,6 +56,25 @@
 ;; (srt-deftest debug:unexpected-error
 ;;   (:error 'arith-error
 ;; 	  (a 'a)))
+
+(srt-deftest package-require0
+  (:equal (macroexpand '(package-require 'use-package))
+	  '(require 'use-package)))
+
+(srt-deftest match-expansion0
+  (:equal (macroexpand
+	   '(match-expansion
+	     (package-require 'use-package)
+	     '(require 'use-package)))
+	  '(:equal
+	    (macroexpand
+	     '(package-require 'use-package))
+	    '(require 'use-package))))
+   
+(srt-deftest match-expansion1
+  (match-expansion
+   (package-require 'use-package)
+   '(require 'use-package)))
 
 (srt-deftest simple:equal
   (:equal '(a b c) '(a b c)))
