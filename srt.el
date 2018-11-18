@@ -41,6 +41,11 @@
   :type 'boolean
   :group 'srt)
 
+(defcustom srt-show-backtrace nil
+  "If non nil, show backtrace when fail test case."
+  :type 'boolean
+  :group 'srt)
+
 (defcustom srt-enable-color (null window-system)
   "If non nil, enable color message to output with meta character.
 Default, enable color if run test on CUI.
@@ -231,8 +236,12 @@ If match, return t, otherwise return nil."
 	   (errorp          (not failp))
 	   (method-errorp   (eq method :srt-error))
 	   (method-defaultp (not (or method-errorp))))
-      (let ((mesheader) (meserror) (mesmethod) (mesgiven) (mesreturned) (mesexpect))
-	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))	
+      (let ((mesheader) (mesmethod) (mesgiven) (mesreturned) (mesexpect)
+	    (meserror) (mesbacktrace))
+	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))
+	(setq mesbacktrace (format "Backtrace:\n%s\n"
+				   (with-output-to-string
+				     (backtrace))))
 	(progn
 	  (when errorp
 	    (setq mesheader (format "%s %s\n" srt-error-label name))
@@ -256,6 +265,8 @@ If match, return t, otherwise return nil."
 		       (srt-aif meserror    it)
 		       (srt-aif mesreturned it)
 		       (srt-aif mesexpect   it)
+		       (if srt-show-backtrace
+			   (srt-aif mesbacktrace it))
 		       "\n"
 		       ))))))
 

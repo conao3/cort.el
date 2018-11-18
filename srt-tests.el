@@ -41,11 +41,11 @@
 ;; define tests
 ;;
 
-;; (srt-deftest debug:fail
-;;   (:= (+ 1 3) 5))
-;; 
 ;; (srt-deftest debug:error
 ;;   (:equa 'a 'a))
+;; 
+;; (srt-deftest debug:fail
+;;   (:= (+ 1 3) 5))
 ;; 
 ;; (srt-deftest debug:unexpected-error
 ;;   (:srt-error 'arith-error
