@@ -161,6 +161,11 @@ Example:
    (srt-list-digest (lambda (a b) (or a b))
      (mapcar (lambda (x) (memq x list)) symlist))))
 
+(defsubst srt-get-funcsym (method)
+  "Return function symbol from symbol such as :eq"
+  (intern
+   (replace-regexp-in-string "^:+" "" (symbol-name method))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  support functions
@@ -206,9 +211,7 @@ If match, return t, otherwise return nil."
 	    (eval ,given)
 	  (,err-type t))))
      (t
-      (let* ((funcname
-	      (replace-regexp-in-string "^:+" "" (symbol-name method)))
-	     (funcsym (intern funcname)))
+      (let* ((funcsym (srt-get-funcsym method)))
 	(funcall funcsym (eval given) (eval expect)))))))
 
 (defun srt-testpass (name plist)
@@ -288,12 +291,20 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
       (let ((method (funcall fn (nth 0 keys)))
 	    (given  (funcall fn (nth 1 keys)))
 	    (expect (funcall fn (nth 2 keys))))
-	`(add-to-list 'srt-test-cases
-		      '(,name (:srt-testcase
-			       :method (:default ,@method)
-			       :given  (:default ,@given)
-			       :expect (:default ,@expect)))
-		      t))))))
+	(if (fboundp (srt-get-funcsym (car method)))
+	    `(add-to-list 'srt-test-cases
+			  '(,name (:srt-testcase
+				   :method (:default ,@method)
+				   :given  (:default ,@given)
+				   :expect (:default ,@expect)))
+			  t)
+	  `(progn
+	     (srt-testfail ',name (cdr
+				   '(:srt-testcase
+				     :method (:default ,@method)
+				     :given  (:default ,@given)
+				     :expect (:default ,@expect))))
+	     (error "invalid test case"))))))))
 
 (defun srt-prune-tests ()
   "Prune all the tests."
