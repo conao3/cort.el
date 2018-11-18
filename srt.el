@@ -115,24 +115,81 @@ Emacs-22 doesn't support `incf'."
 
 (defmacro srt-aif (test-form then-form &optional else-form)
   "Anaphoric if macro."
+  (declare (indent 4) (debug t))
   `(let ((it ,test-form))
      (if it ,then-form ,else-form)))
 
-(defun srt-get-value (plist symbol)
-  "Get reasonable value from PLIST.
-Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
-  (let ((element (plist-get plist symbol)))
-    (plist-get element :default)))
+(defmacro srt-asetq (var &optional body)
+  "Anaphoric setq macro."
+  `(let ((it ,var))
+     (setq ,var ,body)))
 
-(defun srt-pp (sexp)
+(defmacro srt-with-gensyms (syms &rest body)
+  "Create `let' block with `gensym'ed variables."
+  (declare (indent 1))
+  `(let ,(mapcar #'(lambda (s)
+                     `(,s (gensym)))
+                 syms)
+     ,@body))
+
+(defsubst srt-truep (var)
+  "Return t if var is non-nil."
+  (not (not var)))
+
+(defsubst srt-pp (sexp)
   "Return pretty printed SEXP string."
-  (let ((pp-string (pp-to-string sexp)))
-    (replace-regexp-in-string "\n+$" "" pp-string)))
+  (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
+
+(defsubst srt-list-digest (fn list)
+  "Make digest from LIST using FN (using 2 args).
+Example:
+(list-digest (lambda (a b) (or a b))
+  '(nil nil t))
+=> nil
+
+(list-digest (lambda (a b) (or a b))
+  '(nil nil t))
+=> nil"
+  (declare (indent 1))
+  (let ((result))
+    (mapc (lambda (x) (setq result (funcall fn x result))) list)
+    result))
+
+(defsubst srt-list-memq (symlist list)
+  "Return t if LIST contained element of SYMLIST."
+  (srt-truep
+   (srt-list-digest (lambda (a b) (or a b))
+     (mapcar (lambda (x) (memq x list)) symlist))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  support functions
 ;;
+
+(defun srt-get-value (plist symbol)
+  "Get reasonable value from PLIST.
+Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
+  ;;   (let ((element (plist-get plist symbol))
+  ;; 	(fn (lambda (env)
+  ;; 	      (srt-aif (plist-get env :srt-if)
+  ;; 		  (if (car it)
+  ;; 		      (cadr it)
+  ;; 		    (funcall fn (member :srt-if (cdr env))))))))
+  ;;     (srt-aif (funcall fn element)
+  ;; 	it
+  ;; 	(plist-get element :default)))
+  (let* ((element (plist-get plist symbol))
+	 (env element)
+	 (value))
+    (while (and env (not value))
+      (srt-aif (plist-get env :srt-if)
+	  (if (car it)
+	      (setq value (cadr it))
+	    (setq env (cddr (plist-member env :srt-if))))
+	  (setq env it)))
+    (srt-aif value
+	it
+	(plist-get element :default))))
 
 (defun srt-test (plist)
   "Actually execute GIVEN to check it matches EXPECT.
@@ -211,26 +268,32 @@ KEYS supported below form.
 basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
-  (cond
-   ((eq (nth 0 keys) :srt-error)
-    (let ((err-type (nth 1 keys))
-	  (given    (nth 2 keys)))
-      `(add-to-list 'srt-test-cases
-		    '(,name (:srt-testcase
-			     :method   (:default :srt-error)
-			     :err-type (:default ,err-type)
-			     :given    (:default ,given)))
-		    t)))
-   (t
-    (let ((method (nth 0 keys))
-	  (given  (nth 1 keys))
-	  (expect (nth 2 keys)))
-      `(add-to-list 'srt-test-cases
-		    '(,name (:srt-testcase
-			     :method (:default ,method)
-			     :given  (:default ,given)
-			     :expect (:default ,expect)))
-		    t)))))
+  (let ((fn (lambda (env)
+	      (if (listp env)
+		  (if (srt-list-memq '(:srt-if) env)
+		      env
+		    `(,env))
+		`(,env)))))
+    (cond
+     ((eq (nth 0 keys) :srt-error)
+      (let ((err-type (funcall fn (nth 1 keys)))
+	    (given    (funcall fn (nth 2 keys))))
+	`(add-to-list 'srt-test-cases
+		      '(,name (:srt-testcase
+			       :method   (:default :srt-error)
+			       :err-type (:default ,@err-type)
+			       :given    (:default ,@given)))
+		      t)))
+     (t
+      (let ((method (funcall fn (nth 0 keys)))
+	    (given  (funcall fn (nth 1 keys)))
+	    (expect (funcall fn (nth 2 keys))))
+	`(add-to-list 'srt-test-cases
+		      '(,name (:srt-testcase
+			       :method (:default ,@method)
+			       :given  (:default ,@given)
+			       :expect (:default ,@expect)))
+		      t))))))
 
 (defun srt-prune-tests ()
   "Prune all the tests."

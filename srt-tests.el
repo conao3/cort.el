@@ -48,8 +48,31 @@
 ;;   (:equa 'a 'a))
 ;; 
 ;; (srt-deftest debug:unexpected-error
-;;   (:error 'arith-error
-;; 	  (a 'a)))
+;;   (:srt-error 'arith-error
+;; 	      (a 'a)))
+;; 
+;; (srt-deftest debug:srt-if:1
+;;   (:eq 'a
+;;        ('b
+;; 	:srt-if (t 'c))))
+;; 
+;; (srt-deftest debug:srt-if:2
+;;   (:eq 'a
+;;        ('b
+;; 	:srt-if (nil 'c)
+;; 	:srt-if (t 'd))))
+;; 
+;; (srt-deftest debug:srt-if:3
+;;   (:eq 'a
+;;        ('e
+;; 	:srt-if (nil 'c)
+;; 	:srt-if (nil 'd))))
+;; 
+;; (srt-deftest debug:srt-if:4
+;;   (:eq 'a
+;;        ('b
+;; 	:srt-if (t 'c)
+;; 	:srt-if (t 'd))))
 
 (srt-deftest simple:equal
   (:equal '(a b c) '(a b c)))
@@ -105,6 +128,82 @@
 (srt-deftest err:4
   (:srt-error 'void-variable
 	      (+ 1 a)))
+
+(srt-deftest srt-if:1
+  (:eq 'a
+       ('b
+	:srt-if (t 'a))))
+
+(srt-deftest srt-if:2
+  (:eq 'a
+       ('b
+	:srt-if (nil 'c)
+	:srt-if (t 'a))))
+
+(srt-deftest srt-if:3
+  (:eq 'a
+       ('a
+	:srt-if (nil 'c)
+	:srt-if (nil 'd))))
+
+(srt-deftest srt-if:4
+  (:eq 'a
+       ('b
+	:srt-if (t 'a)
+	:srt-if (t 'b))))
+
+(srt-deftest srt-if:1-
+  (:eq ('b
+	:srt-if (t 'a))
+       'a))
+
+(srt-deftest srt-if:2-
+  (:eq ('b
+	:srt-if (nil 'c)
+	:srt-if (t 'a))
+       'a))
+
+(srt-deftest srt-if:3-
+  (:eq ('a
+	:srt-if (nil 'c)
+	:srt-if (nil 'd))
+       'a))
+
+(srt-deftest srt-if:4-
+  (:eq ('b
+	:srt-if (t 'a)
+	:srt-if (t 'b))
+       'a))
+
+(srt-deftest srt-if:1--
+  (:eq ('b
+	:srt-if (t 'a))
+       ('b
+	:srt-if (t 'a))))
+
+(srt-deftest srt-if:2--
+  (:eq ('b
+	:srt-if (nil 'c)
+	:srt-if (t 'a))
+       ('b
+	:srt-if (nil 'c)
+	:srt-if (t 'a))))
+
+(srt-deftest srt-if:3--
+  (:eq ('a
+	:srt-if (nil 'c)
+	:srt-if (nil 'd))
+       ('a
+	:srt-if (nil 'c)
+	:srt-if (nil 'd))))
+
+(srt-deftest srt-if:4--
+  (:eq ('b
+	:srt-if (t 'a)
+	:srt-if (t 'b))
+       ('b
+	:srt-if (t 'a)
+	:srt-if (t 'b))))
 
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
