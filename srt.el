@@ -28,7 +28,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 1.2
+(defconst srt-version 2.0
   "srt.el version")
 
 (defvar srt-test-cases nil
@@ -101,83 +101,160 @@ Default, enable color if run test on CUI.
 ;;  for old Emacs
 ;;
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  utility functions
-;;
-
 (defmacro srt-inc (var &optional step)
+  "increment VAR. If given STEP, increment VAR by STEP.
+Emacs-22 doesn't support `incf'."
   (if step
       `(setq ,var (+ ,var ,step))
     `(setq ,var (+ ,var 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
+;;  small functions
+;;
+
+(defmacro srt-aif (test-form then-form &optional else-form)
+  "Anaphoric if macro."
+  (declare (indent 4) (debug t))
+  `(let ((it ,test-form))
+     (if it ,then-form ,else-form)))
+
+(defmacro srt-asetq (var &optional body)
+  "Anaphoric setq macro."
+  `(let ((it ,var))
+     (setq ,var ,body)))
+
+(defmacro srt-with-gensyms (syms &rest body)
+  "Create `let' block with `gensym'ed variables."
+  (declare (indent 1))
+  `(let ,(mapcar #'(lambda (s)
+                     `(,s (gensym)))
+                 syms)
+     ,@body))
+
+(defsubst srt-truep (var)
+  "Return t if var is non-nil."
+  (not (not var)))
+
+(defsubst srt-pp (sexp)
+  "Return pretty printed SEXP string."
+  (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
+
+(defsubst srt-list-digest (fn list)
+  "Make digest from LIST using FN (using 2 args).
+Example:
+(list-digest (lambda (a b) (or a b))
+  '(nil nil t))
+=> nil
+
+(list-digest (lambda (a b) (or a b))
+  '(nil nil t))
+=> nil"
+  (declare (indent 1))
+  (let ((result))
+    (mapc (lambda (x) (setq result (funcall fn x result))) list)
+    result))
+
+(defsubst srt-list-memq (symlist list)
+  "Return t if LIST contained element of SYMLIST."
+  (srt-truep
+   (srt-list-digest (lambda (a b) (or a b))
+     (mapcar (lambda (x) (memq x list)) symlist))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;;  support functions
 ;;
 
-(defun srt-test (keys)
-  (let ((key  (nth 0 keys))
-	(keyc (length keys)))
-    (cond
-     ((eq 3 keyc)
-      (cond
-       ((eq key :error)
-	(let ((errtype (nth 1 keys))
-	      (form    (nth 2 keys)))
-	  (eval
-	   `(condition-case err
-		(eval ,form)
-	      (,errtype t)))))
-       (t
-	(let ((form   (nth 1 keys))
-	      (expect (nth 2 keys)))
-	  (let* ((funcname
-		  (replace-regexp-in-string "^:+" "" (symbol-name key)))
-		 (funcsym (intern funcname)))
-	    (funcall funcsym (eval form) (eval expect)))))
-       (t nil))))))
+(defun srt-get-value (plist symbol)
+  "Get reasonable value from PLIST.
+Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
+  ;;   (let ((element (plist-get plist symbol))
+  ;; 	(fn (lambda (env)
+  ;; 	      (srt-aif (plist-get env :srt-if)
+  ;; 		  (if (car it)
+  ;; 		      (cadr it)
+  ;; 		    (funcall fn (member :srt-if (cdr env))))))))
+  ;;     (srt-aif (funcall fn element)
+  ;; 	it
+  ;; 	(plist-get element :default)))
+  (let* ((element (plist-get plist symbol))
+	 (env element)
+	 (value))
+    (while (and env (not value))
+      (srt-aif (plist-get env :srt-if)
+	  (if (car it)
+	      (setq value (cadr it))
+	    (setq env (cddr (plist-member env :srt-if))))
+	  (setq env it)))
+    (srt-aif value
+	it
+	(plist-get element :default))))
 
-(defun srt-testpass (name keys)
+(defun srt-test (plist)
+  "Actually execute GIVEN to check it matches EXPECT.
+If match, return t, otherwise return nil."
+
+  (let ((method   (srt-get-value plist :method))
+	(given    (srt-get-value plist :given))
+	(expect   (srt-get-value plist :expect))
+	(err-type (srt-get-value plist :err-type)))
+    (cond
+     ((eq method :srt-error)
+      (eval
+       `(condition-case err
+	    (eval ,given)
+	  (,err-type t))))
+     (t
+      (let* ((funcname
+	      (replace-regexp-in-string "^:+" "" (symbol-name method)))
+	     (funcsym (intern funcname)))
+	(funcall funcsym (eval given) (eval expect)))))))
+
+(defun srt-testpass (name plist)
+  "Output messages for test passed."
+  
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
-(defun srt-testfail (name keys &optional err)
-  (let ((key (nth 0 keys))
-	(keyc (length keys))
-	(type) (form) (expect) (errtype))
-    (cond
-     ((eq 3 keyc)
-      (cond
-       ((eq key :error)
-	(setq type    :error
-	      errtype (nth 1 keys)
-	      form    (nth 2 keys)))
-       (t
-	(setq type    :default
-	      form    (nth 1 keys)
-	      expect  (nth 2 keys))))))
-    
-    (let ((mesheader  (format "%s %s\n"
-			      (if err
-				  srt-error-label
-				srt-fail-label)
-			      name))
-	  (meserr     (format "Error: %s\n" err))
-	  (meskey     (format "< tested on %s >\n" key))
-	  (mesform    (format "form:\n%s\n" (pp-to-string form)))
-	  (mesreturn  (format "returned:\n%s\n" (pp-to-string (unless err (eval form)))))
-	  (mesexpect  (format "expected:\n%s\n" (pp-to-string expect)))
-	  (meserrtype (format "expected error type: %s\n" (pp-to-string errtype))))
-      (princ (concat mesheader
-		     (if (member type '(:default :error)) meserr)
-		     (if (eq type :default) meskey)
-		     (if (eq type :default) mesform)
-		     (if (and (eq type :default) (not err)) mesreturn)
-		     (if (eq type :default) mesexpect)
-		     (if (eq type :error) meserrtype)
-		     "\n"
-		     )))))
+(defun srt-testfail (name plist &optional err)
+  "Output messages for test failed."
+
+  (let ((method   (srt-get-value plist :method))
+	(given    (srt-get-value plist :given))
+	(expect   (srt-get-value plist :expect))
+	(err-type (srt-get-value plist :err-type)))
+    (let* ((failp           (not err))
+	   (errorp          (not failp))
+	   (method-errorp   (eq method :srt-error))
+	   (method-defaultp (not (or method-errorp))))
+      (let ((mesheader) (meserror) (mesmethod) (mesgiven) (mesreturned) (mesexpect))
+	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))	
+	(progn
+	  (when errorp
+	    (setq mesheader (format "%s %s\n" srt-error-label name))
+	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err))))
+	  (when failp
+	    (setq mesheader (format "%s %s\n" srt-fail-label name))))
+	
+	(progn
+	  (when method-defaultp
+	    (setq mesmethod (format "< Tested with %s >\n" method))
+	    (setq mesexpect (format "Expected:\n%s\n" (srt-pp expect)))
+	    (when failp
+	      (setq mesreturned (format "Returned:\n%s\n" (srt-pp (eval given))))))
+	  (when method-errorp
+	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err)))
+	    (setq mesexpect (format "Expected-error:   %s\n" (srt-pp err-type)))))
+	
+	(princ (concat mesheader
+		       (srt-aif mesmethod   it)
+		       (srt-aif mesgiven    it)
+		       (srt-aif meserror    it)
+		       (srt-aif mesreturned it)
+		       (srt-aif mesexpect   it)
+		       "\n"
+		       ))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -185,14 +262,47 @@ Default, enable color if run test on CUI.
 ;;
 
 (defmacro srt-deftest (name keys)
+  "Define a test case with the name A.
+KEYS supported below form.
+
+basic: (:COMPFUN FORM EXPECT)
+error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
-  `(add-to-list 'srt-test-cases '(,name ,keys) t))
+  (let ((fn (lambda (env)
+	      (if (listp env)
+		  (if (srt-list-memq '(:srt-if) env)
+		      env
+		    `(,env))
+		`(,env)))))
+    (cond
+     ((eq (nth 0 keys) :srt-error)
+      (let ((err-type (funcall fn (nth 1 keys)))
+	    (given    (funcall fn (nth 2 keys))))
+	`(add-to-list 'srt-test-cases
+		      '(,name (:srt-testcase
+			       :method   (:default :srt-error)
+			       :err-type (:default ,@err-type)
+			       :given    (:default ,@given)))
+		      t)))
+     (t
+      (let ((method (funcall fn (nth 0 keys)))
+	    (given  (funcall fn (nth 1 keys)))
+	    (expect (funcall fn (nth 2 keys))))
+	`(add-to-list 'srt-test-cases
+		      '(,name (:srt-testcase
+			       :method (:default ,@method)
+			       :given  (:default ,@given)
+			       :expect (:default ,@expect)))
+		      t))))))
 
 (defun srt-prune-tests ()
+  "Prune all the tests."
+  (interactive)
   (setq srt-test-cases nil)
   (message "prune tests completed."))
 
 (defun srt-run-tests ()
+  "Run all the tests."
   (let ((testc  (length srt-test-cases))
 	(failc  0)
 	(errorc 0))
@@ -200,15 +310,16 @@ Default, enable color if run test on CUI.
     (princ (format "%s\n" (emacs-version)))
 
     (dolist (test srt-test-cases)
-      (let ((name (car test))
-	    (keys (cadr test)))
+      (let* ((name  (car  test))
+	     (keys  (cadr test))
+	     (plist (cdr  keys)))	; remove :srt-testcase symbol
 	(condition-case err
-	    (if (srt-test keys)
-		(srt-testpass name keys)
-	      (srt-testfail name keys)
+	    (if (srt-test plist)
+		(srt-testpass name plist)
+	      (srt-testfail name plist)
 	      (srt-inc failc))
 	  (error
-	   (srt-testfail name keys err)
+	   (srt-testfail name plist err)
 	   (srt-inc errorc)))))
 
     (princ "\n\n")
