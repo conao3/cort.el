@@ -28,7 +28,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 2.1
+(defconst srt-version 2.2
   "srt.el version")
 
 (defvar srt-test-cases nil
