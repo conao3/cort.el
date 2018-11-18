@@ -46,6 +46,38 @@ localtest:
 	$(call ECHO_CYAN, "localtest completed!!")
 	@echo "\n"
 
+debug-localtest:
+# Clean all of .elc, compile .el, and run test.
+# don't stop on error, run test on all of emacs.
+
+	$(call ECHO_MAGENTA, "test by emacs-22.1")
+	make clean
+	-EMACS=emacs-22.1 make test
+
+	@echo "\n"
+	$(call ECHO_MAGENTA, "test by emacs-23.4")
+	make clean
+	-EMACS=emacs-23.4 make test
+
+	@echo "\n"
+	$(call ECHO_MAGENTA, "test by emacs-24.5")
+	make clean
+	-EMACS=emacs-24.5 make test
+
+	@echo "\n"
+	$(call ECHO_MAGENTA, "test by emacs-25.3")
+	make clean
+	-EMACS=emacs-25.3 make test
+
+	@echo "\n"
+	$(call ECHO_MAGENTA, "test by emacs-26.1")
+	make clean
+	-EMACS=emacs-26.1 make test
+
+	@echo "\n"
+	$(call ECHO_CYAN, "localtest completed!!")
+	@echo "\n"
+
 clean:
 	-find . -type f -name "*.elc" | xargs rm
 
