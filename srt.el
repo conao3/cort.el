@@ -126,9 +126,17 @@ Emacs-22 doesn't support `incf'."
 
 (defmacro srt-asetq (var &optional body)
   "Anaphoric setq macro."
+  (declare (indent 1))
   `(let ((it ,var))
      (setq ,var ,body)))
 
+(defmacro srt-alet (var &optional body)
+  "Anaphoric setq macro"
+  (declare (indent 1))
+  `(let* ((,var))
+     ,body
+     ,var))
+  
 (defmacro srt-with-gensyms (syms &rest body)
   "Create `let' block with `gensym'ed variables."
   (declare (indent 1))
@@ -275,6 +283,66 @@ If match, return t, otherwise return nil."
 ;;  main macro
 ;;
 
+(defun srt-normalize-env (env)
+  "Return normalized environment.
+Example:
+;; (srt-normalize-env :eq)
+=> (:default :eq)
+
+;; (srt-normalize-env '('b
+                        :srt-if (nil 'c)
+                        :srt-if (t 'a)))
+=> (:default 'b
+    :srt-if (nil 'c)
+    :srt-if (t 'a))"
+  (srt-alet result
+    (if (and (listp env)
+	     (srt-list-memq '(:srt-emacs^
+			      :srt-emacs=
+			      :srt-emacs_
+			      :srt-if)
+			    env))
+	(let ((i 0) (envc (length env)))
+	  (while (< i envc)
+	    (let ((symbol (nth i env))
+		  (value  (nth (1+ i) env)))
+	      (cond
+	       ((eq symbol :srt-emacs^)
+		(let ((version (nth 0 value))
+		      (form    (nth 1 value)))
+		  (srt-asetq result
+		    (append it
+			    `(:srt-if
+			      ((version<= ,version emacs-version) ,form))))
+		  (srt-inc i 2)))
+
+	       ((eq symbol :srt-emacs=)
+		(let ((version (nth 0 value))
+		      (form    (nth 1 value)))
+		  (srt-asetq result
+		    (append it
+			    `(:srt-if
+			      ((version= ,version emacs-version) ,form))))
+		  (srt-inc i 2)))
+
+	       ((eq symbol :srt-emacs_)
+		(let ((version (nth 0 value))
+		      (form    (nth 1 value)))
+		  (srt-asetq result
+		    (append it
+			    `(:srt-if
+			      ((version<= emacs-version ,version) ,form))))
+		  (srt-inc i 2)))
+	       
+	       ((eq symbol :srt-if)
+		(srt-asetq result (append it `(:srt-if ,value)))
+		(srt-inc i 2))
+
+	       (t
+		(srt-asetq result (append it `(:default ,symbol)))
+		(srt-inc i))))))
+      (srt-asetq result (append it `(:default ,env))))))
+
 (defmacro srt-deftest (name keys)
   "Define a test case with the name A.
 KEYS supported below form.
@@ -282,39 +350,35 @@ KEYS supported below form.
 basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
-  (let ((fn (lambda (env)
-	      (if (listp env)
-		  (if (srt-list-memq '(:srt-if) env)
-		      env
-		    `(,env))
-		`(,env)))))
+  (let ((fn #'srt-normalize-env))
     (cond
      ((eq (nth 0 keys) :srt-error)
-      (let ((err-type (funcall fn (nth 1 keys)))
+      (let ((method   (funcall fn (nth 0 keys)))
+	    (err-type (funcall fn (nth 1 keys)))
 	    (given    (funcall fn (nth 2 keys))))
 	`(add-to-list 'srt-test-cases
 		      '(,name (:srt-testcase
-			       :method   (:default :srt-error)
-			       :err-type (:default ,@err-type)
-			       :given    (:default ,@given)))
+			       :method   ,method
+			       :err-type ,err-type
+			       :given    ,given))
 		      t)))
      (t
       (let ((method (funcall fn (nth 0 keys)))
 	    (given  (funcall fn (nth 1 keys)))
 	    (expect (funcall fn (nth 2 keys))))
-	(if (fboundp (srt-get-funcsym (car method)))
+	(if t ;; (fboundp (srt-get-funcsym (car method)))
 	    `(add-to-list 'srt-test-cases
 			  '(,name (:srt-testcase
-				   :method (:default ,@method)
-				   :given  (:default ,@given)
-				   :expect (:default ,@expect)))
+				   :method ,method
+				   :given  ,given
+				   :expect ,expect))
 			  t)
 	  `(progn
 	     (srt-testfail ',name (cdr
 				   '(:srt-testcase
-				     :method (:default ,@method)
-				     :given  (:default ,@given)
-				     :expect (:default ,@expect))))
+				     :method ,method
+				     :given  ,given
+				     :expect ,expect)))
 	     (error "invalid test case"))))))))
 
 (defun srt-prune-tests ()
