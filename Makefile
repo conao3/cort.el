@@ -1,6 +1,7 @@
 TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
 
-EMACS     ?= emacs
+ALL_EMACS_VERS := $(shell compgen -c emacs- | grep -oP '(?<=emacs-)([0-9]|\.)+' | sort | uniq)
+EMACS          ?= emacs
 
 LOAD_PATH := -L $(TOP)
 BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
@@ -20,9 +21,10 @@ build: $(ELCS)
 	@printf "Compiling $<\n"
 	-@$(BATCH) -f batch-byte-compile $<
 
-test: build
+test:
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
+	make clean
 	$(BATCH) -l srt-tests.el -f srt-run-tests
 
 localtest:
@@ -44,6 +46,22 @@ localtest:
 
 	@echo "\n"
 	$(call ECHO_CYAN, "localtest completed!!")
+	@echo "\n"
+
+debug-localtest:
+# Clean all of .elc, compile .el, and run test.
+# don't stop on error, run test on all of emacs.
+# $status = array ${#a[@]}
+
+	for ver in $(ALL_EMACS_VERS); do \
+		$(COLOR_MAGENTA); \
+		echo "===  test by emacs-$${ver}...  ==="; \
+		$(COLOR_DEFAULT); \
+		\
+		EMACS=emacs-$${ver} make test; \
+	done
+	@echo "\n"
+	$(call ECHO_CYAN, "debug-localtest completed!!")
 	@echo "\n"
 
 clean:
