@@ -36,6 +36,12 @@
 (defmacro sym (x)
   `',x)
 
+(defmacro match-expansion (form expect)
+  `(:equal (macroexpand ',form) ,expect))
+
+(defun match-expansion-fn (form expect)
+  `(:equal ',(macroexpand form) ',expect))
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; define tests
@@ -209,6 +215,16 @@
   (:= 10
       (0
        :srt-emacs> (0 10))))
+
+(srt-deftest srt-macro:0
+  (match-expansion
+   (when x (princ x))
+   '(if x (progn (princ x)))))
+
+(srt-deftest srt-macro:0-
+  (match-expansion-fn
+   '(when x (princ x))
+   '(if x (progn (princ x)))))
 
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
