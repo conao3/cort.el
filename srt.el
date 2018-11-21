@@ -31,7 +31,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 2.3
+(defconst srt-version "2.3.1"
   "srt.el version")
 
 (defconst srt-env-symbols '(:srt-emacs<
