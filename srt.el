@@ -119,9 +119,7 @@ Default, enable color if run test on CUI.
   "increment VAR. If given STEP, increment VAR by STEP.
 Emacs-22 doesn't support `incf'."
   (declare (indent 1) (debug t))
-  (if step
-      `(setq ,var (+ ,var ,step))
-    `(setq ,var (+ ,var 1))))
+  `(setq ,var (+ ,var ,(if step step 1))))
 
 (when (version< emacs-version "24.0")
   (defalias 'cl-multiple-value-bind 'multiple-value-bind))
