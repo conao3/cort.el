@@ -24,12 +24,23 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
 (defgroup srt nil
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 2.2
+(defconst srt-version 2.3
   "srt.el version")
+
+(defconst srt-env-symbols '(:srt-emacs<
+			    :srt-emacs<=
+			    :srt-emacs=
+			    :srt-emacs>
+			    :srt-emacs>=
+			    :srt-if)
+  "Test case environment symbols.")
 
 (defvar srt-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
@@ -109,31 +120,65 @@ Default, enable color if run test on CUI.
 (defmacro srt-inc (var &optional step)
   "increment VAR. If given STEP, increment VAR by STEP.
 Emacs-22 doesn't support `incf'."
-  (if step
-      `(setq ,var (+ ,var ,step))
-    `(setq ,var (+ ,var 1))))
+  (declare (indent 1) (debug t))
+  `(setq ,var (+ ,var ,(if step step 1))))
+
+;; defalias cl-symbols for old Emacs.
+(when (version< emacs-version "24.0")
+  (mapc (lambda (x)
+	  (defalias (intern (format "cl-%s" x)) x))
+	'(multiple-value-bind)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  small functions
 ;;
 
-(defmacro srt-aif (test-form then-form &optional else-form)
-  "Anaphoric if macro."
-  (declare (indent 4) (debug t))
-  `(let ((it ,test-form))
-     (if it ,then-form ,else-form)))
+(defmacro srt-aif (test-form* then-form &rest else-form)
+  "Anaphoric if macro.
+This macro expansion is implemented carefully so that sexp is not 
+evaluated multiple times.
 
-(defmacro srt-asetq (var &optional body)
-  "Anaphoric setq macro."
-  `(let ((it ,var))
-     (setq ,var ,body)))
+\(fn (ASYM TEST-FORM) THEN-FORM [ELSE-FORM...])"
+  (declare (indent 2) (debug t))
+  `(let ((,(car test-form*) ,(cadr test-form*)))
+     (if ,(car test-form*) ,then-form ,@else-form)))
+
+(defmacro srt-asetq (sym* &optional body)
+  "Anaphoric setq macro.
+
+\(fn (ASYM SYM) &optional BODY)"
+  (declare (indent 1))
+  `(let ((,(car sym*) ,(cadr sym*)))
+     (setq ,(cadr sym*) ,body)))
+
+(defmacro srt-alet (varlist* &rest body)
+  "Anaphoric let macro. Return first arg value.
+CAUTION:
+`it' has first var value, it is NOT updated if var value changed.
+
+(macroexpand
+ '(srt-alet (it ((result t)))
+  (princ it)))
+=> (let* ((result t)
+          (it result))
+     (progn (princ it))
+     result)
+
+\(fn (ASYM (VARLIST...)) &rest BODY)"
+  (declare (debug t) (indent 1))
+  `(let* (,@(cadr varlist*)
+	  (,(car varlist*) ,(caar (cadr varlist*))))
+     (progn ,@body)
+     ,(caar (cadr varlist*))))
 
 (defmacro srt-with-gensyms (syms &rest body)
-  "Create `let' block with `gensym'ed variables."
+  "Create `let' block with `gensym'ed variables.
+
+\(fn (SYM...) &rest body)"
   (declare (indent 1))
-  `(let ,(mapcar #'(lambda (s)
-                     `(,s (gensym)))
+  `(let ,(mapcar (lambda (s)
+                   `(,s (gensym)))
                  syms)
      ,@body))
 
@@ -176,30 +221,41 @@ Example:
 ;;  support functions
 ;;
 
+(defun srt-get-value-fn (env)
+  "Recursive search function for `srt-get-value'."
+  (srt-aif (it (plist-get env :srt-if))
+      (if (eval (car it))
+  	  (cadr it)
+  	(funcall #'srt-get-value-fn (member :srt-if (cddr env))))))
+
 (defun srt-get-value (plist symbol)
   "Get reasonable value from PLIST.
-Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
-  ;;   (let ((element (plist-get plist symbol))
-  ;; 	(fn (lambda (env)
-  ;; 	      (srt-aif (plist-get env :srt-if)
-  ;; 		  (if (car it)
-  ;; 		      (cadr it)
-  ;; 		    (funcall fn (member :srt-if (cdr env))))))))
-  ;;     (srt-aif (funcall fn element)
-  ;; 	it
-  ;; 	(plist-get element :default)))
-  (let* ((element (plist-get plist symbol))
-	 (env element)
-	 (value))
-    (while (and env (not value))
-      (srt-aif (plist-get env :srt-if)
-	  (if (car it)
-	      (setq value (cadr it))
-	    (setq env (cddr (plist-member env :srt-if))))
-	  (setq env it)))
-    (srt-aif value
+Take SYMBOL value from PLIST and return the value by interpreting srt-if etc.
+
+Example:
+;; (srt-get-value
+;;  '(x (:default 'a :srt-if (t 'b)))
+;; 'x)
+;; => 'b
+;;
+;; (srt-get-value
+;;  '(x (:default 'a :srt-if (nil 'b)))
+;;  'x)
+;; => 'a"
+
+;;   (let ((element (plist-get plist symbol))
+;; 	(fn (lambda (env)
+;;               (srt-aif (it (plist-get env :srt-if))
+;;   		  (if (eval (car it))
+;;   		      (cadr it)
+;;   		    (funcall fn (member :srt-if (cddr env))))))))
+;;     (srt-aif (it (funcall fn element))
+;; 	it
+;;       (plist-get element :default)))
+  (let ((element (plist-get plist symbol)))
+    (srt-aif (it (funcall #'srt-get-value-fn element))
 	it
-	(plist-get element :default))))
+      (plist-get element :default))))
 
 (defun srt-test (plist)
   "Actually execute GIVEN to check it matches EXPECT.
@@ -221,7 +277,7 @@ If match, return t, otherwise return nil."
 
 (defun srt-testpass (name plist)
   "Output messages for test passed."
-  
+
   (let ((mesheader (format "%s %s\n" srt-passed-label name)))
     (princ (concat mesheader))))
 
@@ -248,7 +304,7 @@ If match, return t, otherwise return nil."
 	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err))))
 	  (when failp
 	    (setq mesheader (format "%s %s\n" srt-fail-label name))))
-	
+
 	(progn
 	  (when method-defaultp
 	    (setq mesmethod (format "< Tested with %s >\n" method))
@@ -258,22 +314,81 @@ If match, return t, otherwise return nil."
 	  (when method-errorp
 	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err)))
 	    (setq mesexpect (format "Expected-error:   %s\n" (srt-pp err-type)))))
-	
+
 	(princ (concat mesheader
-		       (srt-aif mesmethod   it)
-		       (srt-aif mesgiven    it)
-		       (srt-aif meserror    it)
-		       (srt-aif mesreturned it)
-		       (srt-aif mesexpect   it)
+		       (srt-aif (it mesmethod)   it)
+		       (srt-aif (it mesgiven)    it)
+		       (srt-aif (it meserror)    it)
+		       (srt-aif (it mesreturned) it)
+		       (srt-aif (it mesexpect)   it)
 		       (if srt-show-backtrace
-			   (srt-aif mesbacktrace it))
+			   (srt-aif (it mesbacktrace) it))
 		       "\n"
 		       ))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  main macro
+;;  Define test phase
 ;;
+
+(defun srt-interpret-env-keyword (env)
+  "Interpret a single keyword and return sexp.
+ENV is list such as (KEYWORD VALUE)"
+  (let ((symbol (car env))
+	(value  (cadr env)))
+    (let ((keyname (prin1-to-string symbol)))
+      (if (string-match (rx (group ":srt-")
+			    (group (or "emacs" "if"))
+			    (? (group (or "<" "<=" "=" ">=" ">"))))
+			keyname)
+	  (cond
+	   ((string= "emacs" (match-string 2 keyname))
+	    (let ((condver  (car value))
+		  (expected (cadr value))
+		  (sign     (match-string 3 keyname)))
+	      (if (string-match "^>=?$" sign)
+		  (progn
+		    (setq sign (replace-regexp-in-string "^>" "<" sign))
+		    (list 2 `(:srt-if
+			      ((not
+				(funcall
+				 (intern ,(concat "version" sign))
+				 emacs-version ,(prin1-to-string condver)))
+			       ,expected))))
+		(list 2 `(:srt-if
+			  ((funcall
+			    (intern ,(concat "version" sign))
+			    emacs-version ,(prin1-to-string condver))
+			   ,expected))))))
+	   
+	   ((string= "if" (match-string 2 keyname))
+	    (list 2 `(:srt-if ,value))))
+
+	(list 1 `(:default ,symbol))))))
+
+(defun srt-normalize-env (env)
+  "Return normalize test environment list.
+
+Example:
+(srt-normalize-env :eq)
+=> (:default :eq)
+
+(srt-normalize-env '('b
+		     :srt-if (t 'a)))
+=> (:default 'b
+    :srt-if (t 'a))
+"
+  (srt-alet (it ((result)))
+    (if (and (listp env) (srt-list-memq srt-env-symbols env))
+	(let ((i 0) (envc (length env)))
+	  (while (< i envc)
+	    (cl-multiple-value-bind (step value)
+		(srt-interpret-env-keyword (nthcdr i env))
+	      (srt-asetq (it result)
+		(append it value))
+	      (srt-inc i step))))
+      (srt-asetq (it result)
+	(append it `(:default ,env))))))
 
 (defmacro srt-deftest (name keys)
   "Define a test case with the name A.
@@ -282,40 +397,41 @@ KEYS supported below form.
 basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
-  (let ((fn (lambda (env)
-	      (if (listp env)
-		  (if (srt-list-memq '(:srt-if) env)
-		      env
-		    `(,env))
-		`(,env)))))
+  (let ((fn #'srt-normalize-env))
     (cond
      ((eq (nth 0 keys) :srt-error)
-      (let ((err-type (funcall fn (nth 1 keys)))
+      (let ((method   (funcall fn (nth 0 keys)))
+	    (err-type (funcall fn (nth 1 keys)))
 	    (given    (funcall fn (nth 2 keys))))
 	`(add-to-list 'srt-test-cases
 		      '(,name (:srt-testcase
-			       :method   (:default :srt-error)
-			       :err-type (:default ,@err-type)
-			       :given    (:default ,@given)))
+			       :method   ,method
+			       :err-type ,err-type
+			       :given    ,given))
 		      t)))
      (t
       (let ((method (funcall fn (nth 0 keys)))
 	    (given  (funcall fn (nth 1 keys)))
 	    (expect (funcall fn (nth 2 keys))))
-	(if (fboundp (srt-get-funcsym (car method)))
+	(if t ;; (fboundp (srt-get-funcsym (car method)))
 	    `(add-to-list 'srt-test-cases
 			  '(,name (:srt-testcase
-				   :method (:default ,@method)
-				   :given  (:default ,@given)
-				   :expect (:default ,@expect)))
+				   :method ,method
+				   :given  ,given
+				   :expect ,expect))
 			  t)
 	  `(progn
 	     (srt-testfail ',name (cdr
 				   '(:srt-testcase
-				     :method (:default ,@method)
-				     :given  (:default ,@given)
-				     :expect (:default ,@expect))))
+				     :method ,method
+				     :given  ,given
+				     :expect ,expect)))
 	     (error "invalid test case"))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Run test phase
+;;
 
 (defun srt-prune-tests ()
   "Prune all the tests."

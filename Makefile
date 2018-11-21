@@ -20,9 +20,10 @@ build: $(ELCS)
 	@printf "Compiling $<\n"
 	-@$(BATCH) -f batch-byte-compile $<
 
-test: build
+test: # build
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
+	make clean
 	$(BATCH) -l srt-tests.el -f srt-run-tests
 
 localtest:

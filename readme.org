@@ -8,7 +8,7 @@
 
 [[./imgs/capture.png]]
 
-** What is it?
+* What is it?
 ~srt.el~ is simplify unit test framework and works with Emacs-22 or above.
 
 ~srt.el~ is one-file simply test package, there're so many merits.
@@ -17,15 +17,15 @@
 - You can test your package as close to vanilla's Emacs.
 - Fail or error tests, output simple and intuitive error message.
 
-** How to use?
+* How to use?
 1. Put ~srt.el~ your package root folder.
 2. Create ~Makefile~, ~.travis.yml~ if you need.
 3. Create testcase difinition file as ~[package-name]-tests.el~.
 
 (Please look at the file of this repository for a practical example.)
 
-*** Makefile
-~Makefile~ sumple as below.
+** Makefile
+~Makefile~ sumple is shown below.
 #+begin_src makefile-bsdmake
   TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
 
@@ -54,8 +54,8 @@
 	   -find . -type f -name "*.elc" | xargs rm
 #+end_src
 
-*** .travis.yml
-~.travis.yml~ sumple as below.
+** .travis.yml
+~.travis.yml~ sumple is shown below.
 #+begin_src fundamental
   language: generic
   sudo: false
@@ -79,8 +79,8 @@
     - make test
 #+end_src
 
-*** srt-test.el
-~srt-test.el~ sumple as below.
+** srt-test.el
+~srt-test.el~ sumple is shown below.
 #+begin_src emacs-lisp
   ;; require depends package
   (require 'srt)
@@ -115,18 +115,23 @@
     (:= (+ 1 2) 5))
 
   (srt-deftest err:1
-    (:error 'void-function
+    (:srt-error 'void-function
 	    (a 'a)))
 
   (srt-deftest err:3
-    (:error 'arith-error
+    (:srt-error 'arith-error
 	    (/ 1 0)))
 
   (srt-deftest srt-if:2
     (:eq 'a
-         ('b
-          :srt-if (nil 'c)
-          :srt-if (t 'a))))
+	 ('b
+	  :srt-if (nil 'c)
+	  :srt-if (t 'a))))
+
+  (srt-deftest srt-emacs=:0
+    (:= 10
+	(0
+	 :srt-emacs> (0 10))))
   ;; ...
 #+end_src
 ~srt-deftest~ will receive ~test-name~ and ~test-configuration~, 
@@ -135,7 +140,7 @@ and ~add-to-list~ to ~srt-test-cases~ defined at inside of ~srt.el~.
 Therefore, ~srt-deftest~ same testcase, not running test twice.
 ~test-name~ shouldn't be unique name.
 
-**** Basic test case (Expected ~t~)
+*** Basic test case (Expected ~t~)
 ~test-configuration~ accept list of the form ~(:KEY GIVEN EXPECT)~,
 expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 
@@ -144,12 +149,12 @@ such as ~eq~, ~equal~, or ~=~.
 
 This flexible test notation is one of the important merits of ~srt.el~.
 
-**** Error expected test case
+*** Error expected test case
 If you pass a list of the form ~(:srt-error 'ERROR-TYPE FORM)~ to ~srt-deftest~,
 ~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
 expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
 
-**** Flexible test case
+*** Change the value expected by the test case (by general boolean values)
 If you want to change the expected form according to the variable
 (or function returns boolean value), use the ~:srt-if~ statement.
 
@@ -197,9 +202,55 @@ If all the first elements are nil, the default value is adopted.
 (You can use ~:srt-if~ statemant for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
 However, such test cases are confusing you in many cases, so you should not use them.)
 
-** Migration
-*** srt v1.0 to v2.0
-**** :error flag has changed to :srt-error
+*** Change the value expected by the test case (by Emacs version)
+If you want to change the expected by Emacs version, use the ~:srt-emacs*~ statement.
+The following symbols are provided.
+- ~:srt-emacs<~
+- ~:srt-emacs<=~
+- ~:srt-emacs=~
+- ~:srt-emacs>=~
+- ~:srt-emacs>~
+
+#+begin_src emacs-lisp
+  (srt-deftest srt-emacs:a0
+    (:= 10
+	(0
+	 :srt-emacs> (0 10))))
+
+  (srt-deftest srt-emacs:a1
+    (:= 10
+	(0
+	 :srt-if ((not
+		   (funcall (intern "version<") emacs-version "0"))
+		  10))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  (srt-deftest srt-emacs:b0
+    (:= 10
+	(0
+	 :srt-emacs<= (0 10))))
+
+  (srt-deftest srt-emacs:b1
+    (:= 10
+	(0
+	 :srt-if (((funcall (intern "version<=") emacs-version "0")
+		   10)))))
+#+end_src
+~srt-emacs:a0~ will be converted to ~srt-emacs:a1~.
+Likewise, ~srt-emacs:b0~ is converted to ~srt-emacs:b1~.
+
+So you can write ~:srt-if~ and ~:srt-emacs*~ statement mixed 
+and the earliest value in the list is adopted for expected value.
+
+Please refer to ~version-to-list~ in subr.el (Emacs source)
+to see the value that ~:srt-emacs*~ can receive. 
+For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
+(however, a value not including a space)
+
+* Migration
+** srt v1.0 to v2.0
+*** :error flag has changed to :srt-error
 ~:error~ flag has changed to ~:srt-error~ so you fix testcase.
 #+begin_src emacs-lisp
   ;; srt v1.0 notation
@@ -213,13 +264,13 @@ However, such test cases are confusing you in many cases, so you should not use 
 		(a 'a)))
 #+end_src
 
-** Why We support Emacs-22?
+* Why We support Emacs-22?
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
 
-** Japanese readme
+* Japanese readme
 There're japanese readme(~readme-ja.org~).
 
-** Welcome PR
+* Welcome PR
 We welcome PR!
 travis CI test ~srt-test.el~ with oll Emacs version 22 or above.
 
