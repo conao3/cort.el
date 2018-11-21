@@ -248,6 +248,64 @@ to see the value that ~:srt-emacs*~ can receive.
 For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
 (however, a value not including a space)
 
+*** Create test case by macro
+When writing many test cases, it is troublesome to write common parts many times.
+
+Therefore, you can let the macro make the test case as shown below.
+
+#+begin_src emacs-lisp
+  (srt-deftest leaf-test/:if-1
+    (:equal
+     (macroexpand-1 '(leaf foo :if t))
+     '(if t
+	  (progn
+	    (require (quote foo) nil nil)))))
+
+  (srt-deftest leaf-test/:if-2
+    (:equal
+     (macroexpand-1 '(leaf foo :if (and t t)))
+     '(if (and t t)
+	  (progn
+	    (require (quote foo) nil nil)))))
+
+  (srt-deftest leaf-test/:if-3
+    (:equal
+     (macroexpand-1 '(leaf foo :if nil))
+     '(if nil
+	  (progn
+	    (require (quote foo) nil nil)))))
+
+  ;; ...
+
+  ;; Almost test case is (srt-deftest NAME (:equal (macroexpand 'FORM) 'EXPECT))
+  ;; -> Create macro to (FORM 'EXPECT) convert to (:equal (macroexpand 'FORM) 'EXPECT)
+
+  ;; test target macro
+  (defmacro package-require (package)
+    `(require ,package))
+
+  ;; Macro to expand FORM and compare it with EXPECT for equal test case
+  (defmacro match-expansion (form expect)
+    `(:equal (macroexpand ',form) ,expect))
+
+  (srt-deftest match-expansion0
+    (match-expansion
+     (package-require 'use-package)
+     '(require 'use-package)))
+
+  (srt-deftest match-expansion1
+    (:equal (macroexpand '(package-require 'use-package))
+	    '(require 'use-package)))
+#+end_src
+
+~match-expansion0~ and ~match-expansion1~ are equivalent since macros are expanded.
+
+(You can also use a function that returns a list to be accepted by ~srt-deftest~ see srt-test.el.
+
+However, test definitions and test runs should usually be separated, 
+and you should not run all forms to immediate when you define a test.
+
+Therefore, we usually recommend using macros.)
 * Migration
 ** srt v1.0 to v2.0
 *** :error flag has changed to :srt-error
@@ -268,7 +326,7 @@ For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctl
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
 
 * Japanese readme
-There're japanese readme(~readme-ja.org~).
+There're japanese readme(~Readme-ja.org~)(obsolete).
 
 * Welcome PR
 We welcome PR!
@@ -277,3 +335,8 @@ travis CI test ~srt-test.el~ with oll Emacs version 22 or above.
 I think that it is difficult to prepare the environment locally, 
 so I think that it is good to throw PR and test travis for the time being!
 Feel free throw PR!
+
+* Special Thanks
+Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
+in developing ~srt.el~.
+Thanks you very much!!
