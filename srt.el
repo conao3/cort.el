@@ -24,6 +24,16 @@
 
 ;;; Code:
 
+(eval-when-compile
+  (require 'cl))
+
+(unless (fboundp 'cl-labels)
+  (defalias 'cl-labels 'labels))
+
+(defmacro alambda (parms &rest body)
+  `(cl-labels ((self ,parms ,@body))
+     #'self))
+
 (defvar srt-test-cases nil)
 
 (defmacro srt-deftest (name keys)
@@ -37,12 +47,12 @@
       (srt-test keys))))
 
 (defun srt-test (keys)
-  (let ((fn (lambda (keys)
-	      (when keys
-		(princ (format "%s, " (car keys)))
-		(funcall fn (cdr keys))))))
-    (funcall fn keys)
-    (princ "\n")))
+  (funcall (alambda (keys)
+		    (when keys
+		      (princ (format "%s, " (car keys)))
+		      (funcall self (cdr keys))))
+	   keys)
+    (princ "\n"))
 
 (provide 'srt)
 ;;; srt.el ends here
