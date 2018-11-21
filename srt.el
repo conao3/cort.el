@@ -121,8 +121,11 @@ Emacs-22 doesn't support `incf'."
   (declare (indent 1) (debug t))
   `(setq ,var (+ ,var ,(if step step 1))))
 
+;; defalias cl-symbols for old Emacs.
 (when (version< emacs-version "24.0")
-  (defalias 'cl-multiple-value-bind 'multiple-value-bind))
+  (mapc (lambda (x)
+	  (defalias (intern (format "cl-%s" x)) x))
+	'(multiple-value-bind)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
