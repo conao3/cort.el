@@ -412,6 +412,13 @@ KEYS supported below form.
 basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
+
+  (let ((symbol (car keys)))
+    (if (fboundp symbol)
+      (if (eq (car (symbol-function symbol)) 'macro)
+	  (setq keys (macroexpand keys))
+	(setq keys (eval keys)))))
+  
   (let ((fn #'srt-normalize-env))
     (srt-case #'eq (nth 0 keys)
       (:srt-error
