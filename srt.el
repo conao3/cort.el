@@ -172,7 +172,8 @@ CAUTION:
 
 (defmacro srt-with-gensyms (syms &rest body)
   "Create `let' block with `gensym'ed variables.
-\(fn (SYM...) &rest BODY)"
+
+\(fn (SYM...) &rest body)"
   (declare (indent 1))
   `(let ,(mapcar (lambda (s)
                    `(,s (gensym)))
@@ -220,7 +221,18 @@ Example:
 
 (defun srt-get-value (plist symbol)
   "Get reasonable value from PLIST.
-Cut SYMBOL value and return the value obtained by interpreting srt-if etc."
+Take SYMBOL value from PLIST and return the value by interpreting srt-if etc.
+
+Example:
+;; (srt-get-value
+;;  '(x (:default 'a :srt-if (t 'b)))
+;; 'x)
+;; => 'b
+;;
+;; (srt-get-value
+;;  '(x (:default 'a :srt-if (nil 'b)))
+;;  'x)
+;; => 'a"
   ;;   (let ((element (plist-get plist symbol))
   ;; 	(fn (lambda (env)
   ;; 	      (srt-aif (plist-get env :srt-if)
@@ -348,6 +360,17 @@ ENV is list such as (KEYWORD VALUE)"
       (list 1 `(:default ,symbol))))))
 
 (defun srt-normalize-env (env)
+  "Return normalize test environment list.
+
+Example:
+(srt-normalize-env :eq)
+=> (:default :eq)
+
+(srt-normalize-env '('b
+		     :srt-if (t 'a)))
+=> (:default 'b
+    :srt-if (t 'a))
+"
   (srt-alet (it ((result)))
     (if (and (listp env) (srt-list-memq srt-env-symbols env))
 	(let ((i 0) (envc (length env)))
