@@ -219,6 +219,13 @@ Example:
 ;;  support functions
 ;;
 
+(defun srt-get-value-fn (env)
+  "Recursive search function for `srt-get-value'."
+  (srt-aif (it (plist-get env :srt-if))
+      (if (eval (car it))
+  	  (cadr it)
+  	(funcall #'srt-get-value-fn (member :srt-if (cddr env))))))
+
 (defun srt-get-value (plist symbol)
   "Get reasonable value from PLIST.
 Take SYMBOL value from PLIST and return the value by interpreting srt-if etc.
@@ -233,27 +240,20 @@ Example:
 ;;  '(x (:default 'a :srt-if (nil 'b)))
 ;;  'x)
 ;; => 'a"
-  ;;   (let ((element (plist-get plist symbol))
-  ;; 	(fn (lambda (env)
-  ;; 	      (srt-aif (plist-get env :srt-if)
-  ;; 		  (if (car it)
-  ;; 		      (cadr it)
-  ;; 		    (funcall fn (member :srt-if (cdr env))))))))
-  ;;     (srt-aif (funcall fn element)
-  ;; 	it
-  ;; 	(plist-get element :default)))
-  (let* ((element (plist-get plist symbol))
-	 (env element)
-	 (value))
-    (while (and env (not value))
-      (srt-aif (it (plist-get env :srt-if))
-	  (if (car it)
-	      (setq value (cadr it))
-	    (setq env (cddr (plist-member env :srt-if))))
-	  (setq env it)))
-    (srt-aif (it value)
+
+;;   (let ((element (plist-get plist symbol))
+;; 	(fn (lambda (env)
+;;               (srt-aif (it (plist-get env :srt-if))
+;;   		  (if (eval (car it))
+;;   		      (cadr it)
+;;   		    (funcall fn (member :srt-if (cddr env))))))))
+;;     (srt-aif (it (funcall fn element))
+;; 	it
+;;       (plist-get element :default)))
+  (let ((element (plist-get plist symbol)))
+    (srt-aif (it (funcall #'srt-get-value-fn element))
 	it
-	(plist-get element :default))))
+      (plist-get element :default))))
 
 (defun srt-test (plist)
   "Actually execute GIVEN to check it matches EXPECT.
