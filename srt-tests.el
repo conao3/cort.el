@@ -205,5 +205,10 @@
 	:srt-if (t 'a)
 	:srt-if (t 'b))))
 
+(srt-deftest srt-emacs=:0
+  (:= 10
+      (0
+       :srt-emacs> (0 10))))
+
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here

@@ -34,9 +34,11 @@
 (defconst srt-version 2.2
   "srt.el version")
 
-(defconst srt-env-symbols '(:srt-emacs^
+(defconst srt-env-symbols '(:srt-emacs<
+			    :srt-emacs<=
 			    :srt-emacs=
-			    :srt-emacs_
+			    :srt-emacs>
+			    :srt-emacs>=
 			    :srt-if)
   "Test case environment symbols.")
 
@@ -326,7 +328,7 @@ If match, return t, otherwise return nil."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;;  main macro
+;;  Define test phase
 ;;
 
 (defun srt-interpret-env-keyword (env)
@@ -334,30 +336,35 @@ If match, return t, otherwise return nil."
 ENV is list such as (KEYWORD VALUE)"
   (let ((symbol (car env))
 	(value  (cadr env)))
-    (cond
-     ((eq symbol :srt-emacs^)
-      (list 2 (let ((version (prin1-to-string (nth 0 value)))
-		    (form    (nth 1 value)))
-		`(:srt-if
-		  ((version<= ,version emacs-version) ,form)))))
+    (let ((keyname (prin1-to-string symbol)))
+      (if (string-match (rx (group ":srt-")
+			    (group (or "emacs" "if"))
+			    (? (group (or "<" "<=" "=" ">=" ">"))))
+			keyname)
+	  (cond
+	   ((string= "emacs" (match-string 2 keyname))
+	    (let ((condver  (car value))
+		  (expected (cadr value))
+		  (sign     (match-string 3 keyname)))
+	      (if (string-match "^>=?$" sign)
+		  (progn
+		    (setq sign (replace-regexp-in-string "^>" "<" sign))
+		    (list 2 `(:srt-if
+			      ((not
+				(funcall
+				 (intern ,(concat "version" sign))
+				 emacs-version ,(prin1-to-string condver)))
+			       ,expected))))
+		(list 2 `(:srt-if
+			  ((funcall
+			    (intern ,(concat "version" sign))
+			    emacs-version ,(prin1-to-string condver))
+			   ,expected))))))
+	   
+	   ((string= "if" (match-string 2 keyname))
+	    (list 2 `(:srt-if ,value))))
 
-     ((eq symbol :srt-emacs=)
-      (list 2 (let ((version (prin1-to-string (nth 0 value)))
-		    (form    (nth 1 value)))
-		`(:srt-if
-		  ((version= ,version emacs-version) ,form)))))
-
-     ((eq symbol :srt-emacs_)
-      (list 2 (let ((version (prin1-to-string (nth 0 value)))
-		    (form    (nth 1 value)))
-		`(:srt-if
-		  ((version<= emacs-version ,version) ,form)))))
-
-     ((eq symbol :srt-if)
-      (list 2 `(:srt-if ,value)))
-
-     (t
-      (list 1 `(:default ,symbol))))))
+	(list 1 `(:default ,symbol))))))
 
 (defun srt-normalize-env (env)
   "Return normalize test environment list.
@@ -420,6 +427,11 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
 				     :given  ,given
 				     :expect ,expect)))
 	     (error "invalid test case"))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;  Run test phase
+;;
 
 (defun srt-prune-tests ()
   "Prune all the tests."
