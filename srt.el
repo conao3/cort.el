@@ -356,8 +356,8 @@ ENV is list such as (KEYWORD VALUE)"
 			    (group (or "emacs" "if"))
 			    (? (group (or "<" "<=" "=" ">=" ">"))))
 			keyname)
-	  (cond
-	   ((string= "emacs" (match-string 2 keyname))
+	  (srt-case #'string= (match-string 2 keyname)
+	   ("emacs"
 	    (let ((condver  (car value))
 		  (expected (cadr value))
 		  (sign     (match-string 3 keyname)))
@@ -376,7 +376,7 @@ ENV is list such as (KEYWORD VALUE)"
 			    emacs-version ,(prin1-to-string condver))
 			   ,expected))))))
 	   
-	   ((string= "if" (match-string 2 keyname))
+	   ("if"
 	    (list 2 `(:srt-if ,value))))
 
 	(list 1 `(:default ,symbol))))))
@@ -413,8 +413,8 @@ basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
   (let ((fn #'srt-normalize-env))
-    (cond
-     ((eq (nth 0 keys) :srt-error)
+    (srt-case #'eq (nth 0 keys)
+     (:srt-error
       (let ((method   (funcall fn (nth 0 keys)))
 	    (err-type (funcall fn (nth 1 keys)))
 	    (given    (funcall fn (nth 2 keys))))
@@ -424,7 +424,7 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
 			       :err-type ,err-type
 			       :given    ,given))
 		      t)))
-     (t
+     (_
       (let ((method (funcall fn (nth 0 keys)))
 	    (given  (funcall fn (nth 1 keys)))
 	    (expect (funcall fn (nth 2 keys))))
