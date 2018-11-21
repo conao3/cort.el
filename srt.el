@@ -31,7 +31,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version 2.3
+(defconst srt-version "2.3.1"
   "srt.el version")
 
 (defconst srt-env-symbols '(:srt-emacs<
@@ -129,6 +129,21 @@ Emacs-22 doesn't support `incf'."
 	  (defalias (intern (format "cl-%s" x)) x))
 	'(multiple-value-bind)))
 
+(defmacro srt-case (fn var &rest conds)
+  "Switch case macro with FN.
+Emacs-22 doesn't support `pcase'."
+  (declare (indent 2))
+  (let ((lcond var))
+    `(cond
+      ,@(mapcar (lambda (x)
+		  (let ((rcond (car x))
+			(form (cadr x)))
+		    (if (eq rcond '_)
+			`(t ,form)
+		      `((funcall ,fn ,lcond ,rcond) ,form))))
+		conds)
+      (t nil))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  small functions
@@ -209,7 +224,7 @@ Example:
   "Return t if LIST contained element of SYMLIST."
   (srt-truep
    (srt-list-digest (lambda (a b) (or a b))
-     (mapcar (lambda (x) (memq x list)) symlist))))
+		    (mapcar (lambda (x) (memq x list)) symlist))))
 
 (defsubst srt-get-funcsym (method)
   "Return function symbol from symbol such as :eq"
@@ -265,15 +280,15 @@ If match, return t, otherwise return nil."
 	(given    (srt-get-value plist :given))
 	(expect   (srt-get-value plist :expect))
 	(err-type (srt-get-value plist :err-type)))
-    (cond
-     ((eq method :srt-error)
-      (eval
-       `(condition-case err
-	    (eval ,given)
-	  (,err-type t))))
-     (t
-      (let* ((funcsym (srt-get-funcsym method)))
-	(funcall funcsym (eval given) (eval expect)))))))
+    (srt-case #'eq method
+      (:srt-error
+       (eval
+	`(condition-case err
+	     (eval ,given)
+	   (,err-type t))))
+      (_
+       (let* ((funcsym (srt-get-funcsym method)))
+	 (funcall funcsym (eval given) (eval expect)))))))
 
 (defun srt-testpass (name plist)
   "Output messages for test passed."
@@ -318,9 +333,9 @@ If match, return t, otherwise return nil."
 	(princ (concat mesheader
 		       (srt-aif (it mesmethod)   it)
 		       (srt-aif (it mesgiven)    it)
-		       (srt-aif (it meserror)    it)
 		       (srt-aif (it mesreturned) it)
 		       (srt-aif (it mesexpect)   it)
+		       (srt-aif (it meserror)    it)
 		       (if srt-show-backtrace
 			   (srt-aif (it mesbacktrace) it))
 		       "\n"
@@ -341,28 +356,28 @@ ENV is list such as (KEYWORD VALUE)"
 			    (group (or "emacs" "if"))
 			    (? (group (or "<" "<=" "=" ">=" ">"))))
 			keyname)
-	  (cond
-	   ((string= "emacs" (match-string 2 keyname))
-	    (let ((condver  (car value))
-		  (expected (cadr value))
-		  (sign     (match-string 3 keyname)))
-	      (if (string-match "^>=?$" sign)
-		  (progn
-		    (setq sign (replace-regexp-in-string "^>" "<" sign))
-		    (list 2 `(:srt-if
-			      ((not
-				(funcall
-				 (intern ,(concat "version" sign))
-				 emacs-version ,(prin1-to-string condver)))
-			       ,expected))))
-		(list 2 `(:srt-if
-			  ((funcall
-			    (intern ,(concat "version" sign))
-			    emacs-version ,(prin1-to-string condver))
-			   ,expected))))))
-	   
-	   ((string= "if" (match-string 2 keyname))
-	    (list 2 `(:srt-if ,value))))
+	  (srt-case #'string= (match-string 2 keyname)
+	    ("emacs"
+	     (let ((condver  (car value))
+		   (expected (cadr value))
+		   (sign     (match-string 3 keyname)))
+	       (if (string-match "^>=?$" sign)
+		   (progn
+		     (setq sign (replace-regexp-in-string "^>" "<" sign))
+		     (list 2 `(:srt-if
+			       ((not
+				 (funcall
+				  (intern ,(concat "version" sign))
+				  emacs-version ,(prin1-to-string condver)))
+				,expected))))
+		 (list 2 `(:srt-if
+			   ((funcall
+			     (intern ,(concat "version" sign))
+			     emacs-version ,(prin1-to-string condver))
+			    ,expected))))))
+	    
+	    ("if"
+	     (list 2 `(:srt-if ,value))))
 
 	(list 1 `(:default ,symbol))))))
 
@@ -379,16 +394,16 @@ Example:
     :srt-if (t 'a))
 "
   (srt-alet (it ((result)))
-    (if (and (listp env) (srt-list-memq srt-env-symbols env))
-	(let ((i 0) (envc (length env)))
-	  (while (< i envc)
-	    (cl-multiple-value-bind (step value)
-		(srt-interpret-env-keyword (nthcdr i env))
+	    (if (and (listp env) (srt-list-memq srt-env-symbols env))
+		(let ((i 0) (envc (length env)))
+		  (while (< i envc)
+		    (cl-multiple-value-bind (step value)
+			(srt-interpret-env-keyword (nthcdr i env))
+		      (srt-asetq (it result)
+				 (append it value))
+		      (srt-inc i step))))
 	      (srt-asetq (it result)
-		(append it value))
-	      (srt-inc i step))))
-      (srt-asetq (it result)
-	(append it `(:default ,env))))))
+			 (append it `(:default ,env))))))
 
 (defmacro srt-deftest (name keys)
   "Define a test case with the name A.
@@ -398,35 +413,35 @@ basic: (:COMPFUN FORM EXPECT)
 error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
   (let ((fn #'srt-normalize-env))
-    (cond
-     ((eq (nth 0 keys) :srt-error)
-      (let ((method   (funcall fn (nth 0 keys)))
-	    (err-type (funcall fn (nth 1 keys)))
-	    (given    (funcall fn (nth 2 keys))))
-	`(add-to-list 'srt-test-cases
-		      '(,name (:srt-testcase
-			       :method   ,method
-			       :err-type ,err-type
-			       :given    ,given))
-		      t)))
-     (t
-      (let ((method (funcall fn (nth 0 keys)))
-	    (given  (funcall fn (nth 1 keys)))
-	    (expect (funcall fn (nth 2 keys))))
-	(if t ;; (fboundp (srt-get-funcsym (car method)))
-	    `(add-to-list 'srt-test-cases
-			  '(,name (:srt-testcase
-				   :method ,method
-				   :given  ,given
-				   :expect ,expect))
-			  t)
-	  `(progn
-	     (srt-testfail ',name (cdr
-				   '(:srt-testcase
-				     :method ,method
-				     :given  ,given
-				     :expect ,expect)))
-	     (error "invalid test case"))))))))
+    (srt-case #'eq (nth 0 keys)
+      (:srt-error
+       (let ((method   (funcall fn (nth 0 keys)))
+	     (err-type (funcall fn (nth 1 keys)))
+	     (given    (funcall fn (nth 2 keys))))
+	 `(add-to-list 'srt-test-cases
+		       '(,name (:srt-testcase
+				:method   ,method
+				:err-type ,err-type
+				:given    ,given))
+		       t)))
+      (_
+       (let ((method (funcall fn (nth 0 keys)))
+	     (given  (funcall fn (nth 1 keys)))
+	     (expect (funcall fn (nth 2 keys))))
+	 (if t ;; (fboundp (srt-get-funcsym (car method)))
+	     `(add-to-list 'srt-test-cases
+			   '(,name (:srt-testcase
+				    :method ,method
+				    :given  ,given
+				    :expect ,expect))
+			   t)
+	   `(progn
+	      (srt-testfail ',name (cdr
+				    '(:srt-testcase
+				      :method ,method
+				      :given  ,given
+				      :expect ,expect)))
+	      (error "invalid test case"))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
