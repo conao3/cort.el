@@ -129,6 +129,21 @@ Emacs-22 doesn't support `incf'."
 	  (defalias (intern (format "cl-%s" x)) x))
 	'(multiple-value-bind)))
 
+(defmacro srt-case (fn var &rest conds)
+  "Switch case macro with FN.
+Emacs-22 doesn't support `pcase'."
+  (declare (indent 2))
+  (let ((lcond var))
+    `(cond
+      ,@(mapcar (lambda (x)
+		  (let ((rcond (car x))
+			(form (cadr x)))
+		    (if (eq rcond '_)
+			`(t ,form)
+		      `((funcall ,fn ,lcond ,rcond) ,form))))
+		conds)
+      (t nil))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  small functions
@@ -265,13 +280,13 @@ If match, return t, otherwise return nil."
 	(given    (srt-get-value plist :given))
 	(expect   (srt-get-value plist :expect))
 	(err-type (srt-get-value plist :err-type)))
-    (cond
-     ((eq method :srt-error)
+    (srt-case #'eq method
+     (:srt-error
       (eval
        `(condition-case err
 	    (eval ,given)
 	  (,err-type t))))
-     (t
+     (_
       (let* ((funcsym (srt-get-funcsym method)))
 	(funcall funcsym (eval given) (eval expect)))))))
 
@@ -318,9 +333,9 @@ If match, return t, otherwise return nil."
 	(princ (concat mesheader
 		       (srt-aif (it mesmethod)   it)
 		       (srt-aif (it mesgiven)    it)
-		       (srt-aif (it meserror)    it)
 		       (srt-aif (it mesreturned) it)
 		       (srt-aif (it mesexpect)   it)
+		       (srt-aif (it meserror)    it)
 		       (if srt-show-backtrace
 			   (srt-aif (it mesbacktrace) it))
 		       "\n"
