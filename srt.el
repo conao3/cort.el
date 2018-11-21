@@ -336,19 +336,19 @@ ENV is list such as (KEYWORD VALUE)"
 	(value  (cadr env)))
     (cond
      ((eq symbol :srt-emacs^)
-      (list 2 (let ((version (nth 0 value))
+      (list 2 (let ((version (prin1-to-string (nth 0 value)))
 		    (form    (nth 1 value)))
 		`(:srt-if
 		  ((version<= ,version emacs-version) ,form)))))
 
      ((eq symbol :srt-emacs=)
-      (list 2 (let ((version (nth 0 value))
+      (list 2 (let ((version (prin1-to-string (nth 0 value)))
 		    (form    (nth 1 value)))
 		`(:srt-if
 		  ((version= ,version emacs-version) ,form)))))
 
      ((eq symbol :srt-emacs_)
-      (list 2 (let ((version (nth 0 value))
+      (list 2 (let ((version (prin1-to-string (nth 0 value)))
 		    (form    (nth 1 value)))
 		`(:srt-if
 		  ((version<= emacs-version ,version) ,form)))))
