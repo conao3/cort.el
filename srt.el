@@ -27,8 +27,8 @@
 (eval-when-compile
   (require 'cl))
 
-(unless (fboundp 'cl-labels)
-  (defalias 'cl-labels 'labels))
+(unless (fboundp 'cl-multiple-value-bind)
+  (defalias 'cl-multiple-value-bind 'multiple-value-bind))
 
 (defmacro alambda (parms &rest body)
   `(cl-labels ((self ,parms ,@body))
@@ -47,12 +47,9 @@
       (srt-test keys))))
 
 (defun srt-test (keys)
-  (funcall (alambda (keys)
-		    (when keys
-		      (princ (format "%s, " (car keys)))
-		      (funcall self (cdr keys))))
-	   keys)
-    (princ "\n"))
+  (cl-multiple-value-bind (given expect)
+      keys
+    (princ (format "%s, %s\n" given expect))))
 
 (provide 'srt)
 ;;; srt.el ends here
