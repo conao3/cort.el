@@ -83,4 +83,3 @@ clean:
 	-find . -type f -name "*.elc" | xargs rm
 
 include Makefunc.mk
-

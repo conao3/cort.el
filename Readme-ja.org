@@ -8,15 +8,15 @@
 
 [[./imgs/capture.png]]
 
-** なにこれ?
+* なにこれ?
 ~cort.el~ は私が[[https://github.com/conao3/leaf.el][leaf.el]]というパッケージを書くために、
 Emacs-22でも完全に動作するテスターがほしいという動機で作成しました。
 
 (余談ですが、[[https://github.com/conao3/leaf.el][leaf.el]]は[[https://github.com/jwiegley/use-package][use-package]], ~package.el~ に代わるパッケージ設定、ダウンロードパッケージです。
-~use-package~ はEmacs-24からしか動作しませんが、 
+~use-package~ はEmacs-24からしか動作しませんが、
 ~leaf.el~ はレガシーEmacsでも ~use-package~ 調のDSLで設定を書きたいという動機で作成されています。)
 
-** メリット
+* メリット
 我々は自分の書いたパッケージがちゃんと動くか、コード改変の度にテストし安全なコミットを行いたいと思っています。
 そしてその動作はパッチを当てたパッケージが上手にS式を変換できるか、また上手にEmacsのバッファなどが操作できるかでテストでき、
 それはそんなに難しくないはずなのです。
@@ -38,13 +38,13 @@ Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/le
 - 1ファイルで完結しており、自分のレポジトリに放り込むだけで使える。
 ことを目標に新しいテスターを開発しました。
 
-** どうやって使うねん
+* どうやって使うねん
 ~cort.el~ の開発動機からわかるようにこのレポジトリの ~cort.el~ を
 自分のレポジトリに放り込むだけで使えます。この仕様は変える予定はありません。
 
 なお、v1.0からはmasterに何かをマージするたびにバージョンタグが上がるようになっています。
 
-*** Makefile
+** Makefile
 まずMakefileを用意し、最低限以下の内容を記述します。
 #+begin_src makefile-bsdmake
   TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
@@ -78,7 +78,7 @@ Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/le
 trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に書きたいので
 用意したほうが良いと思います。
 
-*** .travis.yml
+** .travis.yml
 #+begin_src fundamental
   language: generic
   sudo: false
@@ -108,7 +108,7 @@ trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に�
 「ローカルのテストをパスしないとコミットさせない」という運用を取るなら複数バージョンによる
 テストコマンドを記述することになります。書き方はこのレポジトリのMakefileを参考にしてください。
 
-*** cort-test.el
+** cort-test.el
 #+begin_src emacs-lisp
   ;; パッケージに含まれる.elをrequireします
   (require 'cort)
@@ -155,14 +155,14 @@ trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に�
 ~cort-deftest~ はテスト名とテスト設定を受け取り、内部の変数である ~cort-test-cases~ に ~add-to-list~ します。
 つまり同じテストを2度定義しても1度しか実行されません。なおテスト名は唯一の値である必要はありません。
 
-**** 基本のテストケース(~t~ を期待するテスト)
+*** 基本のテストケース(~t~ を期待するテスト)
 ~cort-deftest~ のテスト設定は ~(:key form expect)~ の形式のリストを受け入れ、
 ~(key form expect)~ を評価した際に ~t~ が返却されることを期待します。
 
 このように定義することにより、比較関数は ~eq~ や ~equal~, ~=~ など真偽値を返す任意の関数を使用できます。
 この柔軟なテスト表記は ~cort.el~ の重要なメリットの一つです。
 
-**** エラーを期待するテストケース
+*** エラーを期待するテストケース
 ~cort-deftest~ に ~(:error 'error-type form)~ の形式のリストを渡した場合、
 ~'error-type~ は[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][エラーシンボル]]を受け取り、 ~(form)~ を評価した際に ~'error-type~ のエラーが発生することを期待します。
 
@@ -177,3 +177,7 @@ travisではEmacs-23から最新のEmacsまででテストが通ることを確�
 
 ローカルで環境を整えるのは大変だと思いますので、とりあえずPR投げてtravisにテストしてもらうのもアリだと思います！
 気軽にPRよろしくおねがいします！
+
+** Special Thanks
+~cort.el~ を作るにあたって、[[http://emacs-jp.github.io/][Emacs-JP]]のフォーラムのメンバーには助言をいただき、とても感謝しています。
+ぜひあなたも参加してみませんか？？リンク先にはSlackの招待リンクがあります。

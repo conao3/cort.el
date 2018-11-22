@@ -46,16 +46,16 @@ it is difficult to understand the displayed error.)
   build: $(ELCS)
 
   %.elc: %.el
-	   @printf "Compiling $<\n"
-	   -@$(BATCH) -f batch-byte-compile $<
+	  @printf "Compiling $<\n"
+	  -@$(BATCH) -f batch-byte-compile $<
 
   test: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make`.
-	   $(BATCH) -l cort-tests.el -f cort-run-tests-batch-and-exit
+	  $(BATCH) -l cort-tests.el -f cort-run-tests-batch-and-exit
 
   clean:
-	   -find . -type f -name "*.elc" | xargs rm
+	  -find . -type f -name "*.elc" | xargs rm
 #+end_src
 
 ** .travis.yml
@@ -120,25 +120,25 @@ it is difficult to understand the displayed error.)
 
   (cort-deftest err:1
     (:cort-error 'void-function
-	    (a 'a)))
+            (a 'a)))
 
   (cort-deftest err:3
     (:cort-error 'arith-error
-	    (/ 1 0)))
+            (/ 1 0)))
 
   (cort-deftest cort-if:2
     (:eq 'a
-	 ('b
-	  :cort-if (nil 'c)
-	  :cort-if (t 'a))))
+         ('b
+          :cort-if (nil 'c)
+          :cort-if (t 'a))))
 
   (cort-deftest cort-emacs=:0
     (:= 10
-	(0
-	 :cort-emacs> (0 10))))
+        (0
+         :cort-emacs> (0 10))))
   ;; ...
 #+end_src
-~cort-deftest~ will receive ~test-name~ and ~test-configuration~, 
+~cort-deftest~ will receive ~test-name~ and ~test-configuration~,
 and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
 
 Therefore, ~cort-deftest~ same testcase, not running test twice.
@@ -165,34 +165,34 @@ If you want to change the expected form according to the variable
 #+begin_src emacs-lisp
   (cort-deftest cort-if:1
     (:eq 'a
-	 ('b
-	  :cort-if (t 'a))))
+         ('b
+          :cort-if (t 'a))))
   ;; compare with `eq' 'a and 'a
   ;; 'a is adopted because first cort-if's VAR is t
 
   (cort-deftest cort-if:2
     (:eq 'a
-	 ('b
-	  :cort-if (nil 'c)
-	  :cort-if (t 'a))))
+         ('b
+          :cort-if (nil 'c)
+          :cort-if (t 'a))))
   ;; compare with `eq' 'a and 'a
   ;; 'a is adopted because second cort-if's VAR is t
   ;; first cort-if statement is ignored
 
   (cort-deftest cort-if:3
     (:eq 'a
-	 ('a
-	  :cort-if (nil 'c)
-	  :cort-if (nil 'd))))
+         ('a
+          :cort-if (nil 'c)
+          :cort-if (nil 'd))))
   ;; compare with `eq' 'a and 'a
   ;; any cort-if statement is ignored because any cort-if's VAR is nil.
   ;; so 'a is adopted, default value.
 
   (cort-deftest cort-if:4
     (:eq 'a
-	 ('b
-	  :cort-if (t 'a)
-	  :cort-if (t 'b))))
+         ('b
+          :cort-if (t 'a)
+          :cort-if (t 'b))))
   ;; compare with `eq' 'a and 'a
   ;; 'a is adopted because first cort-if's VAR is t
   ;; second cort-if statemment is ignored, because first cort-if's VAR is t.
@@ -218,28 +218,28 @@ The following symbols are provided.
 #+begin_src emacs-lisp
   (cort-deftest cort-emacs:a0
     (:= 10
-	(0
-	 :cort-emacs> (0 10))))
+        (0
+         :cort-emacs> (0 10))))
 
   (cort-deftest cort-emacs:a1
     (:= 10
-	(0
-	 :cort-if ((not
-		   (funcall (intern "version<") emacs-version "0"))
-		  10))))
+        (0
+         :cort-if ((not
+                   (funcall (intern "version<") emacs-version "0"))
+                  10))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (cort-deftest cort-emacs:b0
     (:= 10
-	(0
-	 :cort-emacs<= (0 10))))
+        (0
+         :cort-emacs<= (0 10))))
 
   (cort-deftest cort-emacs:b1
     (:= 10
-	(0
-	 :cort-if (((funcall (intern "version<=") emacs-version "0")
-		   10)))))
+        (0
+         :cort-if (((funcall (intern "version<=") emacs-version "0")
+                   10)))))
 #+end_src
 ~cort-emacs:a0~ will be converted to ~cort-emacs:a1~.
 Likewise, ~cort-emacs:b0~ is converted to ~cort-emacs:b1~.
@@ -262,22 +262,22 @@ Therefore, you can let the macro make the test case as shown below.
     (:equal
      (macroexpand-1 '(leaf foo :if t))
      '(if t
-	  (progn
-	    (require (quote foo) nil nil)))))
+          (progn
+            (require (quote foo) nil nil)))))
 
   (cort-deftest leaf-test/:if-2
     (:equal
      (macroexpand-1 '(leaf foo :if (and t t)))
      '(if (and t t)
-	  (progn
-	    (require (quote foo) nil nil)))))
+          (progn
+            (require (quote foo) nil nil)))))
 
   (cort-deftest leaf-test/:if-3
     (:equal
      (macroexpand-1 '(leaf foo :if nil))
      '(if nil
-	  (progn
-	    (require (quote foo) nil nil)))))
+          (progn
+            (require (quote foo) nil nil)))))
 
   ;; ...
 
@@ -299,7 +299,7 @@ Therefore, you can let the macro make the test case as shown below.
 
   (cort-deftest match-expansion1
     (:equal (macroexpand '(package-require 'use-package))
-	    '(require 'use-package)))
+            '(require 'use-package)))
 #+end_src
 
 ~match-expansion0~ and ~match-expansion1~ are equivalent since macros are expanded.
@@ -318,12 +318,12 @@ Therefore, we usually recommend using macros.)
   ;; cort v1.0 notation
   (cort-deftest err:1
     (:error 'void-function
-	    (a 'a)))
+            (a 'a)))
 
   ;; cort v2.0 notation
   (cort-deftest err:1
     (:cort-error 'void-function
-		(a 'a)))
+                (a 'a)))
 #+end_src
 
 * Why We support Emacs-22?

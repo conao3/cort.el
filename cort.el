@@ -35,11 +35,11 @@
   "cort.el version")
 
 (defconst cort-env-symbols '(:cort-emacs<
-			    :cort-emacs<=
-			    :cort-emacs=
-			    :cort-emacs>
-			    :cort-emacs>=
-			    :cort-if)
+                             :cort-emacs<=
+                             :cort-emacs=
+                             :cort-emacs>
+                             :cort-emacs>=
+                             :cort-if)
   "Test case environment symbols.")
 
 (defvar cort-test-cases nil
@@ -126,8 +126,8 @@ Emacs-22 doesn't support `incf'."
 ;; defalias cl-symbols for old Emacs.
 (when (version< emacs-version "24.0")
   (mapc (lambda (x)
-	  (defalias (intern (format "cl-%s" x)) x))
-	'(multiple-value-bind)))
+          (defalias (intern (format "cl-%s" x)) x))
+        '(multiple-value-bind)))
 
 (defmacro cort-case (fn var &rest conds)
   "Switch case macro with FN.
@@ -136,12 +136,12 @@ Emacs-22 doesn't support `pcase'."
   (let ((lcond var))
     `(cond
       ,@(mapcar (lambda (x)
-		  (let ((rcond (car x))
-			(form (cadr x)))
-		    (if (eq rcond '_)
-			`(t ,form)
-		      `((funcall ,fn ,lcond ,rcond) ,form))))
-		conds)
+                  (let ((rcond (car x))
+                        (form (cadr x)))
+                    (if (eq rcond '_)
+                        `(t ,form)
+                      `((funcall ,fn ,lcond ,rcond) ,form))))
+                conds)
       (t nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -183,7 +183,7 @@ CAUTION:
 \(fn (ASYM (VARLIST...)) &rest BODY)"
   (declare (debug t) (indent 1))
   `(let* (,@(cadr varlist*)
-	  (,(car varlist*) ,(caar (cadr varlist*))))
+          (,(car varlist*) ,(caar (cadr varlist*))))
      (progn ,@body)
      ,(caar (cadr varlist*))))
 
@@ -224,7 +224,7 @@ Example:
   "Return t if LIST contained element of SYMLIST."
   (cort-truep
    (cort-list-digest (lambda (a b) (or a b))
-		    (mapcar (lambda (x) (memq x list)) symlist))))
+                     (mapcar (lambda (x) (memq x list)) symlist))))
 
 (defsubst cort-get-funcsym (method)
   "Return function symbol from symbol such as :eq"
@@ -239,9 +239,9 @@ Example:
 (defun cort-get-value-fn (env)
   "Recursive search function for `cort-get-value'."
   (cort-aif (it (plist-get env :cort-if))
-      (if (eval (car it))
-  	  (cadr it)
-  	(funcall #'cort-get-value-fn (member :cort-if (cddr env))))))
+            (if (eval (car it))
+                (cadr it)
+              (funcall #'cort-get-value-fn (member :cort-if (cddr env))))))
 
 (defun cort-get-value (plist symbol)
   "Get reasonable value from PLIST.
@@ -258,37 +258,37 @@ Example:
 ;;  'x)
 ;; => 'a"
 
-;;   (let ((element (plist-get plist symbol))
-;; 	(fn (lambda (env)
-;;               (cort-aif (it (plist-get env :cort-if))
-;;   		  (if (eval (car it))
-;;   		      (cadr it)
-;;   		    (funcall fn (member :cort-if (cddr env))))))))
-;;     (cort-aif (it (funcall fn element))
-;; 	it
-;;       (plist-get element :default)))
+  ;;   (let ((element (plist-get plist symbol))
+  ;;    (fn (lambda (env)
+  ;;               (cort-aif (it (plist-get env :cort-if))
+  ;;                      (if (eval (car it))
+  ;;                          (cadr it)
+  ;;                        (funcall fn (member :cort-if (cddr env))))))))
+  ;;     (cort-aif (it (funcall fn element))
+  ;;    it
+  ;;       (plist-get element :default)))
   (let ((element (plist-get plist symbol)))
     (cort-aif (it (funcall #'cort-get-value-fn element))
-	it
-      (plist-get element :default))))
+              it
+              (plist-get element :default))))
 
 (defun cort-test (plist)
   "Actually execute GIVEN to check it matches EXPECT.
 If match, return t, otherwise return nil."
 
   (let ((method   (cort-get-value plist :method))
-	(given    (cort-get-value plist :given))
-	(expect   (cort-get-value plist :expect))
-	(err-type (cort-get-value plist :err-type)))
+        (given    (cort-get-value plist :given))
+        (expect   (cort-get-value plist :expect))
+        (err-type (cort-get-value plist :err-type)))
     (cort-case #'eq method
-      (:cort-error
-       (eval
-	`(condition-case err
-	     (eval ,given)
-	   (,err-type t))))
-      (_
-       (let* ((funcsym (cort-get-funcsym method)))
-	 (funcall funcsym (eval given) (eval expect)))))))
+               (:cort-error
+                (eval
+                 `(condition-case err
+                      (eval ,given)
+                    (,err-type t))))
+               (_
+                (let* ((funcsym (cort-get-funcsym method)))
+                  (funcall funcsym (eval given) (eval expect)))))))
 
 (defun cort-testpass (name plist)
   "Output messages for test passed."
@@ -300,46 +300,46 @@ If match, return t, otherwise return nil."
   "Output messages for test failed."
 
   (let ((method   (cort-get-value plist :method))
-	(given    (cort-get-value plist :given))
-	(expect   (cort-get-value plist :expect))
-	(err-type (cort-get-value plist :err-type)))
+        (given    (cort-get-value plist :given))
+        (expect   (cort-get-value plist :expect))
+        (err-type (cort-get-value plist :err-type)))
     (let* ((failp           (not err))
-	   (errorp          (not failp))
-	   (method-errorp   (eq method :cort-error))
-	   (method-defaultp (not (or method-errorp))))
+           (errorp          (not failp))
+           (method-errorp   (eq method :cort-error))
+           (method-defaultp (not (or method-errorp))))
       (let ((mesheader) (mesmethod) (mesgiven) (mesreturned) (mesexpect)
-	    (meserror) (mesbacktrace))
-	(setq mesgiven  (format "Given:\n%s\n" (cort-pp given)))
-	(setq mesbacktrace (format "Backtrace:\n%s\n"
-				   (with-output-to-string
-				     (backtrace))))
-	(progn
-	  (when errorp
-	    (setq mesheader (format "%s %s\n" cort-error-label name))
-	    (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
-	  (when failp
-	    (setq mesheader (format "%s %s\n" cort-fail-label name))))
+            (meserror) (mesbacktrace))
+        (setq mesgiven  (format "Given:\n%s\n" (cort-pp given)))
+        (setq mesbacktrace (format "Backtrace:\n%s\n"
+                                   (with-output-to-string
+                                     (backtrace))))
+        (progn
+          (when errorp
+            (setq mesheader (format "%s %s\n" cort-error-label name))
+            (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
+          (when failp
+            (setq mesheader (format "%s %s\n" cort-fail-label name))))
 
-	(progn
-	  (when method-defaultp
-	    (setq mesmethod (format "< Tested with %s >\n" method))
-	    (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
-	    (when failp
-	      (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given))))))
-	  (when method-errorp
-	    (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
-	    (setq mesexpect (format "Expected-error:   %s\n" (cort-pp err-type)))))
+        (progn
+          (when method-defaultp
+            (setq mesmethod (format "< Tested with %s >\n" method))
+            (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
+            (when failp
+              (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given))))))
+          (when method-errorp
+            (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
+            (setq mesexpect (format "Expected-error:   %s\n" (cort-pp err-type)))))
 
-	(princ (concat mesheader
-		       (cort-aif (it mesmethod)   it)
-		       (cort-aif (it mesgiven)    it)
-		       (cort-aif (it mesreturned) it)
-		       (cort-aif (it mesexpect)   it)
-		       (cort-aif (it meserror)    it)
-		       (if cort-show-backtrace
-			   (cort-aif (it mesbacktrace) it))
-		       "\n"
-		       ))))))
+        (princ (concat mesheader
+                       (cort-aif (it mesmethod)   it)
+                       (cort-aif (it mesgiven)    it)
+                       (cort-aif (it mesreturned) it)
+                       (cort-aif (it mesexpect)   it)
+                       (cort-aif (it meserror)    it)
+                       (if cort-show-backtrace
+                           (cort-aif (it mesbacktrace) it))
+                       "\n"
+                       ))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -350,36 +350,36 @@ If match, return t, otherwise return nil."
   "Interpret a single keyword and return sexp.
 ENV is list such as (KEYWORD VALUE)"
   (let ((symbol (car env))
-	(value  (cadr env)))
+        (value  (cadr env)))
     (let ((keyname (prin1-to-string symbol)))
       (if (string-match (rx (group ":cort-")
-			    (group (or "emacs" "if"))
-			    (? (group (or "<" "<=" "=" ">=" ">"))))
-			keyname)
-	  (cort-case #'string= (match-string 2 keyname)
-	    ("emacs"
-	     (let ((condver  (car value))
-		   (expected (cadr value))
-		   (sign     (match-string 3 keyname)))
-	       (if (string-match "^>=?$" sign)
-		   (progn
-		     (setq sign (replace-regexp-in-string "^>" "<" sign))
-		     (list 2 `(:cort-if
-			       ((not
-				 (funcall
-				  (intern ,(concat "version" sign))
-				  emacs-version ,(prin1-to-string condver)))
-				,expected))))
-		 (list 2 `(:cort-if
-			   ((funcall
-			     (intern ,(concat "version" sign))
-			     emacs-version ,(prin1-to-string condver))
-			    ,expected))))))
-	    
-	    ("if"
-	     (list 2 `(:cort-if ,value))))
+                            (group (or "emacs" "if"))
+                            (? (group (or "<" "<=" "=" ">=" ">"))))
+                        keyname)
+          (cort-case #'string= (match-string 2 keyname)
+                     ("emacs"
+                      (let ((condver  (car value))
+                            (expected (cadr value))
+                            (sign     (match-string 3 keyname)))
+                        (if (string-match "^>=?$" sign)
+                            (progn
+                              (setq sign (replace-regexp-in-string "^>" "<" sign))
+                              (list 2 `(:cort-if
+                                        ((not
+                                          (funcall
+                                           (intern ,(concat "version" sign))
+                                           emacs-version ,(prin1-to-string condver)))
+                                         ,expected))))
+                          (list 2 `(:cort-if
+                                    ((funcall
+                                      (intern ,(concat "version" sign))
+                                      emacs-version ,(prin1-to-string condver))
+                                     ,expected))))))
+                     
+                     ("if"
+                      (list 2 `(:cort-if ,value))))
 
-	(list 1 `(:default ,symbol))))))
+        (list 1 `(:default ,symbol))))))
 
 (defun cort-normalize-env (env)
   "Return normalize test environment list.
@@ -389,21 +389,21 @@ Example:
 => (:default :eq)
 
 (cort-normalize-env '('b
-		     :cort-if (t 'a)))
+                     :cort-if (t 'a)))
 => (:default 'b
     :cort-if (t 'a))
 "
   (cort-alet (it ((result)))
-	    (if (and (listp env) (cort-list-memq cort-env-symbols env))
-		(let ((i 0) (envc (length env)))
-		  (while (< i envc)
-		    (cl-multiple-value-bind (step value)
-			(cort-interpret-env-keyword (nthcdr i env))
-		      (cort-asetq (it result)
-				 (append it value))
-		      (cort-inc i step))))
-	      (cort-asetq (it result)
-			 (append it `(:default ,env))))))
+             (if (and (listp env) (cort-list-memq cort-env-symbols env))
+                 (let ((i 0) (envc (length env)))
+                   (while (< i envc)
+                     (cl-multiple-value-bind (step value)
+                         (cort-interpret-env-keyword (nthcdr i env))
+                       (cort-asetq (it result)
+                                   (append it value))
+                       (cort-inc i step))))
+               (cort-asetq (it result)
+                           (append it `(:default ,env))))))
 
 (defmacro cort-deftest (name keys)
   "Define a test case with the name A.
@@ -415,40 +415,40 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
 
   (let ((symbol (car keys)))
     (if (fboundp symbol)
-      (if (eq (car (symbol-function symbol)) 'macro)
-	  (setq keys (macroexpand keys))
-	(setq keys (eval keys)))))
+        (if (eq (car (symbol-function symbol)) 'macro)
+            (setq keys (macroexpand keys))
+          (setq keys (eval keys)))))
   
   (let ((fn #'cort-normalize-env))
     (cort-case #'eq (nth 0 keys)
-      (:cort-error
-       (let ((method   (funcall fn (nth 0 keys)))
-	     (err-type (funcall fn (nth 1 keys)))
-	     (given    (funcall fn (nth 2 keys))))
-	 `(add-to-list 'cort-test-cases
-		       '(,name (:cort-testcase
-				:method   ,method
-				:err-type ,err-type
-				:given    ,given))
-		       t)))
-      (_
-       (let ((method (funcall fn (nth 0 keys)))
-	     (given  (funcall fn (nth 1 keys)))
-	     (expect (funcall fn (nth 2 keys))))
-	 (if t ;; (fboundp (cort-get-funcsym (car method)))
-	     `(add-to-list 'cort-test-cases
-			   '(,name (:cort-testcase
-				    :method ,method
-				    :given  ,given
-				    :expect ,expect))
-			   t)
-	   `(progn
-	      (cort-testfail ',name (cdr
-				    '(:cort-testcase
-				      :method ,method
-				      :given  ,given
-				      :expect ,expect)))
-	      (error "invalid test case"))))))))
+               (:cort-error
+                (let ((method   (funcall fn (nth 0 keys)))
+                      (err-type (funcall fn (nth 1 keys)))
+                      (given    (funcall fn (nth 2 keys))))
+                  `(add-to-list 'cort-test-cases
+                                '(,name (:cort-testcase
+                                         :method   ,method
+                                         :err-type ,err-type
+                                         :given    ,given))
+                                t)))
+               (_
+                (let ((method (funcall fn (nth 0 keys)))
+                      (given  (funcall fn (nth 1 keys)))
+                      (expect (funcall fn (nth 2 keys))))
+                  (if t ;; (fboundp (cort-get-funcsym (car method)))
+                      `(add-to-list 'cort-test-cases
+                                    '(,name (:cort-testcase
+                                             :method ,method
+                                             :given  ,given
+                                             :expect ,expect))
+                                    t)
+                    `(progn
+                       (cort-testfail ',name (cdr
+                                              '(:cort-testcase
+                                                :method ,method
+                                                :given  ,given
+                                                :expect ,expect)))
+                       (error "invalid test case"))))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -464,32 +464,32 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
 (defun cort-run-tests ()
   "Run all the tests."
   (let ((testc  (length cort-test-cases))
-	(failc  0)
-	(errorc 0))
+        (failc  0)
+        (errorc 0))
     (princ (format cort-header-message (length cort-test-cases)))
     (princ (format "%s\n" (emacs-version)))
 
     (dolist (test cort-test-cases)
       (let* ((name  (car  test))
-	     (keys  (cadr test))
-	     (plist (cdr  keys)))	; remove :cort-testcase symbol
-	(condition-case err
-	    (if (cort-test plist)
-		(cort-testpass name plist)
-	      (cort-testfail name plist)
-	      (cort-inc failc))
-	  (error
-	   (cort-testfail name plist err)
-	   (cort-inc errorc)))))
+             (keys  (cadr test))
+             (plist (cdr  keys)))       ; remove :cort-testcase symbol
+        (condition-case err
+            (if (cort-test plist)
+                (cort-testpass name plist)
+              (cort-testfail name plist)
+              (cort-inc failc))
+          (error
+           (cort-testfail name plist err)
+           (cort-inc errorc)))))
 
     (princ "\n\n")
     (if (or (< 0 failc) (< 0 errorc))
-	(if cort-debug
-	    (princ "Test failed!!\n")
-	  (error (format cort-error-message
-			 testc (- testc failc errorc) failc errorc)))
+        (if cort-debug
+            (princ "Test failed!!\n")
+          (error (format cort-error-message
+                         testc (- testc failc errorc) failc errorc)))
       (princ (format cort-passed-message
-		     testc (- testc failc errorc) failc errorc)))))
+                     testc (- testc failc errorc) failc errorc)))))
 
 (provide 'cort)
 ;;; cort.el ends here
