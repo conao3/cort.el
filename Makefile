@@ -24,7 +24,7 @@ test: # build
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
 	make clean
-	$(BATCH) -l srt-tests.el -f srt-run-tests
+#	$(BATCH) -l srt-tests.el -f srt-run-tests
 
 localtest:
 # Clean all of .elc, compile .el, and run test.
