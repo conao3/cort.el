@@ -1,17 +1,17 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-* srt.el
-[[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
-[[https://travis-ci.org/conao3/srt.el][https://img.shields.io/travis/conao3/srt.el/master.svg?style=flat-square]]
-[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/conao3/srt.el.svg?style=flat-square]]
+* cort.el
+[[https://github.com/conao3/cort.el][https://img.shields.io/github/tag/conao3/cort.el.svg?style=flat-square]]
+[[https://travis-ci.org/conao3/cort.el][https://img.shields.io/travis/conao3/cort.el/master.svg?style=flat-square]]
+[[https://github.com/conao3/cort.el][https://img.shields.io/github/license/conao3/cort.el.svg?style=flat-square]]
 
 [[./imgs/capture.png]]
 
 * What is it?
-~srt.el~ is simplify unit test framework and works with Emacs-22 or above.
+~cort.el~ is simplify unit test framework and works with Emacs-22 or above.
 
-~srt.el~ is one-file simply test package, there're so many merits.
+~cort.el~ is one-file simply test package, there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
 - You can test your package as close to vanilla's Emacs.
@@ -22,7 +22,7 @@ operates from Emacs-24 and I think that
 it is difficult to understand the displayed error.)
 
 * How to use?
-1. Put ~srt.el~ your package root folder.
+1. Put ~cort.el~ your package root folder.
 2. Create ~Makefile~, ~.travis.yml~ if you need.
 3. Create testcase difinition file as ~[package-name]-tests.el~.
 
@@ -38,7 +38,7 @@ it is difficult to understand the displayed error.)
   LOAD_PATH := -L $(TOP)
   BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
 
-  ELS   := srt.el         # compiling .el list
+  ELS   := cort.el         # compiling .el list
   ELCS  := $(ELS:.el=.elc)
 
   all: build
@@ -52,7 +52,7 @@ it is difficult to understand the displayed error.)
   test: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make`.
-	   $(BATCH) -l srt-tests.el -f srt-run-tests-batch-and-exit
+	   $(BATCH) -l cort-tests.el -f cort-run-tests-batch-and-exit
 
   clean:
 	   -find . -type f -name "*.elc" | xargs rm
@@ -83,11 +83,11 @@ it is difficult to understand the displayed error.)
     - make test
 #+end_src
 
-** srt-test.el
-~srt-test.el~ sumple is shown below.
+** cort-test.el
+~cort-test.el~ sumple is shown below.
 #+begin_src emacs-lisp
   ;; require depends package
-  (require 'srt)
+  (require 'cort)
 
   ;; if you need temporary functions for test, define this.
   (defun quote-a ()
@@ -97,51 +97,51 @@ it is difficult to understand the displayed error.)
     `',x)
 
   ;; define test cases.
-  (srt-deftest simple:equal
+  (cort-deftest simple:equal
     (:equal '(a b c) '(a b c)))
 
-  (srt-deftest simple:=
+  (cort-deftest simple:=
     (:= 100 100))
 
-  (srt-deftest quote-a:0
+  (cort-deftest quote-a:0
     (:eq 'a 'a))
 
-  (srt-deftest quote-a:1
+  (cort-deftest quote-a:1
     (:eq (quote-a) 'a))
 
-  (srt-deftest sym:1
+  (cort-deftest sym:1
     (:eq (sym a) 'a))
 
-  (srt-deftest sym:4
+  (cort-deftest sym:4
     (:equal (sym (a b c)) '(a b c)))
 
-  (srt-deftest error-test
+  (cort-deftest error-test
     (:= (+ 1 2) 5))
 
-  (srt-deftest err:1
-    (:srt-error 'void-function
+  (cort-deftest err:1
+    (:cort-error 'void-function
 	    (a 'a)))
 
-  (srt-deftest err:3
-    (:srt-error 'arith-error
+  (cort-deftest err:3
+    (:cort-error 'arith-error
 	    (/ 1 0)))
 
-  (srt-deftest srt-if:2
+  (cort-deftest cort-if:2
     (:eq 'a
 	 ('b
-	  :srt-if (nil 'c)
-	  :srt-if (t 'a))))
+	  :cort-if (nil 'c)
+	  :cort-if (t 'a))))
 
-  (srt-deftest srt-emacs=:0
+  (cort-deftest cort-emacs=:0
     (:= 10
 	(0
-	 :srt-emacs> (0 10))))
+	 :cort-emacs> (0 10))))
   ;; ...
 #+end_src
-~srt-deftest~ will receive ~test-name~ and ~test-configuration~, 
-and ~add-to-list~ to ~srt-test-cases~ defined at inside of ~srt.el~.
+~cort-deftest~ will receive ~test-name~ and ~test-configuration~, 
+and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
 
-Therefore, ~srt-deftest~ same testcase, not running test twice.
+Therefore, ~cort-deftest~ same testcase, not running test twice.
 ~test-name~ shouldn't be unique name.
 
 *** Basic test case (Expected ~t~)
@@ -151,104 +151,104 @@ expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 By defining like this, any comparison function can use that returns a boolean value
 such as ~eq~, ~equal~, or ~=~.
 
-This flexible test notation is one of the important merits of ~srt.el~.
+This flexible test notation is one of the important merits of ~cort.el~.
 
 *** Error expected test case
-If you pass a list of the form ~(:srt-error 'ERROR-TYPE FORM)~ to ~srt-deftest~,
+If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
 ~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
 expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
 
 *** Change the value expected by the test case (by general boolean values)
 If you want to change the expected form according to the variable
-(or function returns boolean value), use the ~:srt-if~ statement.
+(or function returns boolean value), use the ~:cort-if~ statement.
 
 #+begin_src emacs-lisp
-  (srt-deftest srt-if:1
+  (cort-deftest cort-if:1
     (:eq 'a
 	 ('b
-	  :srt-if (t 'a))))
+	  :cort-if (t 'a))))
   ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because first srt-if's VAR is t
+  ;; 'a is adopted because first cort-if's VAR is t
 
-  (srt-deftest srt-if:2
+  (cort-deftest cort-if:2
     (:eq 'a
 	 ('b
-	  :srt-if (nil 'c)
-	  :srt-if (t 'a))))
+	  :cort-if (nil 'c)
+	  :cort-if (t 'a))))
   ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because second srt-if's VAR is t
-  ;; first srt-if statement is ignored
+  ;; 'a is adopted because second cort-if's VAR is t
+  ;; first cort-if statement is ignored
 
-  (srt-deftest srt-if:3
+  (cort-deftest cort-if:3
     (:eq 'a
 	 ('a
-	  :srt-if (nil 'c)
-	  :srt-if (nil 'd))))
+	  :cort-if (nil 'c)
+	  :cort-if (nil 'd))))
   ;; compare with `eq' 'a and 'a
-  ;; any srt-if statement is ignored because any srt-if's VAR is nil.
+  ;; any cort-if statement is ignored because any cort-if's VAR is nil.
   ;; so 'a is adopted, default value.
 
-  (srt-deftest srt-if:4
+  (cort-deftest cort-if:4
     (:eq 'a
 	 ('b
-	  :srt-if (t 'a)
-	  :srt-if (t 'b))))
+	  :cort-if (t 'a)
+	  :cort-if (t 'b))))
   ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because first srt-if's VAR is t
-  ;; second srt-if statemment is ignored, because first srt-if's VAR is t.
+  ;; 'a is adopted because first cort-if's VAR is t
+  ;; second cort-if statemment is ignored, because first cort-if's VAR is t.
 #+end_src
 
-You can specify many ~:srt-if~ statemant, and you should specify a list like ~(COND FORM)~ for each.
+You can specify many ~:cort-if~ statemant, and you should specify a list like ~(COND FORM)~ for each.
 When the first element of list is ~t~, it is adopted as the form expected by the second element of it.
 
 If all the first elements are nil, the default value is adopted.
 
-(You can use ~:srt-if~ statemant for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
+(You can use ~:cort-if~ statemant for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
 However, such test cases are confusing you in many cases, so you should not use them.)
 
 *** Change the value expected by the test case (by Emacs version)
-If you want to change the expected by Emacs version, use the ~:srt-emacs*~ statement.
+If you want to change the expected by Emacs version, use the ~:cort-emacs*~ statement.
 The following symbols are provided.
-- ~:srt-emacs<~
-- ~:srt-emacs<=~
-- ~:srt-emacs=~
-- ~:srt-emacs>=~
-- ~:srt-emacs>~
+- ~:cort-emacs<~
+- ~:cort-emacs<=~
+- ~:cort-emacs=~
+- ~:cort-emacs>=~
+- ~:cort-emacs>~
 
 #+begin_src emacs-lisp
-  (srt-deftest srt-emacs:a0
+  (cort-deftest cort-emacs:a0
     (:= 10
 	(0
-	 :srt-emacs> (0 10))))
+	 :cort-emacs> (0 10))))
 
-  (srt-deftest srt-emacs:a1
+  (cort-deftest cort-emacs:a1
     (:= 10
 	(0
-	 :srt-if ((not
+	 :cort-if ((not
 		   (funcall (intern "version<") emacs-version "0"))
 		  10))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-  (srt-deftest srt-emacs:b0
+  (cort-deftest cort-emacs:b0
     (:= 10
 	(0
-	 :srt-emacs<= (0 10))))
+	 :cort-emacs<= (0 10))))
 
-  (srt-deftest srt-emacs:b1
+  (cort-deftest cort-emacs:b1
     (:= 10
 	(0
-	 :srt-if (((funcall (intern "version<=") emacs-version "0")
+	 :cort-if (((funcall (intern "version<=") emacs-version "0")
 		   10)))))
 #+end_src
-~srt-emacs:a0~ will be converted to ~srt-emacs:a1~.
-Likewise, ~srt-emacs:b0~ is converted to ~srt-emacs:b1~.
+~cort-emacs:a0~ will be converted to ~cort-emacs:a1~.
+Likewise, ~cort-emacs:b0~ is converted to ~cort-emacs:b1~.
 
-So you can write ~:srt-if~ and ~:srt-emacs*~ statement mixed 
+So you can write ~:cort-if~ and ~:cort-emacs*~ statement mixed 
 and the earliest value in the list is adopted for expected value.
 
 Please refer to ~version-to-list~ in subr.el (Emacs source)
-to see the value that ~:srt-emacs*~ can receive. 
+to see the value that ~:cort-emacs*~ can receive. 
 For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
 (however, a value not including a space)
 
@@ -258,21 +258,21 @@ When writing many test cases, it is troublesome to write common parts many times
 Therefore, you can let the macro make the test case as shown below.
 
 #+begin_src emacs-lisp
-  (srt-deftest leaf-test/:if-1
+  (cort-deftest leaf-test/:if-1
     (:equal
      (macroexpand-1 '(leaf foo :if t))
      '(if t
 	  (progn
 	    (require (quote foo) nil nil)))))
 
-  (srt-deftest leaf-test/:if-2
+  (cort-deftest leaf-test/:if-2
     (:equal
      (macroexpand-1 '(leaf foo :if (and t t)))
      '(if (and t t)
 	  (progn
 	    (require (quote foo) nil nil)))))
 
-  (srt-deftest leaf-test/:if-3
+  (cort-deftest leaf-test/:if-3
     (:equal
      (macroexpand-1 '(leaf foo :if nil))
      '(if nil
@@ -281,7 +281,7 @@ Therefore, you can let the macro make the test case as shown below.
 
   ;; ...
 
-  ;; Almost test case is (srt-deftest NAME (:equal (macroexpand 'FORM) 'EXPECT))
+  ;; Almost test case is (cort-deftest NAME (:equal (macroexpand 'FORM) 'EXPECT))
   ;; -> Create macro to (FORM 'EXPECT) convert to (:equal (macroexpand 'FORM) 'EXPECT)
 
   ;; test target macro
@@ -292,37 +292,37 @@ Therefore, you can let the macro make the test case as shown below.
   (defmacro match-expansion (form expect)
     `(:equal (macroexpand ',form) ,expect))
 
-  (srt-deftest match-expansion0
+  (cort-deftest match-expansion0
     (match-expansion
      (package-require 'use-package)
      '(require 'use-package)))
 
-  (srt-deftest match-expansion1
+  (cort-deftest match-expansion1
     (:equal (macroexpand '(package-require 'use-package))
 	    '(require 'use-package)))
 #+end_src
 
 ~match-expansion0~ and ~match-expansion1~ are equivalent since macros are expanded.
 
-(You can also use a function that returns a list to be accepted by ~srt-deftest~ see srt-test.el.
+(You can also use a function that returns a list to be accepted by ~cort-deftest~ see cort-test.el.
 
 However, test definitions and test runs should usually be separated, 
 and you should not run all forms to immediate when you define a test.
 
 Therefore, we usually recommend using macros.)
 * Migration
-** srt v1.0 to v2.0
-*** :error flag has changed to :srt-error
-~:error~ flag has changed to ~:srt-error~ so you fix testcase.
+** cort v1.0 to v2.0
+*** :error flag has changed to :cort-error
+~:error~ flag has changed to ~:cort-error~ so you fix testcase.
 #+begin_src emacs-lisp
-  ;; srt v1.0 notation
-  (srt-deftest err:1
+  ;; cort v1.0 notation
+  (cort-deftest err:1
     (:error 'void-function
 	    (a 'a)))
 
-  ;; srt v2.0 notation
-  (srt-deftest err:1
-    (:srt-error 'void-function
+  ;; cort v2.0 notation
+  (cort-deftest err:1
+    (:cort-error 'void-function
 		(a 'a)))
 #+end_src
 
@@ -334,7 +334,7 @@ There're japanese readme(~Readme-ja.org~)(obsolete).
 
 * Welcome PR
 We welcome PR!
-travis CI test ~srt-test.el~ with oll Emacs version 22 or above.
+travis CI test ~cort-test.el~ with oll Emacs version 22 or above.
 
 I think that it is difficult to prepare the environment locally, 
 so I think that it is good to throw PR and test travis for the time being!
@@ -342,6 +342,6 @@ Feel free throw PR!
 
 * Special Thanks
 Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
-in developing ~srt.el~.
+in developing ~cort.el~.
 
 Thanks you very much!!

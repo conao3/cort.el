@@ -1,4 +1,4 @@
-;;; srt.el ---                                       -*- lexical-binding: t; -*-
+;;; cort.el ---                                       -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Naoya Yamashita
 
@@ -27,97 +27,97 @@
 (eval-when-compile
   (require 'cl))
 
-(defgroup srt nil
+(defgroup cort nil
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst srt-version "2.4.1"
-  "srt.el version")
+(defconst cort-version "3.0.0"
+  "cort.el version")
 
-(defconst srt-env-symbols '(:srt-emacs<
-			    :srt-emacs<=
-			    :srt-emacs=
-			    :srt-emacs>
-			    :srt-emacs>=
-			    :srt-if)
+(defconst cort-env-symbols '(:cort-emacs<
+			    :cort-emacs<=
+			    :cort-emacs=
+			    :cort-emacs>
+			    :cort-emacs>=
+			    :cort-if)
   "Test case environment symbols.")
 
-(defvar srt-test-cases nil
+(defvar cort-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
 
-(defcustom srt-debug nil
+(defcustom cort-debug nil
   "If non nil, turn on debug mode.
 
 - don't throw annoying error when test fail, just output message."
   :type 'boolean
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-show-backtrace nil
+(defcustom cort-show-backtrace nil
   "If non nil, show backtrace when fail test case."
   :type 'boolean
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-enable-color (null window-system)
+(defcustom cort-enable-color (null window-system)
   "If non nil, enable color message to output with meta character.
 Default, enable color if run test on CUI.
 `window-system' returns nil on CUI"
   :type 'boolean
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-header-message
-  (if srt-enable-color
+(defcustom cort-header-message
+  (if cort-enable-color
       "\n\e[33mRunning %d tests...\e[m\n"
     "\nRunning %d tests...\n")
   "Header message"
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-passed-label
-  (if srt-enable-color
+(defcustom cort-passed-label
+  (if cort-enable-color
       "\e[36m[PASSED] \e[m"
     "[PASSED] ")
   "Passed label."
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-fail-label
-  (if srt-enable-color
+(defcustom cort-fail-label
+  (if cort-enable-color
       "\e[31m[FAILED] \e[m"
     "[FAILED] ")
   "Fail label."
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-error-label
-  (if srt-enable-color
+(defcustom cort-error-label
+  (if cort-enable-color
       "\e[31m<ERROR>  \e[m"
     "<<ERROR>>")
   "Fail label."
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-error-message
-  (if srt-enable-color
+(defcustom cort-error-message
+  (if cort-enable-color
       "\e[31m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\e[m"
     "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n")
   "Error message"
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
-(defcustom srt-passed-message
-  (if srt-enable-color
+(defcustom cort-passed-message
+  (if cort-enable-color
       "\e[34m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n\e[m"
     "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n")
   "Error message"
   :type 'string
-  :group 'srt)
+  :group 'cort)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  for old Emacs
 ;;
 
-(defmacro srt-inc (var &optional step)
+(defmacro cort-inc (var &optional step)
   "increment VAR. If given STEP, increment VAR by STEP.
 Emacs-22 doesn't support `incf'."
   (declare (indent 1) (debug t))
@@ -129,7 +129,7 @@ Emacs-22 doesn't support `incf'."
 	  (defalias (intern (format "cl-%s" x)) x))
 	'(multiple-value-bind)))
 
-(defmacro srt-case (fn var &rest conds)
+(defmacro cort-case (fn var &rest conds)
   "Switch case macro with FN.
 Emacs-22 doesn't support `pcase'."
   (declare (indent 2))
@@ -149,7 +149,7 @@ Emacs-22 doesn't support `pcase'."
 ;;  small functions
 ;;
 
-(defmacro srt-aif (test-form* then-form &rest else-form)
+(defmacro cort-aif (test-form* then-form &rest else-form)
   "Anaphoric if macro.
 This macro expansion is implemented carefully so that sexp is not 
 evaluated multiple times.
@@ -159,7 +159,7 @@ evaluated multiple times.
   `(let ((,(car test-form*) ,(cadr test-form*)))
      (if ,(car test-form*) ,then-form ,@else-form)))
 
-(defmacro srt-asetq (sym* &optional body)
+(defmacro cort-asetq (sym* &optional body)
   "Anaphoric setq macro.
 
 \(fn (ASYM SYM) &optional BODY)"
@@ -167,13 +167,13 @@ evaluated multiple times.
   `(let ((,(car sym*) ,(cadr sym*)))
      (setq ,(cadr sym*) ,body)))
 
-(defmacro srt-alet (varlist* &rest body)
+(defmacro cort-alet (varlist* &rest body)
   "Anaphoric let macro. Return first arg value.
 CAUTION:
 `it' has first var value, it is NOT updated if var value changed.
 
 (macroexpand
- '(srt-alet (it ((result t)))
+ '(cort-alet (it ((result t)))
   (princ it)))
 => (let* ((result t)
           (it result))
@@ -187,7 +187,7 @@ CAUTION:
      (progn ,@body)
      ,(caar (cadr varlist*))))
 
-(defmacro srt-with-gensyms (syms &rest body)
+(defmacro cort-with-gensyms (syms &rest body)
   "Create `let' block with `gensym'ed variables.
 
 \(fn (SYM...) &rest body)"
@@ -197,15 +197,15 @@ CAUTION:
                  syms)
      ,@body))
 
-(defsubst srt-truep (var)
+(defsubst cort-truep (var)
   "Return t if var is non-nil."
   (not (not var)))
 
-(defsubst srt-pp (sexp)
+(defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
   (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
 
-(defsubst srt-list-digest (fn list)
+(defsubst cort-list-digest (fn list)
   "Make digest from LIST using FN (using 2 args).
 Example:
 (list-digest (lambda (a b) (or a b))
@@ -220,13 +220,13 @@ Example:
     (mapc (lambda (x) (setq result (funcall fn x result))) list)
     result))
 
-(defsubst srt-list-memq (symlist list)
+(defsubst cort-list-memq (symlist list)
   "Return t if LIST contained element of SYMLIST."
-  (srt-truep
-   (srt-list-digest (lambda (a b) (or a b))
+  (cort-truep
+   (cort-list-digest (lambda (a b) (or a b))
 		    (mapcar (lambda (x) (memq x list)) symlist))))
 
-(defsubst srt-get-funcsym (method)
+(defsubst cort-get-funcsym (method)
   "Return function symbol from symbol such as :eq"
   (intern
    (replace-regexp-in-string "^:+" "" (symbol-name method))))
@@ -236,108 +236,108 @@ Example:
 ;;  support functions
 ;;
 
-(defun srt-get-value-fn (env)
-  "Recursive search function for `srt-get-value'."
-  (srt-aif (it (plist-get env :srt-if))
+(defun cort-get-value-fn (env)
+  "Recursive search function for `cort-get-value'."
+  (cort-aif (it (plist-get env :cort-if))
       (if (eval (car it))
   	  (cadr it)
-  	(funcall #'srt-get-value-fn (member :srt-if (cddr env))))))
+  	(funcall #'cort-get-value-fn (member :cort-if (cddr env))))))
 
-(defun srt-get-value (plist symbol)
+(defun cort-get-value (plist symbol)
   "Get reasonable value from PLIST.
-Take SYMBOL value from PLIST and return the value by interpreting srt-if etc.
+Take SYMBOL value from PLIST and return the value by interpreting cort-if etc.
 
 Example:
-;; (srt-get-value
-;;  '(x (:default 'a :srt-if (t 'b)))
+;; (cort-get-value
+;;  '(x (:default 'a :cort-if (t 'b)))
 ;; 'x)
 ;; => 'b
 ;;
-;; (srt-get-value
-;;  '(x (:default 'a :srt-if (nil 'b)))
+;; (cort-get-value
+;;  '(x (:default 'a :cort-if (nil 'b)))
 ;;  'x)
 ;; => 'a"
 
 ;;   (let ((element (plist-get plist symbol))
 ;; 	(fn (lambda (env)
-;;               (srt-aif (it (plist-get env :srt-if))
+;;               (cort-aif (it (plist-get env :cort-if))
 ;;   		  (if (eval (car it))
 ;;   		      (cadr it)
-;;   		    (funcall fn (member :srt-if (cddr env))))))))
-;;     (srt-aif (it (funcall fn element))
+;;   		    (funcall fn (member :cort-if (cddr env))))))))
+;;     (cort-aif (it (funcall fn element))
 ;; 	it
 ;;       (plist-get element :default)))
   (let ((element (plist-get plist symbol)))
-    (srt-aif (it (funcall #'srt-get-value-fn element))
+    (cort-aif (it (funcall #'cort-get-value-fn element))
 	it
       (plist-get element :default))))
 
-(defun srt-test (plist)
+(defun cort-test (plist)
   "Actually execute GIVEN to check it matches EXPECT.
 If match, return t, otherwise return nil."
 
-  (let ((method   (srt-get-value plist :method))
-	(given    (srt-get-value plist :given))
-	(expect   (srt-get-value plist :expect))
-	(err-type (srt-get-value plist :err-type)))
-    (srt-case #'eq method
-      (:srt-error
+  (let ((method   (cort-get-value plist :method))
+	(given    (cort-get-value plist :given))
+	(expect   (cort-get-value plist :expect))
+	(err-type (cort-get-value plist :err-type)))
+    (cort-case #'eq method
+      (:cort-error
        (eval
 	`(condition-case err
 	     (eval ,given)
 	   (,err-type t))))
       (_
-       (let* ((funcsym (srt-get-funcsym method)))
+       (let* ((funcsym (cort-get-funcsym method)))
 	 (funcall funcsym (eval given) (eval expect)))))))
 
-(defun srt-testpass (name plist)
+(defun cort-testpass (name plist)
   "Output messages for test passed."
 
-  (let ((mesheader (format "%s %s\n" srt-passed-label name)))
+  (let ((mesheader (format "%s %s\n" cort-passed-label name)))
     (princ (concat mesheader))))
 
-(defun srt-testfail (name plist &optional err)
+(defun cort-testfail (name plist &optional err)
   "Output messages for test failed."
 
-  (let ((method   (srt-get-value plist :method))
-	(given    (srt-get-value plist :given))
-	(expect   (srt-get-value plist :expect))
-	(err-type (srt-get-value plist :err-type)))
+  (let ((method   (cort-get-value plist :method))
+	(given    (cort-get-value plist :given))
+	(expect   (cort-get-value plist :expect))
+	(err-type (cort-get-value plist :err-type)))
     (let* ((failp           (not err))
 	   (errorp          (not failp))
-	   (method-errorp   (eq method :srt-error))
+	   (method-errorp   (eq method :cort-error))
 	   (method-defaultp (not (or method-errorp))))
       (let ((mesheader) (mesmethod) (mesgiven) (mesreturned) (mesexpect)
 	    (meserror) (mesbacktrace))
-	(setq mesgiven  (format "Given:\n%s\n" (srt-pp given)))
+	(setq mesgiven  (format "Given:\n%s\n" (cort-pp given)))
 	(setq mesbacktrace (format "Backtrace:\n%s\n"
 				   (with-output-to-string
 				     (backtrace))))
 	(progn
 	  (when errorp
-	    (setq mesheader (format "%s %s\n" srt-error-label name))
-	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err))))
+	    (setq mesheader (format "%s %s\n" cort-error-label name))
+	    (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
 	  (when failp
-	    (setq mesheader (format "%s %s\n" srt-fail-label name))))
+	    (setq mesheader (format "%s %s\n" cort-fail-label name))))
 
 	(progn
 	  (when method-defaultp
 	    (setq mesmethod (format "< Tested with %s >\n" method))
-	    (setq mesexpect (format "Expected:\n%s\n" (srt-pp expect)))
+	    (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
 	    (when failp
-	      (setq mesreturned (format "Returned:\n%s\n" (srt-pp (eval given))))))
+	      (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given))))))
 	  (when method-errorp
-	    (setq meserror  (format "Unexpected-error: %s\n" (srt-pp err)))
-	    (setq mesexpect (format "Expected-error:   %s\n" (srt-pp err-type)))))
+	    (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
+	    (setq mesexpect (format "Expected-error:   %s\n" (cort-pp err-type)))))
 
 	(princ (concat mesheader
-		       (srt-aif (it mesmethod)   it)
-		       (srt-aif (it mesgiven)    it)
-		       (srt-aif (it mesreturned) it)
-		       (srt-aif (it mesexpect)   it)
-		       (srt-aif (it meserror)    it)
-		       (if srt-show-backtrace
-			   (srt-aif (it mesbacktrace) it))
+		       (cort-aif (it mesmethod)   it)
+		       (cort-aif (it mesgiven)    it)
+		       (cort-aif (it mesreturned) it)
+		       (cort-aif (it mesexpect)   it)
+		       (cort-aif (it meserror)    it)
+		       (if cort-show-backtrace
+			   (cort-aif (it mesbacktrace) it))
 		       "\n"
 		       ))))))
 
@@ -346,17 +346,17 @@ If match, return t, otherwise return nil."
 ;;  Define test phase
 ;;
 
-(defun srt-interpret-env-keyword (env)
+(defun cort-interpret-env-keyword (env)
   "Interpret a single keyword and return sexp.
 ENV is list such as (KEYWORD VALUE)"
   (let ((symbol (car env))
 	(value  (cadr env)))
     (let ((keyname (prin1-to-string symbol)))
-      (if (string-match (rx (group ":srt-")
+      (if (string-match (rx (group ":cort-")
 			    (group (or "emacs" "if"))
 			    (? (group (or "<" "<=" "=" ">=" ">"))))
 			keyname)
-	  (srt-case #'string= (match-string 2 keyname)
+	  (cort-case #'string= (match-string 2 keyname)
 	    ("emacs"
 	     (let ((condver  (car value))
 		   (expected (cadr value))
@@ -364,53 +364,53 @@ ENV is list such as (KEYWORD VALUE)"
 	       (if (string-match "^>=?$" sign)
 		   (progn
 		     (setq sign (replace-regexp-in-string "^>" "<" sign))
-		     (list 2 `(:srt-if
+		     (list 2 `(:cort-if
 			       ((not
 				 (funcall
 				  (intern ,(concat "version" sign))
 				  emacs-version ,(prin1-to-string condver)))
 				,expected))))
-		 (list 2 `(:srt-if
+		 (list 2 `(:cort-if
 			   ((funcall
 			     (intern ,(concat "version" sign))
 			     emacs-version ,(prin1-to-string condver))
 			    ,expected))))))
 	    
 	    ("if"
-	     (list 2 `(:srt-if ,value))))
+	     (list 2 `(:cort-if ,value))))
 
 	(list 1 `(:default ,symbol))))))
 
-(defun srt-normalize-env (env)
+(defun cort-normalize-env (env)
   "Return normalize test environment list.
 
 Example:
-(srt-normalize-env :eq)
+(cort-normalize-env :eq)
 => (:default :eq)
 
-(srt-normalize-env '('b
-		     :srt-if (t 'a)))
+(cort-normalize-env '('b
+		     :cort-if (t 'a)))
 => (:default 'b
-    :srt-if (t 'a))
+    :cort-if (t 'a))
 "
-  (srt-alet (it ((result)))
-	    (if (and (listp env) (srt-list-memq srt-env-symbols env))
+  (cort-alet (it ((result)))
+	    (if (and (listp env) (cort-list-memq cort-env-symbols env))
 		(let ((i 0) (envc (length env)))
 		  (while (< i envc)
 		    (cl-multiple-value-bind (step value)
-			(srt-interpret-env-keyword (nthcdr i env))
-		      (srt-asetq (it result)
+			(cort-interpret-env-keyword (nthcdr i env))
+		      (cort-asetq (it result)
 				 (append it value))
-		      (srt-inc i step))))
-	      (srt-asetq (it result)
+		      (cort-inc i step))))
+	      (cort-asetq (it result)
 			 (append it `(:default ,env))))))
 
-(defmacro srt-deftest (name keys)
+(defmacro cort-deftest (name keys)
   "Define a test case with the name A.
 KEYS supported below form.
 
 basic: (:COMPFUN FORM EXPECT)
-error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
+error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
 
   (let ((symbol (car keys)))
@@ -419,14 +419,14 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
 	  (setq keys (macroexpand keys))
 	(setq keys (eval keys)))))
   
-  (let ((fn #'srt-normalize-env))
-    (srt-case #'eq (nth 0 keys)
-      (:srt-error
+  (let ((fn #'cort-normalize-env))
+    (cort-case #'eq (nth 0 keys)
+      (:cort-error
        (let ((method   (funcall fn (nth 0 keys)))
 	     (err-type (funcall fn (nth 1 keys)))
 	     (given    (funcall fn (nth 2 keys))))
-	 `(add-to-list 'srt-test-cases
-		       '(,name (:srt-testcase
+	 `(add-to-list 'cort-test-cases
+		       '(,name (:cort-testcase
 				:method   ,method
 				:err-type ,err-type
 				:given    ,given))
@@ -435,16 +435,16 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
        (let ((method (funcall fn (nth 0 keys)))
 	     (given  (funcall fn (nth 1 keys)))
 	     (expect (funcall fn (nth 2 keys))))
-	 (if t ;; (fboundp (srt-get-funcsym (car method)))
-	     `(add-to-list 'srt-test-cases
-			   '(,name (:srt-testcase
+	 (if t ;; (fboundp (cort-get-funcsym (car method)))
+	     `(add-to-list 'cort-test-cases
+			   '(,name (:cort-testcase
 				    :method ,method
 				    :given  ,given
 				    :expect ,expect))
 			   t)
 	   `(progn
-	      (srt-testfail ',name (cdr
-				    '(:srt-testcase
+	      (cort-testfail ',name (cdr
+				    '(:cort-testcase
 				      :method ,method
 				      :given  ,given
 				      :expect ,expect)))
@@ -455,41 +455,41 @@ error: (:srt-error EXPECTED-ERROR-TYPE FORM)"
 ;;  Run test phase
 ;;
 
-(defun srt-prune-tests ()
+(defun cort-prune-tests ()
   "Prune all the tests."
   (interactive)
-  (setq srt-test-cases nil)
+  (setq cort-test-cases nil)
   (message "prune tests completed."))
 
-(defun srt-run-tests ()
+(defun cort-run-tests ()
   "Run all the tests."
-  (let ((testc  (length srt-test-cases))
+  (let ((testc  (length cort-test-cases))
 	(failc  0)
 	(errorc 0))
-    (princ (format srt-header-message (length srt-test-cases)))
+    (princ (format cort-header-message (length cort-test-cases)))
     (princ (format "%s\n" (emacs-version)))
 
-    (dolist (test srt-test-cases)
+    (dolist (test cort-test-cases)
       (let* ((name  (car  test))
 	     (keys  (cadr test))
-	     (plist (cdr  keys)))	; remove :srt-testcase symbol
+	     (plist (cdr  keys)))	; remove :cort-testcase symbol
 	(condition-case err
-	    (if (srt-test plist)
-		(srt-testpass name plist)
-	      (srt-testfail name plist)
-	      (srt-inc failc))
+	    (if (cort-test plist)
+		(cort-testpass name plist)
+	      (cort-testfail name plist)
+	      (cort-inc failc))
 	  (error
-	   (srt-testfail name plist err)
-	   (srt-inc errorc)))))
+	   (cort-testfail name plist err)
+	   (cort-inc errorc)))))
 
     (princ "\n\n")
     (if (or (< 0 failc) (< 0 errorc))
-	(if srt-debug
+	(if cort-debug
 	    (princ "Test failed!!\n")
-	  (error (format srt-error-message
+	  (error (format cort-error-message
 			 testc (- testc failc errorc) failc errorc)))
-      (princ (format srt-passed-message
+      (princ (format cort-passed-message
 		     testc (- testc failc errorc) failc errorc)))))
 
-(provide 'srt)
-;;; srt.el ends here
+(provide 'cort)
+;;; cort.el ends here

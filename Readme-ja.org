@@ -1,15 +1,15 @@
 #+author: conao
 #+date: <2018-11-10 Sat>
 
-* srt.el
-[[https://github.com/conao3/srt.el][https://img.shields.io/github/tag/conao3/srt.el.svg?style=flat-square]]
-[[https://travis-ci.org/conao3/srt.el][https://img.shields.io/travis/conao3/srt.el/master.svg?style=flat-square]]
-[[https://github.com/conao3/srt.el][https://img.shields.io/github/license/conao3/srt.el.svg?style=flat-square]]
+* cort.el
+[[https://github.com/conao3/cort.el][https://img.shields.io/github/tag/conao3/cort.el.svg?style=flat-square]]
+[[https://travis-ci.org/conao3/cort.el][https://img.shields.io/travis/conao3/cort.el/master.svg?style=flat-square]]
+[[https://github.com/conao3/cort.el][https://img.shields.io/github/license/conao3/cort.el.svg?style=flat-square]]
 
 [[./imgs/capture.png]]
 
 ** なにこれ?
-~srt.el~ は私が[[https://github.com/conao3/leaf.el][leaf.el]]というパッケージを書くために、
+~cort.el~ は私が[[https://github.com/conao3/leaf.el][leaf.el]]というパッケージを書くために、
 Emacs-22でも完全に動作するテスターがほしいという動機で作成しました。
 
 (余談ですが、[[https://github.com/conao3/leaf.el][leaf.el]]は[[https://github.com/jwiegley/use-package][use-package]], ~package.el~ に代わるパッケージ設定、ダウンロードパッケージです。
@@ -39,7 +39,7 @@ Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/le
 ことを目標に新しいテスターを開発しました。
 
 ** どうやって使うねん
-~srt.el~ の開発動機からわかるようにこのレポジトリの ~srt.el~ を
+~cort.el~ の開発動機からわかるようにこのレポジトリの ~cort.el~ を
 自分のレポジトリに放り込むだけで使えます。この仕様は変える予定はありません。
 
 なお、v1.0からはmasterに何かをマージするたびにバージョンタグが上がるようになっています。
@@ -54,7 +54,7 @@ Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/le
   LOAD_PATH := -L $(TOP)
   BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
 
-  ELS   := srt.el         # compiling .el list
+  ELS   := cort.el         # compiling .el list
   ELCS  := $(ELS:.el=.elc)
 
   all: build
@@ -68,7 +68,7 @@ Emacs-22では動作しません。（さらに[[https://travis-ci.org/conao3/le
   test: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make`.
-	   $(BATCH) -l srt-tests.el -f srt-run-tests-batch-and-exit
+	   $(BATCH) -l cort-tests.el -f cort-run-tests-batch-and-exit
 
   clean:
 	   -find . -type f -name "*.elc" | xargs rm
@@ -108,10 +108,10 @@ trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に�
 「ローカルのテストをパスしないとコミットさせない」という運用を取るなら複数バージョンによる
 テストコマンドを記述することになります。書き方はこのレポジトリのMakefileを参考にしてください。
 
-*** srt-test.el
+*** cort-test.el
 #+begin_src emacs-lisp
   ;; パッケージに含まれる.elをrequireします
-  (require 'srt)
+  (require 'cort)
 
   ;; テスト用の一時関数があれば定義します。
   (defun quote-a ()
@@ -121,49 +121,49 @@ trabis.cl使って +「build:passed」のバッチ置きたい+ CIを簡単に�
     `',x)
 
   ;; がしがしテストケースを書きます。
-  (srt-deftest simple:equal
+  (cort-deftest simple:equal
     (:equal '(a b c) '(a b c)))
 
-  (srt-deftest simple:=
+  (cort-deftest simple:=
     (:= 100 100))
 
-  (srt-deftest quote-a:0
+  (cort-deftest quote-a:0
     (:eq 'a 'a))
 
-  (srt-deftest quote-a:1
+  (cort-deftest quote-a:1
     (:eq (quote-a) 'a))
 
-  (srt-deftest sym:1
+  (cort-deftest sym:1
     (:eq (sym a) 'a))
 
-  (srt-deftest sym:4
+  (cort-deftest sym:4
     (:equal (sym (a b c)) '(a b c)))
 
-  (srt-deftest error-test
+  (cort-deftest error-test
     (:= (+ 1 2) 5))
 
-  (srt-deftest err:1
+  (cort-deftest err:1
     (:error 'void-function
 	    (a 'a)))
 
-  (srt-deftest err:3
+  (cort-deftest err:3
     (:error 'arith-error
 	    (/ 1 0)))
   ;; ...
 #+end_src
 
-~srt-deftest~ はテスト名とテスト設定を受け取り、内部の変数である ~srt-test-cases~ に ~add-to-list~ します。
+~cort-deftest~ はテスト名とテスト設定を受け取り、内部の変数である ~cort-test-cases~ に ~add-to-list~ します。
 つまり同じテストを2度定義しても1度しか実行されません。なおテスト名は唯一の値である必要はありません。
 
 **** 基本のテストケース(~t~ を期待するテスト)
-~srt-deftest~ のテスト設定は ~(:key form expect)~ の形式のリストを受け入れ、
+~cort-deftest~ のテスト設定は ~(:key form expect)~ の形式のリストを受け入れ、
 ~(key form expect)~ を評価した際に ~t~ が返却されることを期待します。
 
 このように定義することにより、比較関数は ~eq~ や ~equal~, ~=~ など真偽値を返す任意の関数を使用できます。
-この柔軟なテスト表記は ~srt.el~ の重要なメリットの一つです。
+この柔軟なテスト表記は ~cort.el~ の重要なメリットの一つです。
 
 **** エラーを期待するテストケース
-~srt-deftest~ に ~(:error 'error-type form)~ の形式のリストを渡した場合、
+~cort-deftest~ に ~(:error 'error-type form)~ の形式のリストを渡した場合、
 ~'error-type~ は[[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][エラーシンボル]]を受け取り、 ~(form)~ を評価した際に ~'error-type~ のエラーが発生することを期待します。
 
 

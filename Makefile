@@ -5,7 +5,7 @@ EMACS     ?= emacs
 LOAD_PATH := -L $(TOP)
 BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
 
-ELS   := srt.el
+ELS   := cort.el
 ELCS  := $(ELS:.el=.elc)
 
 all: git-hook build
@@ -24,7 +24,7 @@ test: # build
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
 	make clean
-#	$(BATCH) -l srt-tests.el -f srt-run-tests
+	$(BATCH) -l cort-tests.el -f cort-run-tests
 
 localtest:
 # Clean all of .elc, compile .el, and run test.
