@@ -1,12 +1,19 @@
-TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
+TOP        := $(dir $(lastword $(MAKEFILE_LIST)))
+EMACS_RAW  := $(filter-out emacs-undumped, $(shell compgen -c emacs- | xargs))
+ALL_EMACS  := $(strip $(sort $(EMACS_RAW)))
 
-EMACS     ?= emacs
+EMACS      ?= emacs
 
 LOAD_PATH := -L $(TOP)
-BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
+ARGS      := -Q --batch $(LOAD_PATH)
+BATCH     := $(EMACS) $(ARGS)
 
+ALL_TESTS := $(addprefix .make-debug-,$(ALL_EMACS))
 ELS   := cort.el
 ELCS  := $(ELS:.el=.elc)
+
+
+##################################################
 
 all: git-hook build
 
@@ -18,66 +25,18 @@ build: $(ELCS)
 
 %.elc: %.el
 	@printf "Compiling $<\n"
-	-@$(BATCH) -f batch-byte-compile $<
+	$(BATCH) -f batch-byte-compile $<
 
 test: # build
 # If byte compile for specific emacs,
 # set EMACS such as `EMACS=26.1 make`.
-	make clean
+	$(MAKE) clean
 	$(BATCH) -l cort-tests.el -f cort-run-tests
 
-localtest:
-# Clean all of .elc, compile .el, and run test.
-
-	$(call ECHO_MAGENTA, "test by emacs-22.1")
-	make clean
-	EMACS=emacs-22.1 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-24.5")
-	make clean
-	EMACS=emacs-24.5 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-26.1")
-	make clean
-	EMACS=emacs-26.1 make test
-
-	@echo "\n"
-	$(call ECHO_CYAN, "localtest completed!!")
-	@echo "\n"
-
-debug-localtest:
-# Clean all of .elc, compile .el, and run test.
-# don't stop on error, run test on all of emacs.
-
-	$(call ECHO_MAGENTA, "test by emacs-22.1")
-	make clean
-	-EMACS=emacs-22.1 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-23.4")
-	make clean
-	-EMACS=emacs-23.4 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-24.5")
-	make clean
-	-EMACS=emacs-24.5 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-25.3")
-	make clean
-	-EMACS=emacs-25.3 make test
-
-	@echo "\n"
-	$(call ECHO_MAGENTA, "test by emacs-26.1")
-	make clean
-	-EMACS=emacs-26.1 make test
-
-	@echo "\n"
-	$(call ECHO_CYAN, "localtest completed!!")
-	@echo "\n"
+localtest: $(ALL_TESTS)
+.make-debug-%:
+	$(MAKE) clean
+	EMACS=$* $(MAKE) test
 
 clean:
 	-find . -type f -name "*.elc" | xargs rm
