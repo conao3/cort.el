@@ -8,10 +8,10 @@ LOAD_PATH  := -L $(TOP)
 ARGS       := -Q --batch $(LOAD_PATH)
 BATCH      := $(EMACS) $(ARGS)
 
-ALL_TESTS  := $(addprefix .make-debug-,$(ALL_EMACS))
 ELS        := cort.el
 ELCS       := $(ELS:.el=.elc)
 
+LOGFILE    := .make-debug.log
 
 ##################################################
 
@@ -30,13 +30,16 @@ build: $(ELCS)
 test: # build
 # If byte compile for specific emacs,
 # set specify EMACS such as `EMACS=emacs-26.1 make test`.
-	$(MAKE) clean
+	$(MAKE) clean --no-print-directory
 	$(BATCH) -l cort-tests.el -f cort-run-tests
 
-localtest: $(ALL_TESTS)
+localtest: $(ALL_EMACS:%=.make-debug-%)
+	@echo ""
+	@cat $(LOGFILE) | grep =====
+	@rm $(LOGFILE)
+
 .make-debug-%:
-	$(MAKE) clean
-	EMACS=$* $(MAKE) test
+	EMACS=$* $(MAKE) test --no-print-directory | tee $(LOGFILE) -a
 
 clean:
 	-find . -type f -name "*.elc" | xargs rm
