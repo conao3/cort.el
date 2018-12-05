@@ -98,7 +98,7 @@ Default, enable color if run test on CUI.
 
 (defcustom cort-error-message
   (if cort-enable-color
-      "\e[31m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n\e[m"
+      "\e[31m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
   "Error message"
   :type 'string
@@ -106,7 +106,7 @@ Default, enable color if run test on CUI.
 
 (defcustom cort-passed-message
   (if cort-enable-color
-      "\e[34m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n\e[m"
+      "\e[34m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
   "Error message"
   :type 'string
