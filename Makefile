@@ -33,13 +33,22 @@ check: # build
 	$(MAKE) clean --no-print-directory
 	$(BATCH) -l cort-tests.el -f cort-run-tests
 
-localcheck: $(ALL_EMACS:%=.make-check-%)
+allcheck: $(ALL_EMACS:%=.make-check-%)
 	@echo ""
 	@cat $(LOGFILE) | grep =====
 	@rm $(LOGFILE)
 
 .make-check-%:
-	EMACS=$* $(MAKE) test --no-print-directory 2>&1 | tee -a $(LOGFILE)
+	EMACS=$* $(MAKE) check --no-print-directory 2>&1 | tee -a $(LOGFILE)
+
+# silent `localcheck' job
+debug: $(ALL_EMACS:%=.make-debug-%)
+	@echo ""
+	@cat $(LOGFILE) | grep =====
+	@rm $(LOGFILE)
+
+.make-debug-%:
+	EMACS=$* $(MAKE) check --no-print-directory 2>&1 >> $(LOGFILE)
 
 clean:
 	-find . -type f -name "*.elc" | xargs rm
