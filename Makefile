@@ -4,13 +4,13 @@ ALL_EMACS  := $(strip $(sort $(EMACS_RAW)))
 
 EMACS      ?= emacs
 
-LOAD_PATH := -L $(TOP)
-ARGS      := -Q --batch $(LOAD_PATH)
-BATCH     := $(EMACS) $(ARGS)
+LOAD_PATH  := -L $(TOP)
+ARGS       := -Q --batch $(LOAD_PATH)
+BATCH      := $(EMACS) $(ARGS)
 
-ALL_TESTS := $(addprefix .make-debug-,$(ALL_EMACS))
-ELS   := cort.el
-ELCS  := $(ELS:.el=.elc)
+ALL_TESTS  := $(addprefix .make-debug-,$(ALL_EMACS))
+ELS        := cort.el
+ELCS       := $(ELS:.el=.elc)
 
 
 ##################################################
@@ -29,7 +29,7 @@ build: $(ELCS)
 
 test: # build
 # If byte compile for specific emacs,
-# set EMACS such as `EMACS=26.1 make`.
+# set specify EMACS such as `EMACS=emacs-26.1 make test`.
 	$(MAKE) clean
 	$(BATCH) -l cort-tests.el -f cort-run-tests
 
