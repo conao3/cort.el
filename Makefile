@@ -11,7 +11,7 @@ BATCH      := $(EMACS) $(ARGS)
 ELS        := cort.el
 ELCS       := $(ELS:.el=.elc)
 
-LOGFILE    := .make-debug.log
+LOGFILE    := .make-check.log
 
 ##################################################
 
@@ -27,18 +27,18 @@ build: $(ELCS)
 	@printf "Compiling $<\n"
 	$(BATCH) -f batch-byte-compile $<
 
-test: # build
+check: # build
 # If byte compile for specific emacs,
 # set specify EMACS such as `EMACS=emacs-26.1 make test`.
 	$(MAKE) clean --no-print-directory
 	$(BATCH) -l cort-tests.el -f cort-run-tests
 
-localtest: $(ALL_EMACS:%=.make-debug-%)
+localcheck: $(ALL_EMACS:%=.make-check-%)
 	@echo ""
 	@cat $(LOGFILE) | grep =====
 	@rm $(LOGFILE)
 
-.make-debug-%:
+.make-check-%:
 	EMACS=$* $(MAKE) test --no-print-directory 2>&1 | tee -a $(LOGFILE)
 
 clean:
