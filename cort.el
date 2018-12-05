@@ -31,7 +31,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst cort-version "3.0.0"
+(defconst cort-version "3.0.1"
   "cort.el version")
 
 (defconst cort-env-symbols '(:cort-emacs<
@@ -98,16 +98,16 @@ Default, enable color if run test on CUI.
 
 (defcustom cort-error-message
   (if cort-enable-color
-      "\e[31m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\e[m"
-    "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n")
+      "\e[31m===== Run %d Tests, %d Expected, %d Failed, %d Errored on Emacs-%s =====\n\e[m"
+    "===== Run %d Tests, %d Expected, %d Failed, %d Errored on Emacs-%s =====\n")
   "Error message"
   :type 'string
   :group 'cort)
 
 (defcustom cort-passed-message
   (if cort-enable-color
-      "\e[34m===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n\e[m"
-    "===== Run %d Tests, %d Expected, %d Failed, %d Errored =====\n\n")
+      "\e[34m===== Run %d Tests, %d Expected, %d Failed, %d Errored on Emacs-%s =====\n\n\e[m"
+    "===== Run %d Tests, %d Expected, %d Failed, %d Errored on Emacs-%s =====\n\n")
   "Error message"
   :type 'string
   :group 'cort)
@@ -489,7 +489,7 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
           (error (format cort-error-message
                          testc (- testc failc errorc) failc errorc)))
       (princ (format cort-passed-message
-                     testc (- testc failc errorc) failc errorc)))))
+                     testc (- testc failc errorc) failc errorc emacs-version)))))
 
 (provide 'cort)
 ;;; cort.el ends here

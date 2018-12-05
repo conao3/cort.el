@@ -311,18 +311,22 @@ and you should not run all forms to immediate when you define a test.
 
 Therefore, we usually recommend using macros.)
 * Migration
-** cort v1.0 to v2.0
-*** :error flag has changed to :cort-error
-~:error~ flag has changed to ~:cort-error~ so you fix testcase.
+** srt v2.0 to cort v3.0
+*** ~srt~ has renamed to ~cort~
+All ~srt~ suffix flag is renamed to ~cort~ suffix.
+
+** srt v1.0 to v2.0
+*** :error flag has changed to :srt-error
+~:error~ flag has changed to ~:srt-error~ so please fix testcase.
 #+begin_src emacs-lisp
-  ;; cort v1.0 notation
-  (cort-deftest err:1
+  ;; srt v1.0 notation
+  (srt-deftest err:1
     (:error 'void-function
             (a 'a)))
 
-  ;; cort v2.0 notation
-  (cort-deftest err:1
-    (:cort-error 'void-function
+  ;; srt v2.0 notation
+  (srt-deftest err:1
+    (:srt-error 'void-function
                 (a 'a)))
 #+end_src
 
