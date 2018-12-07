@@ -227,7 +227,7 @@ If all the first elements are nil, the default value is adopted.
 (You can use ~:cort-if~ statement for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
 However, such test cases are confusing you in many cases, so you should not use them.)
 
-** ~:cort-emacs<~, ~:cort-emacs<=~,,, keywords
+** ~:cort-emacs~ keyword
 If you want to change the expected by Emacs version, use the ~:cort-emacs*~ statement.
 The following symbols are provided.
 - ~:cort-emacs<~
