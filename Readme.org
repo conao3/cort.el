@@ -38,8 +38,8 @@ it is difficult to understand the displayed error.)
   LOAD_PATH := -L $(TOP)
   BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
 
-  ELS   := cort.el         # compiling .el list
-  ELCS  := $(ELS:.el=.elc)
+  ELS       := cort.el         # compiling .el list
+  ELCS      := $(ELS:.el=.elc)
 
   all: build
 
@@ -47,12 +47,12 @@ it is difficult to understand the displayed error.)
 
   %.elc: %.el
 	  @printf "Compiling $<\n"
-	  -@$(BATCH) -f batch-byte-compile $<
+	  @$(BATCH) -f batch-byte-compile $<
 
-  test: build
+  check: build
   # If byte compile for specific emacs,
-  # set EMACS such as `EMACS=26.1 make`.
-	  $(BATCH) -l cort-tests.el -f cort-run-tests-batch-and-exit
+  # set EMACS such as `EMACS=26.1 make check`.
+	  $(BATCH) -l cort-tests.el -f cort-run-tests
 
   clean:
 	  -find . -type f -name "*.elc" | xargs rm
@@ -80,7 +80,7 @@ it is difficult to understand the displayed error.)
 
   script:
     - make
-    - make test
+    - make check
 #+end_src
 
 ** cort-test.el
