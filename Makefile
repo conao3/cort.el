@@ -1,37 +1,57 @@
-TOP        := $(dir $(lastword $(MAKEFILE_LIST)))
-EMACS_RAW  := $(filter-out emacs-undumped, $(shell compgen -c emacs- | xargs))
-ALL_EMACS  := $(strip $(sort $(EMACS_RAW)))
+all:
 
-EMACS      ?= emacs
+include Makefunc.mk
 
-LOAD_PATH  := -L $(TOP)
-ARGS       := -Q --batch $(LOAD_PATH)
-BATCH      := $(EMACS) $(ARGS)
+TOP         := $(dir $(lastword $(MAKEFILE_LIST)))
+EMACS_RAW   := $(filter-out emacs-undumped, $(shell compgen -c emacs- | xargs))
+ALL_EMACS   := $(strip $(sort $(EMACS_RAW)))
 
-ELS        := cort.el
-ELCS       := $(ELS:.el=.elc)
+EMACS       ?= emacs
 
-LOGFILE    := .make-check.log
+BATCH       := $(EMACS) -Q --batch -L $(TOP)
+BATCH_LOCAL  = $* -Q --batch -L `pwd`
+
+TESTFILE    := cort-tests.el
+ELS         := cort.el
+ELCS        := $(ELS:.el=.elc)
+CORTELS     := $(TESTFILE)
+CORT_ARGS   := -l $(TESTFILE) -f cort-run-tests
+
+LOGFILE     := .make-check.log
+
+TOUCH_TIME     := 201001010000
+RECOMPILE_SEXP := --eval '(byte-recompile-directory "./")'
+
 
 ##################################################
 
 all: git-hook build
 
 git-hook:
-# cp git hooks to .git/hooks
 	cp -a git-hooks/* .git/hooks/
+
+##############################
+#  byte-compile job
 
 build: $(ELCS)
 
-%.elc: %.el
-	@printf "Compiling $<\n"
-	$(BATCH) -f batch-byte-compile $<
+$(ELCS): $(ELS)
+	$(EMACS) --version
+	touch -t $(TOUCH_TIME) $(ELCS)
+	$(BATCH) $(RECOMPILE_SEXP)
 
-check: # build
-# If byte compile for specific emacs,
-# set specify EMACS such as `EMACS=emacs-26.1 make test`.
+##############################
+#  simple test job
+
+# If you want to run specify EMACS,
+# run `make` such as `EMACS=emacs-26.1 make check`.
+
+check: build
 	$(MAKE) clean --no-print-directory
-	$(BATCH) -l cort-tests.el -f cort-run-tests
+	$(BATCH) $(CORT_ARGS)
+
+##############################
+#  test on all Emacs
 
 allcheck: $(ALL_EMACS:%=.make-check-%)
 	@echo ""
@@ -39,18 +59,34 @@ allcheck: $(ALL_EMACS:%=.make-check-%)
 	@rm $(LOGFILE)
 
 .make-check-%:
-	EMACS=$* $(MAKE) check --no-print-directory 2>&1 | tee -a $(LOGFILE)
+	mkdir -p .make-$*
+	cp -f $(ELS) $(CORTELS) .make-$*/
+	cd .make-$*; touch -t $(TOUCH_TIME) $(ELCS)
+	cd .make-$*; $(BATCH_LOCAL) $(RECOMPILE_SEXP)
+	cd .make-$*; find . -name "*.elc" | xargs rm -rf
+	cd .make-$*; $(BATCH_LOCAL) $(CORT_ARGS) 2>&1 | tee -a ../$(LOGFILE)
+	@rm -rf .make-$*
 
-# silent `localcheck' job
-debug: $(ALL_EMACS:%=.make-debug-%)
+##############################
+#  silent `allcheck' job
+
+test: $(ALL_EMACS:%=.make-test-%)
 	@echo ""
 	@cat $(LOGFILE) | grep =====
 	@rm $(LOGFILE)
 
-.make-debug-%:
-	EMACS=$* $(MAKE) check --no-print-directory 2>&1 >> $(LOGFILE)
+.make-test-%:
+	mkdir -p .make-$*
+	cp -f $(ELS) $(CORTELS) .make-$*/
+	cd .make-$*; touch -t $(TOUCH_TIME) $(ELCS)
+	cd .make-$*; $(BATCH_LOCAL) $(RECOMPILE_SEXP)
+	cd .make-$*; find . -name "*.elc" | xargs rm -rf
+	cd .make-$*; $(BATCH_LOCAL) $(CORT_ARGS) 2>&1 >> ../$(LOGFILE)
+	@rm -rf .make-$*
+
+##############################
+#  other jobs
 
 clean:
-	-find . -type f -name "*.elc" | xargs rm
-
-include Makefunc.mk
+	-find . -name "*.elc" | xargs rm -rf
+	-rm -rf .make-*
