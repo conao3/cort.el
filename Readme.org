@@ -15,7 +15,7 @@
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
 - You can test your package as close to vanilla's Emacs.
-- Fail or error tests, output simple and intuitive error message.
+- If it fails or error tests, it would output the simple and intuitive error message.
 
 (~ert.el~ is attached as standard to Emacs,
 operates from Emacs-24 and I think that
