@@ -24,12 +24,12 @@ it is difficult to understand the displayed error.)
 * How to use?
 1. Put ~cort.el~ your package root folder.
 2. Create ~Makefile~, ~.travis.yml~ if you need.
-3. Create testcase difinition file as ~[package-name]-tests.el~.
+3. Create test cases definition file as ~[package-name]-tests.el~.
 
 (Please look at the file of this repository for a practical example.)
 
 ** Makefile
-~Makefile~ sumple is shown below.
+~Makefile~ sample is shown below.
 #+begin_src makefile-bsdmake
   TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
 
@@ -46,16 +46,16 @@ it is difficult to understand the displayed error.)
   build: $(ELCS)
 
   %.elc: %.el
-	  @printf "Compiling $<\n"
-	  @$(BATCH) -f batch-byte-compile $<
+      @printf "Compiling $<\n"
+      @$(BATCH) -f batch-byte-compile $<
 
   check: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make check`.
-	  $(BATCH) -l cort-tests.el -f cort-run-tests
+      $(BATCH) -l cort-tests.el -f cort-run-tests
 
   clean:
-	  -find . -type f -name "*.elc" | xargs rm
+      -find . -type f -name "*.elc" | xargs rm
 #+end_src
 
 ** .travis.yml
@@ -89,7 +89,7 @@ it is difficult to understand the displayed error.)
   ;; require depends package
   (require 'cort)
 
-  ;; if you need temporary functions for test, define this.
+  ;; if you need temporary functions for a test, define this.
   (defun quote-a ()
     'a)
 
@@ -141,11 +141,11 @@ it is difficult to understand the displayed error.)
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration~,
 and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
 
-Therefore, ~cort-deftest~ same testcase, not running test twice.
-~test-name~ shouldn't be unique name.
+Therefore, ~cort-deftest~ same test case, not running test twice.
+~test-name~ shouldn't be a unique name.
 
 *** Basic test case (Expected ~t~)
-~test-configuration~ accept list of the form ~(:KEY GIVEN EXPECT)~,
+~test-configuration~ accept the list of the form ~(:KEY GIVEN EXPECT)~,
 expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 
 By defining like this, any comparison function can use that returns a boolean value
@@ -153,7 +153,7 @@ such as ~eq~, ~equal~, or ~=~.
 
 This flexible test notation is one of the important merits of ~cort.el~.
 
-*** Error expected test case
+*** Error expected a test case
 If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
 ~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
 expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
@@ -198,12 +198,12 @@ If you want to change the expected form according to the variable
   ;; second cort-if statemment is ignored, because first cort-if's VAR is t.
 #+end_src
 
-You can specify many ~:cort-if~ statemant, and you should specify a list like ~(COND FORM)~ for each.
-When the first element of list is ~t~, it is adopted as the form expected by the second element of it.
+You can specify many ~:cort-if~ statement, and you should specify a list like ~(COND FORM)~ for each.
+When the first element of the list is ~t~, it is adopted as the form expected by the second element of it.
 
 If all the first elements are nil, the default value is adopted.
 
-(You can use ~:cort-if~ statemant for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
+(You can use ~:cort-if~ statement for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
 However, such test cases are confusing you in many cases, so you should not use them.)
 
 *** Change the value expected by the test case (by Emacs version)
@@ -250,9 +250,9 @@ and the earliest value in the list is adopted for expected value.
 Please refer to ~version-to-list~ in subr.el (Emacs source)
 to see the value that ~:cort-emacs*~ can receive. 
 For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
-(however, a value not including a space)
+(however, a value not including space)
 
-*** Create test case by macro
+*** Create a test case by macro
 When writing many test cases, it is troublesome to write common parts many times.
 
 Therefore, you can let the macro make the test case as shown below.
@@ -334,18 +334,18 @@ All ~srt~ suffix flag is renamed to ~cort~ suffix.
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
 
 * Japanese readme
-There're japanese readme(~Readme-ja.org~)(obsolete).
+There're Japanese readme(~Readme-ja.org~)(obsolete).
 
 * Welcome PR
 We welcome PR!
-travis CI test ~cort-test.el~ with oll Emacs version 22 or above.
+travis CI test ~cort-test.el~ with all Emacs version 22 or above.
 
 I think that it is difficult to prepare the environment locally, 
-so I think that it is good to throw PR and test travis for the time being!
+so I think that it is good to throw PR and test Travis for the time being!
 Feel free throw PR!
 
 * Special Thanks
 Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
 in developing ~cort.el~.
 
-Thanks you very much!!
+Thank you very much!!
