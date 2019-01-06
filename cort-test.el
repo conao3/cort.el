@@ -1,4 +1,4 @@
-;;; cort.el ---                                       -*- lexical-binding: t; -*-
+;;; cort-test.el ---                                 -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Naoya Yamashita
 
@@ -495,5 +495,5 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
       (princ (format cort-passed-message
                      testc (- testc failc errorc) failc errorc emacs-version)))))
 
-(provide 'cort)
-;;; cort.el ends here
+(provide 'cort-test)
+;;; cort-test.el ends here

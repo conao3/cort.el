@@ -12,7 +12,7 @@ BATCH       := $(EMACS) -Q --batch -L $(TOP)
 BATCH_LOCAL  = $* -Q --batch -L `pwd`
 
 TESTFILE    := cort-tests.el
-ELS         := cort.el
+ELS         := cort-test.el
 ELCS        := $(ELS:.el=.elc)
 CORTELS     := $(TESTFILE)
 CORT_ARGS   := -l $(TESTFILE) -f cort-run-tests
