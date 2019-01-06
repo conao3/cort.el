@@ -2,8 +2,12 @@
 
 ;; Copyright (C) 2018  Naoya Yamashita
 
-;; Author: Naoya Yamashita
-;; Keywords: test
+;; Author: Naoya Yamashita <conao3@gmail.com>
+;; Maintainer: Naoya Yamashita <conao3@gmail.com>
+;; Keywords: test lisp
+;; Version: 3.0.0
+;; URL: https://github.com/conao3/cort.el
+;; Package-Requires: ((emacs "22.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -31,7 +35,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst cort-version "3.0.8"
+(defconst cort-version "3.0.9"
   "cort.el version")
 
 (defconst cort-env-symbols '(:cort-emacs<
