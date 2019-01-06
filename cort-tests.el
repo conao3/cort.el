@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 3.0.0
+;; Version: 4.0.0
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "22.0"))
 

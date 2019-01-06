@@ -1,7 +1,7 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-* cort.el
+* cort-test.el
 [[https://github.com/conao3/cort.el][https://img.shields.io/github/tag/conao3/cort.el.svg?style=flat-square]]
 [[https://travis-ci.org/conao3/cort.el][https://img.shields.io/travis/conao3/cort.el/master.svg?style=flat-square]]
 [[https://github.com/conao3/cort.el][https://img.shields.io/github/license/conao3/cort.el.svg?style=flat-square]]
@@ -9,9 +9,9 @@
 [[./imgs/capture.png]]
 
 * What is it?
-~cort.el~ is simplify unit test framework and works with Emacs-22 or above.
+~cort-test.el~ is simplify unit test framework and works with Emacs-22 or above.
 
-~cort.el~ is one-file simply test package, there're so many merits.
+~cort-test.el~ is one-file simply test package, there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
 - You can test your package as close to vanilla's Emacs.
@@ -22,7 +22,7 @@ operates from Emacs-24 and I think that
 it is difficult to understand the displayed error.)
 
 * How to use?
-1. Put ~cort.el~ your package root folder.
+1. Put ~cort-test.el~ your package root folder.
 2. Create ~Makefile~, ~.travis.yml~ if you need.
 3. Create test cases definition file as ~[package-name]-tests.el~.
 
@@ -139,7 +139,7 @@ it is difficult to understand the displayed error.)
   ;; ...
 #+end_src
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration~,
-and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
+and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort-test.el~.
 
 Therefore, ~cort-deftest~ same test case, not running test twice.
 ~test-name~ shouldn't be a unique name.
@@ -151,7 +151,7 @@ expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 By defining like this, any comparison function can use that returns a boolean value
 such as ~eq~, ~equal~, or ~=~.
 
-This flexible test notation is one of the important merits of ~cort.el~.
+This flexible test notation is one of the important merits of ~cort-test.el~.
 
 *** Error expected a test case
 If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
@@ -311,6 +311,13 @@ and you should not run all forms to immediate when you define a test.
 
 Therefore, we usually recommend using macros.)
 * Migration
+** cort v3.0 to cort-test v4.0
+*** ~cort~ has renamed to ~cort-test~
+MELPA ignore ~*-test.el~ and ~*-tests.el~ by default.
+With rename ~cort.el~ to ~cort-test.el~, MELPA can ignore this test framework by default.
+
+However, since this prefix has not changed, this effect is minimal.
+
 ** srt v2.0 to cort v3.0
 *** ~srt~ has renamed to ~cort~
 All ~srt~ suffix flag is renamed to ~cort~ suffix.
@@ -346,6 +353,6 @@ Feel free throw PR!
 
 * Special Thanks
 Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
-in developing ~cort.el~.
+in developing ~cort-test.el~.
 
 Thank you very much!!
