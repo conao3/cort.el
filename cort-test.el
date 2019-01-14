@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 4.0.0
+;; Version: 5.0.0
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "22.0"))
 
@@ -35,7 +35,7 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst cort-version "4.0.2"
+(defconst cort-version "5.0.0"
   "cort.el version")
 
 (defconst cort-env-symbols '(:cort-emacs<
