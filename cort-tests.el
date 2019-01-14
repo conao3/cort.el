@@ -85,150 +85,128 @@
 ;;      :cort-if (t 'd))))
 
 (cort-deftest simple:equal
-              (:equal '(a b c) '(a b c)))
+  ((:equal '(a b c) '(a b c))))
 
 (cort-deftest simple:=
-              (:= 100 100))
+  ((:= 100 100)))
 
 (cort-deftest quote-a:0
-              (:eq 'a 'a))
+  (:eq 'a 'a))
 
 (cort-deftest quote-a:1
-              (:eq (quote-a) 'a))
+  (:eq (quote-a) 'a))
 
 (cort-deftest quote-a:2
-              (:eq 'a (quote-a)))
+  (:eq 'a (quote-a)))
 
 (cort-deftest quote-a:3
-              (:eq (quote-a) (quote-a)))
+  (:eq (quote-a) (quote-a)))
 
 (cort-deftest sym:0
-              (:eq 'a 'a))
+  (:eq 'a 'a))
 
 (cort-deftest sym:1
-              (:eq (sym a) 'a))
+  (:eq (sym a) 'a))
 
 (cort-deftest sym:2
-              (:eq 'a (sym a)))
+  (:eq 'a (sym a)))
 
 (cort-deftest sym:3
-              (:eq (sym a) (sym a)))
+  (:eq (sym a) (sym a)))
 
 (cort-deftest sym:4
-              (:equal (sym (a b c)) '(a b c)))
+  (:equal (sym (a b c)) '(a b c)))
 
 (cort-deftest sym:5
-              (:equal '(a b c) (sym (a b c))))
+  (:equal '(a b c) (sym (a b c))))
 
 (cort-deftest sym:6
-              (:equal (sym (a b c)) (sym (a b c))))
+  (:equal (sym (a b c)) (sym (a b c))))
 
 (cort-deftest err:1
-              (:cort-error 'void-function
-                           (a 'a)))
+  (:cort-error 'void-function
+               (a 'a)))
 
 (cort-deftest err:2
-              (:cort-error 'error
-                           (a 'a)))
+  (:cort-error 'error
+               (a 'a)))
 
 (cort-deftest err:3
-              (:cort-error 'arith-error
-                           (/ 1 0)))
+  (:cort-error 'arith-error
+               (/ 1 0)))
 
 (cort-deftest err:4
-              (:cort-error 'void-variable
-                           (+ 1 a)))
+  (:cort-error 'void-variable
+               (+ 1 a)))
 
-(cort-deftest cort-if:1
-              (:eq 'a
-                   ('b
-                    :cort-if (t 'a))))
+(cort-deftest cort-if
+  ((:eq 'a ('b
+            :cort-if (t 'a)))
+   (:eq 'a ('b
+            :cort-if (nil 'c)
+            :cort-if (t 'a)))
+   (:eq 'a ('a
+            :cort-if (nil 'c)
+            :cort-if (nil 'd)))
+   (:eq 'a ('b
+            :cort-if (t 'a)
+            :cort-if (t 'b)))))
 
-(cort-deftest cort-if:2
-              (:eq 'a
-                   ('b
-                    :cort-if (nil 'c)
-                    :cort-if (t 'a))))
+(cort-deftest cort-if-
+  ((:eq ('b
+         :cort-if (t 'a))
+        'a)
+   (:eq ('b
+         :cort-if (nil 'c)
+         :cort-if (t 'a))
+        'a)
+   (:eq ('a
+         :cort-if (nil 'c)
+         :cort-if (nil 'd))
+        'a)
+   (:eq ('b
+         :cort-if (t 'a)
+         :cort-if (t 'b))
+        'a)))
 
-(cort-deftest cort-if:3
-              (:eq 'a
-                   ('a
-                    :cort-if (nil 'c)
-                    :cort-if (nil 'd))))
-
-(cort-deftest cort-if:4
-              (:eq 'a
-                   ('b
-                    :cort-if (t 'a)
-                    :cort-if (t 'b))))
-
-(cort-deftest cort-if:1-
-              (:eq ('b
-                    :cort-if (t 'a))
-                   'a))
-
-(cort-deftest cort-if:2-
-              (:eq ('b
-                    :cort-if (nil 'c)
-                    :cort-if (t 'a))
-                   'a))
-
-(cort-deftest cort-if:3-
-              (:eq ('a
-                    :cort-if (nil 'c)
-                    :cort-if (nil 'd))
-                   'a))
-
-(cort-deftest cort-if:4-
-              (:eq ('b
-                    :cort-if (t 'a)
-                    :cort-if (t 'b))
-                   'a))
-
-(cort-deftest cort-if:1--
-              (:eq ('b
-                    :cort-if (t 'a))
-                   ('b
-                    :cort-if (t 'a))))
-
-(cort-deftest cort-if:2--
-              (:eq ('b
-                    :cort-if (nil 'c)
-                    :cort-if (t 'a))
-                   ('b
-                    :cort-if (nil 'c)
-                    :cort-if (t 'a))))
-
-(cort-deftest cort-if:3--
-              (:eq ('a
-                    :cort-if (nil 'c)
-                    :cort-if (nil 'd))
-                   ('a
-                    :cort-if (nil 'c)
-                    :cort-if (nil 'd))))
-
-(cort-deftest cort-if:4--
-              (:eq ('b
-                    :cort-if (t 'a)
-                    :cort-if (t 'b))
-                   ('b
-                    :cort-if (t 'a)
-                    :cort-if (t 'b))))
+(cort-deftest cort-if--
+  ((:eq ('b
+         :cort-if (t 'a))
+        ('b
+         :cort-if (t 'a)))
+   (:eq ('b
+         :cort-if (nil 'c)
+         :cort-if (t 'a))
+        ('b
+         :cort-if (nil 'c)
+         :cort-if (t 'a)))
+   (:eq ('a
+         :cort-if (nil 'c)
+         :cort-if (nil 'd))
+        ('a
+         :cort-if (nil 'c)
+         :cort-if (nil 'd)))
+   (:eq ('b
+         :cort-if (t 'a)
+         :cort-if (t 'b))
+        ('b
+         :cort-if (t 'a)
+         :cort-if (t 'b)))))
 
 (cort-deftest cort-emacs=:0
-              (:= 10
-                  (0
-                   :cort-emacs> (0 10))))
+  ((:= 10
+      (0
+       :cort-emacs> (0 10)))))
 
 (cort-deftest cort-macro:0
-              (match-expansion
-               (when x (princ x))
-               '(if x (progn (princ x)))))
+  ((match-expansion
+    (when x (princ x))
+    '(if x (progn (princ x))))))
 
 (cort-deftest cort-macro:0-
-              (match-expansion-fn
-               '(when x (princ x))
-               '(if x (progn (princ x)))))
+  ((match-expansion-fn
+    '(when x (princ x))
+    '(if x (progn (princ x))))))
 
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
