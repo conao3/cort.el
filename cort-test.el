@@ -409,50 +409,48 @@ Example:
       (cort-asetq (it result)
         (append it `(:default ,env))))))
 
-(defmacro cort-deftest (name keys)
-  "Define a test case with the name A.
-KEYS supported below form.
+(defmacro cort-deftest (name testlst)
+  "Define a test case with the NAME.
+TESTLST is list of forms as below.
 
-basic: (:COMPFUN FORM EXPECT)
+basic: (:COMPFUN GIVEN EXPECT)
 error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
 
-  (let ((symbol (car keys)))
-    (if (fboundp symbol)
-        (if (eq (car (symbol-function symbol)) 'macro)
-            (setq keys (macroexpand keys))
-          (setq keys (eval keys)))))
-  
-  (let ((fn #'cort-normalize-env))
-    (cort-case #'eq (nth 0 keys)
-      (:cort-error
-       (let ((method   (funcall fn (nth 0 keys)))
-             (err-type (funcall fn (nth 1 keys)))
-             (given    (funcall fn (nth 2 keys))))
-         `(add-to-list 'cort-test-cases
-                       '(,name (:cort-testcase
-                                :method   ,method
-                                :err-type ,err-type
-                                :given    ,given))
-                       t)))
-      (_
-       (let ((method (funcall fn (nth 0 keys)))
-             (given  (funcall fn (nth 1 keys)))
-             (expect (funcall fn (nth 2 keys))))
-         (if t ;; (fboundp (cort-get-funcsym (car method)))
-             `(add-to-list 'cort-test-cases
-                           '(,name (:cort-testcase
-                                    :method ,method
-                                    :given  ,given
-                                    :expect ,expect))
-                           t)
-           `(progn
-              (cort-testfail ',name (cdr
-                                     '(:cort-testcase
-                                       :method ,method
-                                       :given  ,given
-                                       :expect ,expect)))
-              (error "invalid test case"))))))))
+  (let ((fn #'cort-normalize-env)
+        (testlst* (eval testlst)))
+    `(progn
+       ,@(mapcar (lambda (test)
+                   (cort-case #'eq (nth 0 test)
+                     (:cort-error
+                      (let ((method   (funcall fn (nth 0 test)))
+                            (err-type (funcall fn (nth 1 test)))
+                            (given    (funcall fn (nth 2 test))))
+                        `(add-to-list 'cort-test-cases
+                                      '(,name (:cort-testcase
+                                               :method   ,method
+                                               :err-type ,err-type
+                                               :given    ,given))
+                                      t)))
+                     (_
+                      (let ((method (funcall fn (nth 0 test)))
+                            (given  (funcall fn (nth 1 test)))
+                            (expect (funcall fn (nth 2 test))))
+                        (if t ;; (fboundp (cort-get-funcsym (car method)))
+                            `(add-to-list 'cort-test-cases
+                                          '(,name (:cort-testcase
+                                                   :method ,method
+                                                   :given  ,given
+                                                   :expect ,expect))
+                                          t)
+                          `(progn
+                             (cort-testfail ',name (cdr
+                                                    '(:cort-testcase
+                                                      :method ,method
+                                                      :given  ,given
+                                                      :expect ,expect)))
+                             (error "invalid test case")))))))
+                 testlst*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
