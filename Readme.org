@@ -1,16 +1,38 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-[[https://github.com/conao3/cort-test.el][https://img.shields.io/github/tag/conao3/cort-test.el.svg?style=flat-square]]
+[[https://github.com/conao3/cort-test.el][https://raw.githubusercontent.com/conao3/files/master/header/png/cort-test.el.png]]
+[[https://github.com/conao3/cort-test.el/blob/master/LICENSE][https://img.shields.io/github/license/conao3/cort-test.el.svg?style=flat-square]]
+[[https://github.com/conao3/cort-test.el/releases][https://img.shields.io/github/tag/conao3/cort-test.el.svg?style=flat-square]]
 [[https://travis-ci.org/conao3/cort-test.el][https://img.shields.io/travis/conao3/cort-test.el/master.svg?style=flat-square]]
-[[https://github.com/conao3/cort-test.el][https://img.shields.io/github/license/conao3/cort-test.el.svg?style=flat-square]]
-[[https://github.com/conao3/github-header][https://files.conao3.com/github-header/gif/cort-test.el.gif]]
+[[https://app.codacy.com/project/conao3/cort-test.el/dashboard][https://img.shields.io/codacy/grade/f37ea5ce921f4d05b4f900945c2121c2.svg?logo=codacy&style=flat-square]]
+[[https://www.patreon.com/conao3][https://img.shields.io/badge/patreon-@conao3-orange.svg?logo=patreon&style=flat-square]]
+[[https://twitter.com/conao_3][https://img.shields.io/badge/twitter-@conao__3-blue.svg?logo=twitter&style=flat-square]]
+[[https://join.slack.com/t/conao3-support/shared_invite/enQtNTg2MTY0MjkzOTU0LTFjOTdhOTFiNTM2NmY5YTE5MTNlYzNiOTE2MTZlZWZkNDEzZmRhN2E0NjkwMWViZTZiYjA4MDUxYTUzNDZiNjY][https://img.shields.io/badge/chat-on_slack-blue.svg?logo=slack&style=flat-square]]
 
 [[./imgs/capture.png]]
 
-* What is it?
-~cort-test.el~ is simplify unit test framework and works with Emacs-22 or above.
+* Table of Contents
+- [[#background][Background]]
+- [[#install][Install]]
+  - [[#makefile][Makefile]]
+  - [[#-travis-yml][.travis.yml]]
+  - [[#cort-test-el][cort-test.el]]
+- [[#usage][Usage]]
+  - [[#basic-test-case][Basic test case]]
+  - [[#cort-error-keyword][ ~:cort-error~ keyword]]
+  - [[#cort-if-keyword][ ~:cort-if~ keyword]]
+  - [[#cort-emacs-keyword][ ~:cort-emacs~ keyword]]
+- [[#create-test-case-by-macro][Create test case by macro]]
+- [[#migration][Migration]]
+  - [[#srt-v2-0-to-cort-v3-0][srt v2.0 to cort v3.0]]
+  - [[#srt-v1-0-to-v2-0][srt v1.0 to v2.0]]
+- [[#why-we-support-emacs-22][Why We support Emacs-22?]]
+- [[#japanese-readme][Japanese readme]]
+- [[#welcome-pr][Welcome PR]]
+- [[#special-thanks][Special Thanks]]
 
+* Background
 ~cort-test.el~ is one-file simply test package, there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
@@ -21,8 +43,8 @@
 operates from Emacs-24 and I think that
 it is difficult to understand the displayed error.)
 
-* How to use?
-1. Put ~cort-test.el~ your package root folder.
+* Install
+1. Put ~cort.el~ your package root folder.
 2. Create ~Makefile~, ~.travis.yml~ if you need.
 3. Create test cases definition file as ~[package-name]-tests.el~.
 
@@ -145,9 +167,10 @@ and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort-test.el~.
 Therefore, define same test case by ~cort-deftest~, not running test twice.
 Dupulicated ~test-name~ is allowed.
 
-*** Basic test case
-(Expected ~t~)
-~test-configuration~ accept the list of the form ~(:KEY GIVEN EXPECT)~,
+* Usage
+** Basic test case
+~test-configuration~ accept list of the form ~(:KEY GIVEN EXPECT)~,
+>>>>>>> fix readme style
 expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 
 By defining like this, any comparison function can use that returns a boolean value
@@ -155,12 +178,12 @@ such as ~eq~, ~equal~, or ~=~.
 
 This flexible test notation is one of the important merits of ~cort-test.el~.
 
-*** Error expected a test case
+** ~:cort-error~ keyword
 If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
 ~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
 expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
 
-*** Change the value expected by the test case (by general boolean values)
+** ~:cort-if~ keyword
 If you want to change the expected form according to the variable
 (or function returns boolean value), use the ~:cort-if~ statement.
 
@@ -208,7 +231,7 @@ If all the first elements are nil, the default value is adopted.
 (You can use ~:cort-if~ statement for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
 However, such test cases are confusing you in many cases, so you should not use them.)
 
-*** Change the value expected by the test case (by Emacs version)
+** ~:cort-emacs~ keyword
 If you want to change the expected by Emacs version, use the ~:cort-emacs*~ statement.
 The following symbols are provided.
 - ~:cort-emacs<~
@@ -254,7 +277,8 @@ to see the value that ~:cort-emacs*~ can receive.
 For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
 (however, a value not including space)
 
-*** Create a test case by macro
+** Create test case by macro
+>>>>>>> make table of contents
 When writing many test cases, it is troublesome to write common parts many times.
 
 Therefore, you can let the macro make the test case as shown below.
@@ -312,6 +336,7 @@ However, test definitions and test runs should usually be separated,
 and you should not run all forms to immediate when you define a test.
 
 Therefore, we usually recommend using macros.)
+
 * Migration
 ** v4.0 to v5.0
 - A now expects a list of forms as the second argument.
@@ -321,6 +346,7 @@ Therefore, we usually recommend using macros.)
 
 ** cort v3.0 to cort-test v4.0
 - ~cort~ has renamed to ~cort-test~
+
   MELPA ignore ~*-test.el~ and ~*-tests.el~ by default.
   With rename ~cort.el~ to ~cort-test.el~, MELPA can ignore this test framework by default.
 
@@ -328,6 +354,7 @@ Therefore, we usually recommend using macros.)
 
 ** srt v2.0 to cort v3.0
 - ~srt~ has renamed to ~cort~
+
   All ~srt~ suffix flag is renamed to ~cort~ suffix.
 
 ** srt v1.0 to v2.0
@@ -346,21 +373,49 @@ Therefore, we usually recommend using macros.)
                   (a 'a)))
   #+end_src
 
-* Why We support Emacs-22?
+* Information
+** Why We support Emacs-22?
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
 
-* Japanese readme
-There're Japanese readme(~Readme-ja.org~)(obsolete).
+** Japanese readme
+There're japanese readme(~Readme-ja.org~)(obsolete).
 
-* Welcome PR
-We welcome PR!
-travis CI test ~cort-test.el~ with all Emacs version 22 or above.
+** Donation
+I love OSS and I am dreaming of working on it as *full-time* job.
+
+*With your support*, I will be able to spend more time at OSS!
+
+[[https://www.patreon.com/conao3][https://c5.patreon.com/external/logo/become_a_patron_button.png]]
+
+** Community
+All feedback and suggestions are welcome!
+
+You can use github issues, but you can also use [[https://join.slack.com/t/conao3-support/shared_invite/enQtNTg2MTY0MjkzOTU0LTFjOTdhOTFiNTM2NmY5YTE5MTNlYzNiOTE2MTZlZWZkNDEzZmRhN2E0NjkwMWViZTZiYjA4MDUxYTUzNDZiNjY][Slack]]
+if you want a more casual conversation.
+
+** Contribution
+travis CI test ~cort-test.el~ with oll Emacs version 22 or above.
 
 I think that it is difficult to prepare the environment locally, 
-so I think that it is good to throw PR and test Travis for the time being!
-Feel free throw PR!
+so I think that it is good to throw PR and test travis for the time being!
+>>>>>>> fix readme style
 
-* Special Thanks
+Feel free to send PR!
+
+** License
+#+begin_example
+  Affero General Public License Version 3 (AGPLv3)
+  Copyright (c) Naoya Yamashita - https://conao3.com
+  https://github.com/conao3/cort-test.el/blob/master/LICENSE
+#+end_example
+
+** Author
+- Naoya Yamashita ([[https://github.com/conao3][conao3]])
+
+** Contributor
+- Kazuya Sugiyama ([[https://github.com/Kzflute][Kzflute]])
+
+** Special Thanks
 Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
 in developing ~cort-test.el~.
 
