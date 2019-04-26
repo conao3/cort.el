@@ -1,7 +1,7 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-[[https://github.com/conao3/cort-test.el][https://raw.githubusercontent.com/conao3/files/master/header/png/cort-test.el.png]]
+[[https://github.com/conao3/cort-test.el][https://raw.githubusercontent.com/conao3/files/master/blob/headers/png/cort-test.el.png]]
 [[https://github.com/conao3/cort-test.el/blob/master/LICENSE][https://img.shields.io/github/license/conao3/cort-test.el.svg?style=flat-square]]
 [[https://github.com/conao3/cort-test.el/releases][https://img.shields.io/github/tag/conao3/cort-test.el.svg?style=flat-square]]
 [[https://travis-ci.org/conao3/cort-test.el][https://img.shields.io/travis/conao3/cort-test.el/master.svg?style=flat-square]]
@@ -13,7 +13,7 @@
 [[./imgs/capture.png]]
 
 * Table of Contents
-- [[#background][Background]]
+- [[#description][Background]]
 - [[#install][Install]]
   - [[#makefile][Makefile]]
   - [[#-travis-yml][.travis.yml]]
@@ -27,12 +27,18 @@
 - [[#migration][Migration]]
   - [[#srt-v2-0-to-cort-v3-0][srt v2.0 to cort v3.0]]
   - [[#srt-v1-0-to-v2-0][srt v1.0 to v2.0]]
-- [[#why-we-support-emacs-22][Why We support Emacs-22?]]
-- [[#japanese-readme][Japanese readme]]
-- [[#welcome-pr][Welcome PR]]
-- [[#special-thanks][Special Thanks]]
+- Information
+  - [[#why-we-support-emacs-22][Why We support Emacs-22?]]
+  - [[#japanese-readme][Japanese readme]]
+  - [[#donation][Donation]]
+  - [[#commynity][Community]]
+  - [[#contribution][Contribution]]
+  - [[#license][License]]
+  - [[#author][Author]]
+  - [[#contributors][Contributors]]
+  - [[#special-thanks][Special Thanks]]
 
-* Background
+* Description
 ~cort-test.el~ is one-file simply test package, there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
@@ -170,7 +176,6 @@ Dupulicated ~test-name~ is allowed.
 * Usage
 ** Basic test case
 ~test-configuration~ accept list of the form ~(:KEY GIVEN EXPECT)~,
->>>>>>> fix readme style
 expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 
 By defining like this, any comparison function can use that returns a boolean value
@@ -278,7 +283,6 @@ For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctl
 (however, a value not including space)
 
 ** Create test case by macro
->>>>>>> make table of contents
 When writing many test cases, it is troublesome to write common parts many times.
 
 Therefore, you can let the macro make the test case as shown below.
@@ -398,7 +402,6 @@ travis CI test ~cort-test.el~ with oll Emacs version 22 or above.
 
 I think that it is difficult to prepare the environment locally, 
 so I think that it is good to throw PR and test travis for the time being!
->>>>>>> fix readme style
 
 Feel free to send PR!
 
@@ -412,7 +415,7 @@ Feel free to send PR!
 ** Author
 - Naoya Yamashita ([[https://github.com/conao3][conao3]])
 
-** Contributor
+** Contributors
 - Kazuya Sugiyama ([[https://github.com/Kzflute][Kzflute]])
 
 ** Special Thanks
