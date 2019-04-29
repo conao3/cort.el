@@ -41,11 +41,11 @@
   :group 'lisp)
 
 (defconst cort-test-env-symbols '(:cort-emacs<
-                             :cort-emacs<=
-                             :cort-emacs=
-                             :cort-emacs>
-                             :cort-emacs>=
-                             :cort-if)
+                                  :cort-emacs<=
+                                  :cort-emacs=
+                                  :cort-emacs>
+                                  :cort-emacs>=
+                                  :cort-if)
   "Test case environment symbols.")
 
 (defvar cort-test-test-cases nil
@@ -231,7 +231,7 @@ Example:
   "Return t if LIST contained element of SYMLIST."
   (cort-test-truep
    (cort-test-list-digest (lambda (a b) (or a b))
-     (mapcar (lambda (x) (memq x list)) symlist))))
+                          (mapcar (lambda (x) (memq x list)) symlist))))
 
 (defsubst cort-test-get-funcsym (symbol)
   "Return function symbol from SYMBOL like :eq."
@@ -246,9 +246,9 @@ Example:
 (defun cort-test-get-value-fn (env)
   "Recursive search function for `cort-test-get-value' from ENV."
   (cort-test-aif (it (plist-get env :cort-if))
-      (if (eval (car it))
-          (cadr it)
-        (funcall #'cort-test-get-value-fn (member :cort-if (cddr env))))))
+                 (if (eval (car it))
+                     (cadr it)
+                   (funcall #'cort-test-get-value-fn (member :cort-if (cddr env))))))
 
 (defun cort-test-get-value (plist symbol)
   "Get reasonable value from PLIST.
@@ -277,8 +277,8 @@ Example:
   ;;       (plist-get element :default)))
   (let ((element (plist-get plist symbol)))
     (cort-test-aif (it (funcall #'cort-test-get-value-fn element))
-        it
-      (plist-get element :default))))
+                   it
+                   (plist-get element :default))))
 
 (defun cort-test-test (plist)
   "Actually execute GIVEN to check it match EXPECT geted from PLIST.
@@ -289,14 +289,14 @@ If match, return t, otherwise return nil."
         (expect   (cort-test-get-value plist :expect))
         (err-type (cort-test-get-value plist :err-type)))
     (cort-test-case #'eq method
-      (:cort-error
-       (eval
-        `(condition-case err
-             (eval ,given)
-           (,err-type t))))
-      (_
-       (let* ((funcsym (cort-test-get-funcsym method)))
-         (funcall funcsym (eval given) (eval expect)))))))
+                    (:cort-error
+                     (eval
+                      `(condition-case err
+                           (eval ,given)
+                         (,err-type t))))
+                    (_
+                     (let* ((funcsym (cort-test-get-funcsym method)))
+                       (funcall funcsym (eval given) (eval expect)))))))
 
 (defun cort-test-testpass (name _plist)
   "Output messages for test passed for NAME and _PLIST."
@@ -366,27 +366,27 @@ ENV is list such as (KEYWORD VALUE)"
                             (? (group (or "<" "<=" "=" ">=" ">"))))
                         keyname)
           (cort-test-case #'string= (match-string 2 keyname)
-            ("emacs"
-             (let ((condver  (car value))
-                   (expected (cadr value))
-                   (sign     (match-string 3 keyname)))
-               (if (string-match "^>=?$" sign)
-                   (progn
-                     (setq sign (replace-regexp-in-string "^>" "<" sign))
-                     (list 2 `(:cort-if
-                               ((not
-                                 (funcall
-                                  (intern ,(concat "version" sign))
-                                  emacs-version ,(prin1-to-string condver)))
-                                ,expected))))
-                 (list 2 `(:cort-if
-                           ((funcall
-                             (intern ,(concat "version" sign))
-                             emacs-version ,(prin1-to-string condver))
-                            ,expected))))))
-            
-            ("if"
-             (list 2 `(:cort-if ,value))))
+                          ("emacs"
+                           (let ((condver  (car value))
+                                 (expected (cadr value))
+                                 (sign     (match-string 3 keyname)))
+                             (if (string-match "^>=?$" sign)
+                                 (progn
+                                   (setq sign (replace-regexp-in-string "^>" "<" sign))
+                                   (list 2 `(:cort-if
+                                             ((not
+                                               (funcall
+                                                (intern ,(concat "version" sign))
+                                                emacs-version ,(prin1-to-string condver)))
+                                              ,expected))))
+                               (list 2 `(:cort-if
+                                         ((funcall
+                                           (intern ,(concat "version" sign))
+                                           emacs-version ,(prin1-to-string condver))
+                                          ,expected))))))
+                          
+                          ("if"
+                           (list 2 `(:cort-if ,value))))
 
         (list 1 `(:default ,symbol))))))
 
@@ -402,16 +402,16 @@ Example:
   => (:default 'b
       :cort-if (t 'a))"
   (cort-test-alet (_it ((result)))
-    (if (and (listp env) (cort-test-list-memq cort-test-env-symbols env))
-        (let ((i 0) (envc (length env)))
-          (while (< i envc)
-            (cl-multiple-value-bind (step value)
-                (cort-test-interpret-env-keyword (nthcdr i env))
-              (cort-test-asetq (it result)
-                (append it value))
-              (cort-test-inc i step))))
-      (cort-test-asetq (it result)
-        (append it `(:default ,env))))))
+                  (if (and (listp env) (cort-test-list-memq cort-test-env-symbols env))
+                      (let ((i 0) (envc (length env)))
+                        (while (< i envc)
+                          (cl-multiple-value-bind (step value)
+                              (cort-test-interpret-env-keyword (nthcdr i env))
+                            (cort-test-asetq (it result)
+                                             (append it value))
+                            (cort-test-inc i step))))
+                    (cort-test-asetq (it result)
+                                     (append it `(:default ,env))))))
 
 (defmacro cort-deftest (name testlst)
   "Define a test case with the NAME.
@@ -426,34 +426,34 @@ error: (:cort-test-error EXPECTED-ERROR-TYPE FORM)"
     `(progn
        ,@(mapcar (lambda (test)
                    (cort-test-case #'eq (nth 0 test)
-                     (:cort-error
-                      (let ((method   (funcall fn (nth 0 test)))
-                            (err-type (funcall fn (nth 1 test)))
-                            (given    (funcall fn (nth 2 test))))
-                        `(add-to-list 'cort-test-test-cases
-                                      '(,name (:cort-testcase
-                                               :method   ,method
-                                               :err-type ,err-type
-                                               :given    ,given))
-                                      t)))
-                     (_
-                      (let ((method (funcall fn (nth 0 test)))
-                            (expect (funcall fn (nth 1 test)))
-                            (given  (funcall fn (nth 2 test))))
-                        (if t ;; (fboundp (cort-test-get-funcsym (car method)))
-                            `(add-to-list 'cort-test-test-cases
-                                          '(,name (:cort-testcase
-                                                   :method ,method
-                                                   :expect ,expect
-                                                   :given  ,given))
-                                          t)
-                          `(progn
-                             (cort-test-testfail ',name (cdr
-                                                    '(:cort-testcase
-                                                      :method ,method
-                                                      :expect ,expect
-                                                      :given  ,given)))
-                             (error "Invalid test case")))))))
+                                   (:cort-error
+                                    (let ((method   (funcall fn (nth 0 test)))
+                                          (err-type (funcall fn (nth 1 test)))
+                                          (given    (funcall fn (nth 2 test))))
+                                      `(add-to-list 'cort-test-test-cases
+                                                    '(,name (:cort-testcase
+                                                             :method   ,method
+                                                             :err-type ,err-type
+                                                             :given    ,given))
+                                                    t)))
+                                   (_
+                                    (let ((method (funcall fn (nth 0 test)))
+                                          (expect (funcall fn (nth 1 test)))
+                                          (given  (funcall fn (nth 2 test))))
+                                      (if t ;; (fboundp (cort-test-get-funcsym (car method)))
+                                          `(add-to-list 'cort-test-test-cases
+                                                        '(,name (:cort-testcase
+                                                                 :method ,method
+                                                                 :expect ,expect
+                                                                 :given  ,given))
+                                                        t)
+                                        `(progn
+                                           (cort-test-testfail ',name (cdr
+                                                                       '(:cort-testcase
+                                                                         :method ,method
+                                                                         :expect ,expect
+                                                                         :given  ,given)))
+                                           (error "Invalid test case")))))))
                  testlst*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
