@@ -73,14 +73,44 @@
     (:eq 'a (quote-a))
     (:eq (quote-a) (quote-a))))
 
-(cort-deftest sym
-  '((:eq 'a 'a)
-    (:eq (sym a) 'a)
-    (:eq 'a (sym a))
-    (:eq (sym a) (sym a))
-    (:equal (sym (a b c)) '(a b c))
-    (:equal '(a b c) (sym (a b c)))
-    (:equal (sym (a b c)) (sym (a b c)))))
+(cort-deftest arith
+  '((:= 9   (+ 4 5))
+    (:= -1  (- 4 5))
+    (:= 20  (* 4 5))
+    (:= 0   (/ 4 5))
+    (:= 0.8 (/ 4.0 5))
+    (:= 4   (mod 4 5))))
+
+(cort-deftest string-concat
+  '((:string= "aaabbb" (concat "aaa" "bbb"))
+    (:string= "aaa,bbb,ccc"
+              (mapconcat #'identity '("aaa" "bbb" "ccc") ","))))
+
+(cort-deftest string-split
+  '((:equal '("aaa" "bbb" "ccc") (split-string "aaa,bbb,ccc" ","))))
+
+(cort-deftest string-length
+  '((:= 5  (length "asdfg"))
+    (:= 5  (length "あいうえお"))
+    (:= 10 (string-width "あいうえお"))))
+
+(cort-deftest string-pickup
+  '((:string= "ab"    (substring "abcdef" 0 2))
+    (:string= "abcd"  (substring "abcdef" 0 -2))
+    (:string= "abcde" (substring "abcdef" 0 -1))
+    (:string= "cdef"  (substring "abcdef" 2))))
+
+(cort-deftest string-serch
+  '((:= 1 (string-match "bc" "abcd"))))
+
+(cort-deftest list-reference
+  (let ((lst '(100 200 300)))
+    `((:= 100            (car ',lst))
+      (:equal '(200 300) (cdr ',lst))
+
+      (:= 100 (first ',lst))
+      (:= 100 (nth 0 ',lst))
+      (:= 100 (elt ',lst 0)))))
 
 (cort-deftest err
   '((:cort-error 'void-function (a 'a))
