@@ -80,7 +80,7 @@ it is difficult to understand the displayed error.)
   check: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make check`.
-      $(BATCH) -l cort-tests.el -f cort-run-tests
+      $(BATCH) -l cort-tests.el -f cort-tests-run
 
   clean:
       -find . -type f -name "*.elc" | xargs rm
@@ -342,6 +342,11 @@ and you should not run all forms to immediate when you define a test.
 Therefore, we usually recommend using macros.)
 
 * Migration
+** v5.0 to v6.0
+- Add ~cort-test~ prefix to all functions macros and change below function names.
+  - ~cort-run-tests~ changed to ~cort-test-run~
+  - ~cort-prune-tests~ changed to ~cort-test-prune~
+
 ** v4.0 to v5.0
 - A now expects a list of forms as the second argument.
 

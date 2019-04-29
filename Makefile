@@ -15,7 +15,7 @@ TESTFILE    := cort-tests.el
 ELS         := cort-test.el
 ELCS        := $(ELS:.el=.elc)
 CORTELS     := $(TESTFILE)
-CORT_ARGS   := -l $(TESTFILE) -f cort-run-tests
+CORT_ARGS   := -l $(TESTFILE) -f cort-test-run
 
 LOGFILE     := .make-check.log
 
