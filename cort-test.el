@@ -31,8 +31,10 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))                        ; for old Emacs
+(if (<= 24 emacs-major-version)
+    (require 'cl-lib)
+  (eval-when-compile
+    (require 'cl)))
 
 (defgroup cort nil
   "Simplify elisp test framework."
