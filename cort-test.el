@@ -44,7 +44,7 @@
   "Test case environment symbols.")
 
 (defvar cort-test-cases nil
-  "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE))")
+  "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
 (defcustom cort-debug nil
   "If non nil, turn on debug mode.
@@ -69,7 +69,7 @@ Default, enable color if run test on CUI.
   (if cort-enable-color
       "\n\e[33mRunning %d tests...\e[m\n"
     "\nRunning %d tests...\n")
-  "Header message"
+  "Header message."
   :type 'string
   :group 'cort)
 
@@ -101,7 +101,7 @@ Default, enable color if run test on CUI.
   (if cort-enable-color
       "\e[31m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
-  "Error message"
+  "Error message."
   :type 'string
   :group 'cort)
 
@@ -109,7 +109,7 @@ Default, enable color if run test on CUI.
   (if cort-enable-color
       "\e[34m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
-  "Error message"
+  "Error message."
   :type 'string
   :group 'cort)
 
@@ -119,7 +119,7 @@ Default, enable color if run test on CUI.
 ;;
 
 (defmacro cort-inc (var &optional step)
-  "increment VAR. If given STEP, increment VAR by STEP.
+  "Increment VAR.  If given STEP, increment VAR by STEP.
 Emacs-22 doesn't support `incf'."
   (declare (indent 1) (debug t))
   `(setq ,var (+ ,var ,(if step step 1))))
@@ -131,7 +131,7 @@ Emacs-22 doesn't support `incf'."
         '(multiple-value-bind)))
 
 (defmacro cort-case (fn var &rest conds)
-  "Switch case macro with FN.
+  "Switch case CONDS macro with FN for VAR.
 Emacs-22 doesn't support `pcase'."
   (declare (indent 2))
   (let ((lcond var))
@@ -152,7 +152,7 @@ Emacs-22 doesn't support `pcase'."
 
 (defmacro cort-aif (test-form* then-form &rest else-form)
   "Anaphoric if macro.
-This macro expansion is implemented carefully so that sexp is not 
+This macro expansion is implemented carefully so that sexp is not
 evaluated multiple times.
 
 \(fn (ASYM TEST-FORM) THEN-FORM [ELSE-FORM...])"
@@ -169,17 +169,17 @@ evaluated multiple times.
      (setq ,(cadr sym*) ,body)))
 
 (defmacro cort-alet (varlist* &rest body)
-  "Anaphoric let macro. Return first arg value.
+  "Anaphoric let macro.  Return first arg value.
 CAUTION:
 `it' has first var value, it is NOT updated if var value changed.
 
-(macroexpand
- '(cort-alet (it ((result t)))
-  (princ it)))
-=> (let* ((result t)
-          (it result))
-     (progn (princ it))
-     result)
+  (macroexpand
+   '(cort-alet (it ((result t)))
+    (princ it)))
+  => (let* ((result t)
+            (it result))
+       (progn (princ it))
+       result)
 
 \(fn (ASYM (VARLIST...)) &rest BODY)"
   (declare (debug t) (indent 1))
@@ -190,8 +190,9 @@ CAUTION:
 
 (defmacro cort-with-gensyms (syms &rest body)
   "Create `let' block with `gensym'ed variables.
+SYMS is symbol list.
 
-\(fn (SYM...) &rest body)"
+\(fn (SYM...) &rest BODY)"
   (declare (indent 1))
   `(let ,(mapcar (lambda (s)
                    `(,s (gensym)))
@@ -199,7 +200,7 @@ CAUTION:
      ,@body))
 
 (defsubst cort-truep (var)
-  "Return t if var is non-nil."
+  "Return t if VAR is non-nil."
   (not (not var)))
 
 (defsubst cort-pp (sexp)
@@ -209,13 +210,13 @@ CAUTION:
 (defsubst cort-list-digest (fn list)
   "Make digest from LIST using FN (using 2 args).
 Example:
-(list-digest (lambda (a b) (or a b))
-  '(nil nil t))
-=> nil
+  (list-digest (lambda (a b) (or a b))
+    '(nil nil t))
+  => nil
 
-(list-digest (lambda (a b) (or a b))
-  '(nil nil t))
-=> nil"
+  (list-digest (lambda (a b) (or a b))
+    '(nil nil t))
+  => nil"
   (declare (indent 1))
   (let ((result))
     (mapc (lambda (x) (setq result (funcall fn x result))) list)
@@ -227,10 +228,10 @@ Example:
    (cort-list-digest (lambda (a b) (or a b))
      (mapcar (lambda (x) (memq x list)) symlist))))
 
-(defsubst cort-get-funcsym (method)
-  "Return function symbol from symbol such as :eq"
+(defsubst cort-get-funcsym (symbol)
+  "Return function symbol from SYMBOL like :eq."
   (intern
-   (replace-regexp-in-string "^:+" "" (symbol-name method))))
+   (replace-regexp-in-string "^:+" "" (symbol-name symbol))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -238,7 +239,7 @@ Example:
 ;;
 
 (defun cort-get-value-fn (env)
-  "Recursive search function for `cort-get-value'."
+  "Recursive search function for `cort-get-value' from ENV."
   (cort-aif (it (plist-get env :cort-if))
       (if (eval (car it))
           (cadr it)
@@ -249,15 +250,15 @@ Example:
 Take SYMBOL value from PLIST and return the value by interpreting cort-if etc.
 
 Example:
-;; (cort-get-value
-;;  '(x (:default 'a :cort-if (t 'b)))
-;; 'x)
-;; => 'b
-;;
-;; (cort-get-value
-;;  '(x (:default 'a :cort-if (nil 'b)))
-;;  'x)
-;; => 'a"
+  (cort-get-value
+   '(x (:default 'a :cort-if (t 'b)))
+  'x)
+  ;; => 'b
+  
+  (cort-get-value
+   '(x (:default 'a :cort-if (nil 'b)))
+   'x)
+  ;; => 'a"
 
   ;;   (let ((element (plist-get plist symbol))
   ;;    (fn (lambda (env)
@@ -274,7 +275,7 @@ Example:
       (plist-get element :default))))
 
 (defun cort-test (plist)
-  "Actually execute GIVEN to check it matches EXPECT.
+  "Actually execute GIVEN to check it match EXPECT geted from PLIST.
 If match, return t, otherwise return nil."
 
   (let ((method   (cort-get-value plist :method))
@@ -291,14 +292,15 @@ If match, return t, otherwise return nil."
        (let* ((funcsym (cort-get-funcsym method)))
          (funcall funcsym (eval given) (eval expect)))))))
 
-(defun cort-testpass (name plist)
-  "Output messages for test passed."
+(defun cort-testpass (name _plist)
+  "Output messages for test passed for NAME and _PLIST."
 
   (let ((mesheader (format "%s %s\n" cort-passed-label name)))
     (princ (concat mesheader))))
 
 (defun cort-testfail (name plist &optional err)
-  "Output messages for test failed."
+  "Output messages for test failed for NAME and PLIST.
+ERR is error message."
 
   (let ((method   (cort-get-value plist :method))
         (given    (cort-get-value plist :given))
@@ -383,18 +385,17 @@ ENV is list such as (KEYWORD VALUE)"
         (list 1 `(:default ,symbol))))))
 
 (defun cort-normalize-env (env)
-  "Return normalize test environment list.
+  "Return normalize test environment list for ENV.
 
 Example:
-(cort-normalize-env :eq)
-=> (:default :eq)
+  (cort-normalize-env :eq)
+  => (:default :eq)
 
-(cort-normalize-env '('b
-                     :cort-if (t 'a)))
-=> (:default 'b
-    :cort-if (t 'a))
-"
-  (cort-alet (it ((result)))
+  (cort-normalize-env '('b
+                       :cort-if (t 'a)))
+  => (:default 'b
+      :cort-if (t 'a))"
+  (cort-alet (_it ((result)))
     (if (and (listp env) (cort-list-memq cort-env-symbols env))
         (let ((i 0) (envc (length env)))
           (while (< i envc)
@@ -446,7 +447,7 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
                                                       :method ,method
                                                       :expect ,expect
                                                       :given  ,given)))
-                             (error "invalid test case")))))))
+                             (error "Invalid test case")))))))
                  testlst*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -455,13 +456,13 @@ error: (:cort-error EXPECTED-ERROR-TYPE FORM)"
 ;;
 
 (defun cort-prune-tests ()
-  "Prune all the tests."
+  "Prune all test."
   (interactive)
   (setq cort-test-cases nil)
   (message "prune tests completed."))
 
 (defun cort-run-tests ()
-  "Run all the tests."
+  "Run all test."
   (let ((testc  (length cort-test-cases))
         (failc  0)
         (errorc 0))
