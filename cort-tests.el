@@ -56,39 +56,6 @@
 ;; define tests
 ;;
 
-;; (cort-deftest debug:error
-;;   (:equa 'a 'a))
-
-;; (cort-deftest debug:fail
-;;   (:= (+ 1 3) 5))
-
-;; (cort-deftest debug:unexpected-error
-;;   (:cort-error 'arith-error
-;;            (a 'a)))
-
-;; (cort-deftest debug:cort-if:1
-;;   (:eq 'a
-;;        ('b
-;;      :cort-if (t 'c))))
-
-;; (cort-deftest debug:cort-if:2
-;;   (:eq 'a
-;;        ('b
-;;      :cort-if (nil 'c)
-;;      :cort-if (t 'd))))
-
-;; (cort-deftest debug:cort-if:3
-;;   (:eq 'a
-;;        ('e
-;;      :cort-if (nil 'c)
-;;      :cort-if (nil 'd))))
-
-;; (cort-deftest debug:cort-if:4
-;;   (:eq 'a
-;;        ('b
-;;      :cort-if (t 'c)
-;;      :cort-if (t 'd))))
-
 (defvar d 'a)
 (cort-deftest simple:equal1
   `((:equal ',d 'a)))
@@ -120,75 +87,6 @@
     (:cort-error 'error (a 'a))
     (:cort-error 'arith-error (/ 1 0))
     (:cort-error 'void-variable (+ 1 a))))
-
-(cort-deftest cort-if
-  '((:eq 'a ('b
-             :cort-if (t 'a)))
-    (:eq 'a ('b
-             :cort-if (nil 'c)
-             :cort-if (t 'a)))
-    (:eq 'a ('a
-             :cort-if (nil 'c)
-             :cort-if (nil 'd)))
-    (:eq 'a ('b
-             :cort-if (t 'a)
-             :cort-if (t 'b)))))
-
-(cort-deftest cort-if-
-  '((:eq ('b
-          :cort-if (t 'a))
-         'a)
-    (:eq ('b
-          :cort-if (nil 'c)
-          :cort-if (t 'a))
-         'a)
-    (:eq ('a
-          :cort-if (nil 'c)
-          :cort-if (nil 'd))
-         'a)
-    (:eq ('b
-          :cort-if (t 'a)
-          :cort-if (t 'b))
-         'a)))
-
-(cort-deftest cort-if--
-  '((:eq ('b
-          :cort-if (t 'a))
-         ('b
-          :cort-if (t 'a)))
-    (:eq ('b
-          :cort-if (nil 'c)
-          :cort-if (t 'a))
-         ('b
-          :cort-if (nil 'c)
-          :cort-if (t 'a)))
-    (:eq ('a
-          :cort-if (nil 'c)
-          :cort-if (nil 'd))
-         ('a
-          :cort-if (nil 'c)
-          :cort-if (nil 'd)))
-    (:eq ('b
-          :cort-if (t 'a)
-          :cort-if (t 'b))
-         ('b
-          :cort-if (t 'a)
-          :cort-if (t 'b)))))
-
-(cort-deftest cort-emacs=:0
-  '((:= 10
-        (0
-         :cort-emacs> (0 10)))))
-
-;; (cort-deftest cort-macro:0
-;;   ((match-expansion
-;;     (when x (princ x))
-;;     '(if x (progn (princ x))))))
-
-;; (cort-deftest cort-macro:0-
-;;   ((match-expansion-fn
-;;     '(when x (princ x))
-;;     '(if x (progn (princ x))))))
 
 (provide 'leaf-tests)
 ;;; leaf-tests.el ends here
