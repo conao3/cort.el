@@ -108,7 +108,6 @@
     `((:= 100            (car ',lst))
       (:equal '(200 300) (cdr ',lst))
 
-      (:= 100 (first ',lst))
       (:= 100 (nth 0 ',lst))
       (:= 100 (elt ',lst 0)))))
 
