@@ -20,9 +20,7 @@
   - [[#cort-test-el][cort-test.el]]
 - [[#usage][Usage]]
   - [[#basic-test-case][Basic test case]]
-  - [[#cort-error-keyword][ ~:cort-error~ keyword]]
-  - [[#cort-if-keyword][ ~:cort-if~ keyword]]
-  - [[#cort-emacs-keyword][ ~:cort-emacs~ keyword]]
+  - [[#cort-error-keyword][:cort-error keyword]]
 - [[#create-test-case-by-macro][Create test case by macro]]
 - [[#migration][Migration]]
   - [[#srt-v2-0-to-cort-v3-0][srt v2.0 to cort v3.0]]
@@ -39,7 +37,8 @@
   - [[#special-thanks][Special Thanks]]
 
 * Description
-~cort-test.el~ is one-file simply test package, there're so many merits.
+~cort-test.el~ is one-file simply Emacs Lisp unit test package,
+there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
 - You can test your package as close to vanilla's Emacs.
@@ -58,6 +57,7 @@ it is difficult to understand the displayed error.)
 
 ** Makefile
 ~Makefile~ sample is shown below.
+
 #+begin_src makefile-bsdmake
   TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
 
@@ -113,6 +113,7 @@ it is difficult to understand the displayed error.)
 
 ** cort-test.el
 ~cort-test.el~ sumple is shown below.
+
 #+begin_src emacs-lisp
   ;; require depends package
   (require 'cort)
@@ -121,52 +122,44 @@ it is difficult to understand the displayed error.)
   (defun quote-a ()
     'a)
 
-  (defmacro sym (x)
-    `',x)
-
   ;; define test cases.
   (cort-deftest quote-a
     '((:eq 'a 'a)
       (:eq (quote-a) 'a)
       (:eq 'a (quote-a))
       (:eq (quote-a) (quote-a))))
-
-  (cort-deftest sym
-    '((:eq 'a 'a)
-      (:eq (sym a) 'a)
-      (:eq 'a (sym a))
-      (:eq (sym a) (sym a))
-      (:equal (sym (a b c)) '(a b c))
-      (:equal '(a b c) (sym (a b c)))
-      (:equal (sym (a b c)) (sym (a b c)))))
-
-  (cort-deftest err
-    '((:cort-error 'void-function (a 'a))
-      (:cort-error 'error (a 'a))
-      (:cort-error 'arith-error (/ 1 0))
-      (:cort-error 'void-variable (+ 1 a))))
-
-  (cort-deftest cort-if
-    '((:eq 'a ('b
-               :cort-if (t 'a)))
-      (:eq 'a ('b
-               :cort-if (nil 'c)
-               :cort-if (t 'a)))
-      (:eq 'a ('a
-               :cort-if (nil 'c)
-               :cort-if (nil 'd)))
-      (:eq 'a ('b
-               :cort-if (t 'a)
-               :cort-if (t 'b)))))
-
-  (defvar d 'a)
-  (cort-deftest simple:equal1
-    `((:equal ',d 'a)))
-
-  (cort-deftest simple:equal2
-    (let ((e 'b))
-      `((:equal ',e 'b))))
+  
+  (cort-deftest arith
+    '((:= 9   (+ 4 5))
+      (:= -1  (- 4 5))
+      (:= 20  (* 4 5))
+      (:= 0   (/ 4 5))
+      (:= 0.8 (/ 4.0 5))
+      (:= 4   (mod 4 5))))
+  
+  (cort-deftest string-concat
+    '((:string= "aaabbb" (concat "aaa" "bbb"))
+      (:string= "aaa,bbb,ccc"
+                (mapconcat #'identity '("aaa" "bbb" "ccc") ","))))
+  
+  (cort-deftest string-split
+    '((:equal '("aaa" "bbb" "ccc") (split-string "aaa,bbb,ccc" ","))))
+  
+  (cort-deftest string-length
+    '((:= 5  (length "asdfg"))
+      (:= 5  (length "あいうえお"))
+      (:= 10 (string-width "あいうえお"))))
+  
+  (cort-deftest string-pickup
+    '((:string= "ab"    (substring "abcdef" 0 2))
+      (:string= "abcd"  (substring "abcdef" 0 -2))
+      (:string= "abcde" (substring "abcdef" 0 -1))
+      (:string= "cdef"  (substring "abcdef" 2))))
+  
+  (cort-deftest string-serch
+    '((:= 1 (string-match "bc" "abcd"))))
 #+end_src
+
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration-list~,
 and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort-test.el~.
 
@@ -183,104 +176,10 @@ such as ~eq~, ~equal~, or ~=~.
 
 This flexible test notation is one of the important merits of ~cort-test.el~.
 
-** ~:cort-error~ keyword
+** :cort-error keyword
 If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
 ~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
 expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
-
-** ~:cort-if~ keyword
-If you want to change the expected form according to the variable
-(or function returns boolean value), use the ~:cort-if~ statement.
-
-#+begin_src emacs-lisp
-  (cort-deftest cort-if:1
-    '((:eq 'a
-           ('b
-            :cort-if (t 'a)))))
-  ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because first cort-if's VAR is t
-
-  (cort-deftest cort-if:2
-    `((:eq 'a
-           ('b
-            :cort-if (nil 'c)
-            :cort-if (t 'a)))))
-  ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because second cort-if's VAR is t
-  ;; first cort-if statement is ignored
-
-  (cort-deftest cort-if:3
-    '((:eq 'a
-           ('a
-            :cort-if (nil 'c)
-            :cort-if (nil 'd)))))
-  ;; compare with `eq' 'a and 'a
-  ;; any cort-if statement is ignored because any cort-if's VAR is nil.
-  ;; so 'a is adopted, default value.
-
-  (cort-deftest cort-if:4
-    '((:eq 'a
-           ('b
-            :cort-if (t 'a)
-            :cort-if (t 'b)))))
-  ;; compare with `eq' 'a and 'a
-  ;; 'a is adopted because first cort-if's VAR is t
-  ;; second cort-if statemment is ignored, because first cort-if's VAR is t.
-#+end_src
-
-You can specify many ~:cort-if~ statement, and you should specify a list like ~(COND FORM)~ for each.
-When the first element of the list is ~t~, it is adopted as the form expected by the second element of it.
-
-If all the first elements are nil, the default value is adopted.
-
-(You can use ~:cort-if~ statement for ~GIVEN~ or both ~GIVEN~ and ~EXPECT~.
-However, such test cases are confusing you in many cases, so you should not use them.)
-
-** ~:cort-emacs~ keyword
-If you want to change the expected by Emacs version, use the ~:cort-emacs*~ statement.
-The following symbols are provided.
-- ~:cort-emacs<~
-- ~:cort-emacs<=~
-- ~:cort-emacs=~
-- ~:cort-emacs>=~
-- ~:cort-emacs>~
-
-#+begin_src emacs-lisp
-  (cort-deftest cort-emacs:a0
-    '((:= 10
-          (0
-           :cort-emacs> (0 10)))))
-
-  (cort-deftest cort-emacs:a1
-    '((:= 10
-          (0
-           :cort-if ((not
-                      (funcall (intern "version<") emacs-version "0"))
-                     10)))))
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-  (cort-deftest cort-emacs:b0
-    '((:= 10
-          (0
-           :cort-emacs<= (0 10)))))
-
-  (cort-deftest cort-emacs:b1
-    '((:= 10
-          (0
-           :cort-if (((funcall (intern "version<=") emacs-version "0")
-                      10))))))
-#+end_src
-~cort-emacs:a0~ will be converted to ~cort-emacs:a1~.
-Likewise, ~cort-emacs:b0~ is converted to ~cort-emacs:b1~.
-
-So you can write ~:cort-if~ and ~:cort-emacs*~ statement mixed 
-and the earliest value in the list is adopted for expected value.
-
-Please refer to ~version-to-list~ in subr.el (Emacs source)
-to see the value that ~:cort-emacs*~ can receive. 
-For example, values like ~26.1~, ~1.0pre2~, ~22.8beta2~ are interpreted correctly.
-(however, a value not including space)
 
 ** Create test case by macro
 When writing many test cases, it is troublesome to write common parts many times.
@@ -346,6 +245,10 @@ Therefore, we usually recommend using macros.)
 - Add ~cort-test~ prefix to all functions macros and change below function names.
   - ~cort-run-tests~ changed to ~cort-test-run~
   - ~cort-prune-tests~ changed to ~cort-test-prune~
+
+- Remove environment keyword such as ~:cort-if~, ~:cort-emacs<~,,,
+
+  Use normal condition functions in test definition.
 
 ** v4.0 to v5.0
 - A now expects a list of forms as the second argument.
