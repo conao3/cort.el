@@ -32,7 +32,7 @@
 
 ;;; Code:
 
-(defgroup cort nil
+(defgroup cort-test nil
   "Simplify elisp test framework."
   :group 'lisp)
 
@@ -44,19 +44,19 @@
 
 - don't throw annoying error when test fail, just output message."
   :type 'boolean
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-show-backtrace nil
   "If non nil, show backtrace when fail test case."
   :type 'boolean
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-enable-color noninteractive
   "If non nil, enable color message to output with meta character.
 Default, enable color if run test on CUI.
 `noninteractive' returns t on --batch mode"
   :type 'boolean
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-header-message
   (if cort-test-enable-color
@@ -64,7 +64,7 @@ Default, enable color if run test on CUI.
     "\nRunning %d tests...\n")
   "Header message."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-passed-label
   (if cort-test-enable-color
@@ -72,7 +72,7 @@ Default, enable color if run test on CUI.
     "[PASSED] ")
   "Passed label."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-fail-label
   (if cort-test-enable-color
@@ -80,7 +80,7 @@ Default, enable color if run test on CUI.
     "[FAILED] ")
   "Fail label."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-error-label
   (if cort-test-enable-color
@@ -88,7 +88,7 @@ Default, enable color if run test on CUI.
     "<<ERROR>>")
   "Fail label."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-error-message
   (if cort-test-enable-color
@@ -96,7 +96,7 @@ Default, enable color if run test on CUI.
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
   "Error message."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 (defcustom cort-test-passed-message
   (if cort-test-enable-color
@@ -104,7 +104,7 @@ Default, enable color if run test on CUI.
     "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
   "Error message."
   :type 'string
-  :group 'cort)
+  :group 'cort-test)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
