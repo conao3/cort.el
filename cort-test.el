@@ -367,8 +367,8 @@ Example:
   "Define a test case with the NAME.
 TESTLST is list of forms as below.
 
-basic: (:COMPFUN EXPECT GIVEN)
-error: (:cort-test-error EXPECTED-ERROR-TYPE FORM)"
+basic         : (:COMPFUN EXPECT GIVEN)
+error testcase: (:cort-error EXPECTED-ERROR-TYPE FORM)"
   (declare (indent 1))
 
   (let ((fn #'cort-test-normalize-env)
