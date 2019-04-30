@@ -41,14 +41,6 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defconst cort-test-env-symbols '(:cort-emacs<
-                                  :cort-emacs<=
-                                  :cort-emacs=
-                                  :cort-emacs>
-                                  :cort-emacs>=
-                                  :cort-if)
-  "Test case environment symbols.")
-
 (defvar cort-test-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
@@ -356,41 +348,6 @@ ERR is error message."
 ;;  Define test phase
 ;;
 
-(defun cort-test-interpret-env-keyword (env)
-  "Interpret a single keyword and return sexp.
-ENV is list such as (KEYWORD VALUE)"
-  (let ((symbol (car env))
-        (value  (cadr env)))
-    (let ((keyname (prin1-to-string symbol)))
-      (if (string-match (rx (group ":cort-")
-                            (group (or "emacs" "if"))
-                            (? (group (or "<" "<=" "=" ">=" ">"))))
-                        keyname)
-          (cort-test-case #'string= (match-string 2 keyname)
-                          ("emacs"
-                           (let ((condver  (car value))
-                                 (expected (cadr value))
-                                 (sign     (match-string 3 keyname)))
-                             (if (string-match "^>=?$" sign)
-                                 (progn
-                                   (setq sign (replace-regexp-in-string "^>" "<" sign))
-                                   (list 2 `(:cort-if
-                                             ((not
-                                               (funcall
-                                                (intern ,(concat "version" sign))
-                                                emacs-version ,(prin1-to-string condver)))
-                                              ,expected))))
-                               (list 2 `(:cort-if
-                                         ((funcall
-                                           (intern ,(concat "version" sign))
-                                           emacs-version ,(prin1-to-string condver))
-                                          ,expected))))))
-                          
-                          ("if"
-                           (list 2 `(:cort-if ,value))))
-
-        (list 1 `(:default ,symbol))))))
-
 (defun cort-test-normalize-env (env)
   "Return normalize test environment list for ENV.
 
@@ -403,16 +360,8 @@ Example:
   => (:default 'b
       :cort-if (t 'a))"
   (cort-test-alet (_it ((result)))
-                  (if (and (listp env) (cort-test-list-memq cort-test-env-symbols env))
-                      (let ((i 0) (envc (length env)))
-                        (while (< i envc)
-                          (cl-multiple-value-bind (step value)
-                              (cort-test-interpret-env-keyword (nthcdr i env))
-                            (cort-test-asetq (it result)
-                                             (append it value))
-                            (cort-test-inc i step))))
-                    (cort-test-asetq (it result)
-                                     (append it `(:default ,env))))))
+                  (cort-test-asetq (it result)
+                                   (append it `(:default ,env)))))
 
 (defmacro cort-deftest (name testlst)
   "Define a test case with the NAME.
