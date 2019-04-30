@@ -111,13 +111,6 @@ Default, enable color if run test on CUI.
 ;;  for old Emacs
 ;;
 
-(when (not (fboundp 'incf))
-  (defmacro incf (var &optional step)
-    "Increment VAR.  If given STEP, increment VAR by STEP.
-Emacs-22 doesn't support `incf'."
-    (declare (indent 1))
-    `(setq ,var (+ ,var ,(or step 1)))))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;  small functions
