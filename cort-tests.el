@@ -105,7 +105,7 @@
 
 (cort-deftest list-reference
   (let ((lst '(100 200 300)))
-    `((:= 100            (car ',lst))
+    `((:=     100        (car ',lst))
       (:equal '(200 300) (cdr ',lst))
 
       (:= 100 (nth 0 ',lst))
