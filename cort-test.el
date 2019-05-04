@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 6.0.1
+;; Version: 6.0.2
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.0"))
 
@@ -206,20 +206,18 @@ TESTLST is list of forms as below.
 basic         : (:COMPFUN EXPECT GIVEN)
 error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
   (declare (indent 1))
-  (let ((count 1)
-        (suffixp (not (= 1 (length (cadr testlst)))))
-        (result '(progn))
-        (testlst* (eval testlst)))
-    (dolist (test testlst*)
-      (let ((value `(,(if suffixp
-                         (make-symbol
-                          (format "%s-%s" (symbol-name name) count))
-                       name)
-                     ,@test)))
-        (setq count (1+ count))
-        (setq result
-              (cons `(add-to-list 'cort-test-test-cases ',value) result))))
-    (reverse result)))
+  (let ((count 0)
+        (suffixp (< 1 (length (cadr testlst)))))
+    `(progn
+       ,@(mapcar (lambda (test)
+                   (setq count (1+ count))
+                   `(add-to-list 'cort-test-test-cases
+                                 '(,(if suffixp
+                                         (make-symbol
+                                          (format "%s-%s" (symbol-name name) count))
+                                       name)
+                                    ,@test)))
+                 (eval testlst)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
