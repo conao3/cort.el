@@ -27,7 +27,6 @@
   - [[#srt-v1-0-to-v2-0][srt v1.0 to v2.0]]
 - Information
   - [[#why-we-support-emacs-22][Why We support Emacs-22?]]
-  - [[#japanese-readme][Japanese readme]]
   - [[#donation][Donation]]
   - [[#commynity][Community]]
   - [[#contribution][Contribution]]
@@ -288,9 +287,6 @@ Therefore, we usually recommend using macros.)
 * Information
 ** Why We support Emacs-22?
 Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
-
-** Japanese readme
-There're japanese readme(~Readme-ja.org~)(obsolete).
 
 ** Donation
 I love OSS and I am dreaming of working on it as *full-time* job.
