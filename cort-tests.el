@@ -117,5 +117,5 @@
     (:cort-error 'arith-error (/ 1 0))
     (:cort-error 'void-variable (+ 1 a))))
 
-(provide 'leaf-tests)
-;;; leaf-tests.el ends here
+;; (provide 'cort-tests)
+;;; cort-tests.el ends here
