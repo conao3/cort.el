@@ -1,90 +1,81 @@
 all:
 
 TOP         := $(dir $(lastword $(MAKEFILE_LIST)))
-EMACS_RAW   := $(filter-out emacs-undumped, $(shell compgen -c emacs- | xargs))
-ALL_EMACS   := $(strip $(sort $(EMACS_RAW)))
 
-EMACS       ?= emacs
+UUID         := $(shell ((uuidgen > /dev/null 2>&1 && uuidgen) || echo $$) | cut -c -7)
 
-BATCH       := $(EMACS) -Q --batch -L $(TOP)
-BATCH_LOCAL  = $* -Q --batch -L `pwd`
+UBUNTU_EMACS := 23.4 24.1 24.5 25.1
+ALPINE_EMACS := 25.3 26.1 26.2
+DOCKER_EMACS := $(UBUNTU_EMACS:%=ubuntu-min-%) $(ALPINE_EMACS:%=alpine-min-%)
 
-TESTFILE    := cort-tests.el
-ELS         := cort-test.el
-ELCS        := $(ELS:.el=.elc)
-CORTELS     := $(TESTFILE)
-CORT_ARGS   := -l $(TESTFILE) -f cort-test-run
+DEPENDS      :=
 
-LOGFILE     := .make-check.log
+EMACS        ?= emacs
+BATCH        := $(EMACS) -Q --batch -L $(TOP) $(DEPENDS:%=-L ./%/)
 
-TOUCH_TIME     := 201001010000
-RECOMPILE_SEXP := --eval '(byte-recompile-directory "./")'
+TESTFILE     := cort-tests.el
+ELS          := cort-test.el
 
+CORTELS      := $(TESTFILE)
 
-##################################################
+
+
+.PHONY: all git-hook build check allcheck test clean-soft clean
 
 all: git-hook build
+
+
 
 git-hook:
 	cp -a git-hooks/* .git/hooks/
 
-##############################
-#  byte-compile job
+build: $(ELS:%.el=%.elc)
 
-build: $(ELCS)
+%.elc: %.el $(DEPENDS)
+	$(BATCH) $(DEPENDS:%=-L %/) -f batch-byte-compile $<
 
-$(ELCS): $(ELS)
-	$(EMACS) --version
-	touch -t $(TOUCH_TIME) $(ELCS)
-	$(BATCH) $(RECOMPILE_SEXP)
 
-##############################
-#  simple test job
-
-# If you want to run specify EMACS,
-# run `make` such as `EMACS=emacs-26.1 make check`.
+
+#  docker one-time test (on top level)
 
 check: build
-	$(MAKE) clean --no-print-directory
-	$(BATCH) $(CORT_ARGS)
+	$(BATCH) -l $(TESTFILE) -f cort-test-run
 
-##############################
-#  test on all Emacs
+
+#  docker multi Emacs version test (on independent environment)
 
-allcheck: $(ALL_EMACS:%=.make-check-%)
+allcheck: $(DOCKER_EMACS:%=.make/verbose-${UUID}-emacs-test--%)
 	@echo ""
-	@cat $(LOGFILE) | grep =====
-	@rm $(LOGFILE)
+	@cat $^ | grep =====
+	@rm -rf $^
 
-.make-check-%:
-	mkdir -p .make-$*
-	cp -f $(ELS) $(CORTELS) .make-$*/
-	cd .make-$*; touch -t $(TOUCH_TIME) $(ELCS)
-	cd .make-$*; $(BATCH_LOCAL) $(RECOMPILE_SEXP)
-	cd .make-$*; find . -name "*.elc" | xargs rm -rf
-	cd .make-$*; $(BATCH_LOCAL) $(CORT_ARGS) 2>&1 | tee -a ../$(LOGFILE)
-	@rm -rf .make-$*
+.make/verbose-%: .make $(DEPENDS)
+	docker run -itd --name $* conao3/emacs:$(shell echo $* | sed "s/.*--//") /bin/sh
+	docker cp . $*:/test
+	docker exec $* sh -c "cd test && make clean-soft && make check -j" | tee $@
+	docker rm -f $*
 
-##############################
-#  silent `allcheck' job
+
+#  docker silent `allcheck' job
 
-test: $(ALL_EMACS:%=.make-test-%)
+test: $(DOCKER_EMACS:%=.make/silent-${UUID}-emacs-test--%)
 	@echo ""
-	@cat $(LOGFILE) | grep =====
-	@rm $(LOGFILE)
+	@cat $^ | grep =====
+	@rm -rf $^
 
-.make-test-%:
-	mkdir -p .make-$*
-	cp -f $(ELS) $(CORTELS) .make-$*/
-	cd .make-$*; touch -t $(TOUCH_TIME) $(ELCS)
-	cd .make-$*; $(BATCH_LOCAL) $(RECOMPILE_SEXP)
-	cd .make-$*; find . -name "*.elc" | xargs rm -rf
-	cd .make-$*; $(BATCH_LOCAL) $(CORT_ARGS) 2>&1 >> ../$(LOGFILE)
-	@rm -rf .make-$*
+.make/silent-%: .make $(DEPENDS)
+	docker run -itd --name $* conao3/emacs:$(shell echo $* | sed "s/.*--//") /bin/sh > /dev/null
+	@docker cp . $*:/test
+	@docker exec $* sh -c "cd test && make clean-soft && make check -j" > $@ || ( docker rm -f $*; cat $@ || false )
+	@docker rm -f $* > /dev/null
 
-##############################
-#  other jobs
+.make:
+	mkdir $@
+
+
+
+clean-soft:
+	rm -rf $(ELS:%.el=%.elc) .make
 
 clean:
-	-find . -name "*.elc" | xargs rm -rf
-	-rm -rf .make-*
+	rm -rf $(ELS:%.el=%.elc) $(DEPENDS) .make
