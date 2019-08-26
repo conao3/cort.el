@@ -1,7 +1,5 @@
 all:
 
-include Makefunc.mk
-
 TOP         := $(dir $(lastword $(MAKEFILE_LIST)))
 EMACS_RAW   := $(filter-out emacs-undumped, $(shell compgen -c emacs- | xargs))
 ALL_EMACS   := $(strip $(sort $(EMACS_RAW)))
