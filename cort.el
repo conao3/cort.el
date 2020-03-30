@@ -1,11 +1,11 @@
-;;; cort-test.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
+;;; cort.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018-2019 Naoya Yamashita <conao3@gmail.com>
 
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 6.0.7
+;; Version: 7.0.0
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.0"))
 
@@ -257,5 +257,5 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
       (princ (format cort-test-passed-message
                      testc (- testc failc errorc) failc errorc emacs-version)))))
 
-(provide 'cort-test)
-;;; cort-test.el ends here
+(provide 'cort)
+;;; cort.el ends here

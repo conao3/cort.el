@@ -1,16 +1,10 @@
-;;; cort-tests.el --- cort-test test file       -*- lexical-binding: t; -*-
+;;; cort-tests.el --- cort test file       -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018-2019 Naoya Yamashita <conao3@gmail.com>
 
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
-;; Keywords: test lisp
-;; Version: 6.0.0
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.0"))
-
-;;   Abobe declared this package requires Emacs-24, but it's for warning
-;;   suppression, and will actually work from Emacs-22.
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the Affero GNU General Public License as
@@ -32,7 +26,7 @@
 
 ;;; Code:
 
-(require 'cort-test)
+(require 'cort)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

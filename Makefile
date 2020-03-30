@@ -1,6 +1,6 @@
 all:
 
-TOP         := $(dir $(lastword $(MAKEFILE_LIST)))
+TOP          := $(dir $(lastword $(MAKEFILE_LIST)))
 
 UUID         := $(shell ((uuidgen > /dev/null 2>&1 && uuidgen) || echo $$) | cut -c -7)
 
@@ -14,7 +14,7 @@ EMACS        ?= emacs
 BATCH        := $(EMACS) -Q --batch -L $(TOP) $(DEPENDS:%=-L ./%/)
 
 TESTFILE     := cort-tests.el
-ELS          := cort-test.el
+ELS          := cort.el
 
 CORTELS      := $(TESTFILE)
 
