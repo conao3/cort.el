@@ -1,11 +1,11 @@
 #+author: conao
 #+date: <2018-10-25 Thu>
 
-[[https://github.com/conao3/cort-test.el][https://raw.githubusercontent.com/conao3/files/master/blob/headers/png/cort-test.el.png]]
-[[https://github.com/conao3/cort-test.el/blob/master/LICENSE][https://img.shields.io/github/license/conao3/cort-test.el.svg?style=flat-square]]
-[[https://github.com/conao3/cort-test.el/releases][https://img.shields.io/github/tag/conao3/cort-test.el.svg?style=flat-square]]
-[[https://travis-ci.org/conao3/cort-test.el][https://img.shields.io/travis/conao3/cort-test.el/master.svg?style=flat-square]]
-[[https://app.codacy.com/project/conao3/cort-test.el/dashboard][https://img.shields.io/codacy/grade/f37ea5ce921f4d05b4f900945c2121c2.svg?logo=codacy&style=flat-square]]
+[[https://github.com/conao3/cort.el][https://raw.githubusercontent.com/conao3/files/master/blob/headers/png/cort.el.png]]
+[[https://github.com/conao3/cort.el/blob/master/LICENSE][https://img.shields.io/github/license/conao3/cort.el.svg?style=flat-square]]
+[[https://github.com/conao3/cort.el/releases][https://img.shields.io/github/tag/conao3/cort.el.svg?style=flat-square]]
+[[https://travis-ci.org/conao3/cort.el][https://img.shields.io/travis/conao3/cort.el/master.svg?style=flat-square]]
+[[https://app.codacy.com/project/conao3/cort.el/dashboard][https://img.shields.io/codacy/grade/f37ea5ce921f4d05b4f900945c2121c2.svg?logo=codacy&style=flat-square]]
 [[https://www.patreon.com/conao3][https://img.shields.io/badge/patreon-become%20a%20patron-orange.svg?logo=patreon&style=flat-square]]
 [[https://twitter.com/conao_3][https://img.shields.io/badge/twitter-@conao__3-blue.svg?logo=twitter&style=flat-square]]
 [[https://join.slack.com/t/conao3-support/shared_invite/enQtNjUzMDMxODcyMjE1LTA4ZGRmOWYwZWE3NmE5NTkyZjk3M2JhYzU2ZmRkMzdiMDdlYTQ0ODMyM2ExOGY0OTkzMzZiMTNmZjJjY2I5NTM][https://img.shields.io/badge/chat-on_slack-blue.svg?logo=slack&style=flat-square]]
@@ -16,8 +16,8 @@
 - [[#description][Background]]
 - [[#install][Install]]
   - [[#makefile][Makefile]]
-  - [[#-travis-yml][.travis.yml]]
-  - [[#cort-test-el][cort-test.el]]
+  - [[#travis-yml][.travis.yml]]
+  - [[#cort-el][cort.el]]
 - [[#usage][Usage]]
   - [[#basic-test-case][Basic test case]]
   - [[#cort-error-keyword][:cort-error keyword]]
@@ -36,7 +36,7 @@
   - [[#special-thanks][Special Thanks]]
 
 * Description
-~cort-test.el~ is one-file simply Emacs Lisp unit test package,
+~cort.el~ is one-file simply Emacs Lisp unit test package,
 there're so many merits.
 - It works with Emacs-22 or above.
 - Not need to download big package, many files before testing. Only 1 file.
@@ -79,7 +79,7 @@ it is difficult to understand the displayed error.)
   check: build
   # If byte compile for specific emacs,
   # set EMACS such as `EMACS=26.1 make check`.
-      $(BATCH) -l cort-tests.el -f cort-tests-run
+      $(BATCH) -l corts.el -f cort-tests-run
 
   clean:
       -find . -type f -name "*.elc" | xargs rm
@@ -110,8 +110,8 @@ it is difficult to understand the displayed error.)
     - make check
 #+end_src
 
-** cort-test.el
-~cort-test.el~ sumple is shown below.
+** cort.el
+~cort.el~ sumple is shown below.
 
 #+begin_src emacs-lisp
   ;; require depends package
@@ -160,7 +160,7 @@ it is difficult to understand the displayed error.)
 #+end_src
 
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration-list~,
-and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort-test.el~.
+and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
 
 Therefore, define same test case by ~cort-deftest~, not running test twice.
 Dupulicated ~test-name~ is allowed.
@@ -173,7 +173,7 @@ expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 By defining like this, any comparison function can use that returns a boolean value
 such as ~eq~, ~equal~, or ~=~.
 
-This flexible test notation is one of the important merits of ~cort-test.el~.
+This flexible test notation is one of the important merits of ~cort.el~.
 
 ** :cort-error keyword
 If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
@@ -232,7 +232,7 @@ Therefore, you can let the macro make the test case as shown below.
 
 ~match-expansion0~ and ~match-expansion1~ are equivalent since macros are expanded.
 
-(You can also use a function that returns a list to be accepted by ~cort-deftest~ see cort-test.el.
+(You can also use a function that returns a list to be accepted by ~cort-deftest~ see cort.el.
 
 However, test definitions and test runs should usually be separated, 
 and you should not run all forms to immediate when you define a test.

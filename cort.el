@@ -1,4 +1,4 @@
-;;; cort-test.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
+;;; cort.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018-2019 Naoya Yamashita <conao3@gmail.com>
 
@@ -257,5 +257,5 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
       (princ (format cort-test-passed-message
                      testc (- testc failc errorc) failc errorc emacs-version)))))
 
-(provide 'cort-test)
-;;; cort-test.el ends here
+(provide 'cort)
+;;; cort.el ends here
