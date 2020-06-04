@@ -1,4 +1,4 @@
-;;; cort.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
+;;; cort.el --- Simplify extended unit test framework  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018-2019 Naoya Yamashita <conao3@gmail.com>
 
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 
-;; Simplify extended unit test framework
+;; Simplify extended unit test framework.
 
 ;;; Code:
 
