@@ -49,24 +49,12 @@
   :type 'boolean
   :group 'cort-test)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  for old Emacs
-;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  small functions
-;;
+
+;;; functions
 
 (defsubst cort-test-pp (sexp)
   "Return pretty printed SEXP string."
   (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  support functions
-;;
 
 (defun cort-test-test (test)
   "Actually execute TEST.  TEST expect (METHOD EXPECT GIVEN).
@@ -137,10 +125,8 @@ ERR is error message."
                          (when mesbacktrace mesbacktrace))
                        "\n"))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Define test phase
-;;
+
+;;; deftest
 
 (defmacro cort-deftest (name testlst)
   "Define a test case with the NAME.
@@ -162,10 +148,8 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
                                     ,@test)))
                  (eval testlst)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Run test phase
-;;
+
+;;; main
 
 (defun cort-test-prune ()
   "Prune all test."
