@@ -1,0 +1,7 @@
+;; Keg
+
+(source gnu melpa)
+
+(package
+  (cort
+   (recipe . (cort :fetcher github :repo "conao3/cort.el"))))

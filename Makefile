@@ -1,81 +1,45 @@
+## Makefile
+
 all:
 
-TOP          := $(dir $(lastword $(MAKEFILE_LIST)))
-
-UUID         := $(shell ((uuidgen > /dev/null 2>&1 && uuidgen) || echo $$) | cut -c -7)
-
-UBUNTU_EMACS := 23.4 24.1 24.5 25.1
-ALPINE_EMACS := 25.3 26.1 26.2
-DOCKER_EMACS := $(UBUNTU_EMACS:%=ubuntu-min-%) $(ALPINE_EMACS:%=alpine-min-%)
-
-DEPENDS      :=
+REPO_USER    := conao3
+PACKAGE_NAME := cort
+REPO_NAME    := cort.el
 
 EMACS        ?= emacs
-BATCH        := $(EMACS) -Q --batch -L $(TOP) $(DEPENDS:%=-L ./%/)
 
-TESTFILE     := cort-tests.el
-ELS          := cort.el
+##################################################
 
-CORTELS      := $(TESTFILE)
+.PHONY: all help build test lint clean
 
-
+all: help
 
-.PHONY: all git-hook build check allcheck test clean-soft clean
+help:
+	$(info )
+	$(info Commands)
+	$(info ========)
+	$(info   - make          # Show this help)
+	$(info   - make build    # Compile Elisp files)
+	$(info   - make test     # Compile Elisp files and test $(PACKAGE_NAME))
+	$(info )
+	$(info Cleaning)
+	$(info ========)
+	$(info   - make clean    # Clean compiled files)
+	$(info )
+	$(info This Makefile required `keg`)
+	$(info See https://github.com/$(REPO_USER)/$(REPO_NAME)#contribution)
+	$(info )
 
-all: git-hook build
+##############################
 
-
+build:
+	keg build
 
-git-hook:
-	cp -a git-hooks/* .git/hooks/
+lint:
+	keg lint
 
-build: $(ELS:%.el=%.elc)
-
-%.elc: %.el $(DEPENDS)
-	$(BATCH) $(DEPENDS:%=-L %/) -f batch-byte-compile $<
-
-
-
-#  docker one-time test (on top level)
-
-check: build
-	$(BATCH) -l $(TESTFILE) -f cort-test-run
-
-
-#  docker multi Emacs version test (on independent environment)
-
-allcheck: $(DOCKER_EMACS:%=.make/verbose-${UUID}-emacs-test--%)
-	@echo ""
-	@cat $^ | grep =====
-	@rm -rf $^
-
-.make/verbose-%: .make $(DEPENDS)
-	docker run -itd --name $* conao3/emacs:$(shell echo $* | sed "s/.*--//") /bin/sh
-	docker cp . $*:/test
-	docker exec $* sh -c "cd test && make clean-soft && make check -j" | tee $@
-	docker rm -f $*
-
-
-#  docker silent `allcheck' job
-
-test: $(DOCKER_EMACS:%=.make/silent-${UUID}-emacs-test--%)
-	@echo ""
-	@cat $^ | grep =====
-	@rm -rf $^
-
-.make/silent-%: .make $(DEPENDS)
-	docker run -itd --name $* conao3/emacs:$(shell echo $* | sed "s/.*--//") /bin/sh > /dev/null
-	@docker cp . $*:/test
-	@docker exec $* sh -c "cd test && make clean-soft && make check -j" > $@ || ( docker rm -f $*; cat $@ || false )
-	@docker rm -f $* > /dev/null
-
-.make:
-	mkdir $@
-
-
-
-clean-soft:
-	rm -rf $(ELS:%.el=%.elc) .make
+test: build
+	keg exec $(EMACS) --batch -l $(PACKAGE_NAME)-tests.el -f cort-test-run
 
 clean:
-	rm -rf $(ELS:%.el=%.elc) $(DEPENDS) .make
+	keg clean

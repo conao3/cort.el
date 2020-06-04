@@ -1,11 +1,11 @@
-;;; cort.el --- Simplify extended unit test framework -*- lexical-binding: t; -*-
+;;; cort.el --- Simplify extended unit test framework  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018-2019 Naoya Yamashita <conao3@gmail.com>
 
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.0.1
+;; Version: 7.0.2
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.0"))
 
@@ -27,7 +27,7 @@
 
 ;;; Commentary:
 
-;; Simplify extended unit test framework
+;; Simplify extended unit test framework.
 
 ;;; Code:
 
