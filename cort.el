@@ -7,7 +7,7 @@
 ;; Keywords: test lisp
 ;; Version: 7.0.2
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.0"))
+;; Package-Requires: ((emacs "24.0") (ansi "0.4"))
 
 ;;   Abobe declared this package requires Emacs-24, but it's for warning
 ;;   suppression, and will actually work from Emacs-22.
@@ -30,6 +30,8 @@
 ;; Simplify extended unit test framework.
 
 ;;; Code:
+
+(require 'ansi)
 
 (defgroup cort-test nil
   "Simplify elisp test framework."
