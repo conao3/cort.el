@@ -7,10 +7,7 @@
 ;; Keywords: test lisp
 ;; Version: 7.0.2
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.0") (ansi "0.4"))
-
-;;   Abobe declared this package requires Emacs-24, but it's for warning
-;;   suppression, and will actually work from Emacs-22.
+;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
