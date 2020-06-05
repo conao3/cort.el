@@ -133,7 +133,7 @@ Return list of (testc failc errorc)"
              (format "Given:\n%s\n" (cort-pp given))
              (if err
                  (format "Unexpected-error: %s\n" (cort-pp err))
-               (format "Returned:\n%s\n" (cort-pp (eval given))))
+               (format "Returned:\n%s\n" (cort-pp ret)))
              (format "Expected:\n%s\n" (cort-pp expect))))
 
           (princ "\n"))))))
