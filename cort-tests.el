@@ -49,16 +49,12 @@
 ;; define tests
 ;;
 
-(defvar d 'a)
-(cort-deftest simple:equal1
-  `((:equal ',d 'a)))
-
-(cort-deftest simple:equal2
-  (let ((e 'b))
-    `((:equal ',e 'b))))
-
-(cort-deftest simple:=
-  '((:= 100 100)))
+(defvar var 'a)
+(cort-deftest simple
+  '((:equal var
+            'a)
+    (:= 100
+        100)))
 
 (cort-deftest quote-a
   '((:eq 'a 'a)
@@ -67,42 +63,34 @@
     (:eq (quote-a) (quote-a))))
 
 (cort-deftest arith
-  '((:= 9   (+ 4 5))
-    (:= -1  (- 4 5))
-    (:= 20  (* 4 5))
-    (:= 0   (/ 4 5))
-    (:= 0.8 (/ 4.0 5))
-    (:= 4   (mod 4 5))))
+  '((:= (+ 4 5)   9)
+    (:= (- 4 5)   -1)
+    (:= (* 4 5)   20)
+    (:= (/ 4 5)   0)
+    (:= (/ 4.0 5) 0.8)
+    (:= (mod 4 5) 4)))
 
 (cort-deftest string-concat
-  '((:string= "aaabbb" (concat "aaa" "bbb"))
-    (:string= "aaa,bbb,ccc"
-              (mapconcat #'identity '("aaa" "bbb" "ccc") ","))))
+  '((:string= (concat "aaa" "bbb") "aaabbb")
+    (:string= (mapconcat #'identity '("aaa" "bbb" "ccc") ",")
+              "aaa,bbb,ccc")))
 
 (cort-deftest string-split
-  '((:equal '("aaa" "bbb" "ccc") (split-string "aaa,bbb,ccc" ","))))
+  '((:equal (split-string "aaa,bbb,ccc" ",") '("aaa" "bbb" "ccc"))))
 
 (cort-deftest string-length
-  '((:= 5  (length "asdfg"))
-    (:= 5  (length "あいうえお"))
-    (:= 10 (string-width "あいうえお"))))
+  '((:= (length "asdfg")  5)
+    (:= (length "あいうえお")  5)
+    (:= (string-width "あいうえお") 10)))
 
 (cort-deftest string-pickup
-  '((:string= "ab"    (substring "abcdef" 0 2))
-    (:string= "abcd"  (substring "abcdef" 0 -2))
-    (:string= "abcde" (substring "abcdef" 0 -1))
-    (:string= "cdef"  (substring "abcdef" 2))))
+  '((:string= (substring "abcdef" 0 2)  "ab")
+    (:string= (substring "abcdef" 0 -2) "abcd")
+    (:string= (substring "abcdef" 0 -1) "abcde")
+    (:string= (substring "abcdef" 2)    "cdef")))
 
 (cort-deftest string-serch
-  '((:= 1 (string-match "bc" "abcd"))))
-
-(cort-deftest list-reference
-  (let ((lst '(100 200 300)))
-    `((:=     100        (car ',lst))
-      (:equal '(200 300) (cdr ',lst))
-
-      (:= 100 (nth 0 ',lst))
-      (:= 100 (elt ',lst 0)))))
+  '((:= (string-match "bc" "abcd") 1)))
 
 (cort-deftest err
   '((:cort-error 'void-function (a 'a))

@@ -62,13 +62,13 @@ Evaluate GIVEN to check it match EXPECT.
 If match, return t, otherwise return nil."
   (let ((_name  (nth 0 test))
         (method (nth 1 test))
-        (expect (nth 2 test))
-        (given  (nth 3 test)))
+        (given  (nth 2 test))
+        (expect (nth 3 test)))
     (if (eq method :cort-error)
         (eval
          `(condition-case err
-              (eval ,given)
-            (,expect t)))
+              (eval ,(nth 3 test))
+            (,(nth 2 test) t)))
       (funcall (intern
                 (substring (symbol-name method) 1))
                (eval given) (eval expect)))))
@@ -77,8 +77,8 @@ If match, return t, otherwise return nil."
   "Output messages for passed TEST."
   (let* ((name    (nth 0 test))
          (_method (nth 1 test))
-         (_expect (nth 2 test))
-         (_given  (nth 3 test)))
+         (_given  (nth 2 test))
+         (_expect (nth 3 test)))
     (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))))
 
 (defun cort-test-testfail (test &optional err)
@@ -86,8 +86,8 @@ If match, return t, otherwise return nil."
 ERR is error message."
   (let ((name    (nth 0 test))
         (method  (nth 1 test))
-        (expect  (nth 2 test))
-        (given   (nth 3 test)))
+        (given   (nth 2 test))
+        (expect  (nth 3 test)))
     (let* ((failp           (not err))
            (errorp          (not failp))
            (method-errorp   (eq method :cort-error))
@@ -117,9 +117,9 @@ ERR is error message."
 
         (princ (concat mesheader
                        (when mesmethod   mesmethod)
-                       (when mesexpect   mesexpect)
                        (when mesgiven    mesgiven)
                        (when mesreturned mesreturned)
+                       (when mesexpect   mesexpect)
                        (when meserror    meserror)
                        (when cort-test-show-backtrace
                          (when mesbacktrace mesbacktrace))
