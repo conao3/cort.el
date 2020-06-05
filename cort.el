@@ -126,16 +126,15 @@ Return list of (testc failc errorc)"
           (if method-errorp
               (with-ansi-princ
                (format "Given:\n%s\n" (cort-pp expect))
-               (format "Expected-error:   %s\n" (cort-pp given)))
+               (format "Expected-error:   %s\n" (cort-pp given))
+               (format "Unexpected-error: %s\n" (cort-pp err)))
             (with-ansi-princ
              (format "< Tested with %s >\n" (yellow (prin1-to-string method)))
              (format "Given:\n%s\n" (cort-pp given))
+             (if err
+                 (format "Unexpected-error: %s\n" (cort-pp err))
+               (format "Returned:\n%s\n" (cort-pp (eval given))))
              (format "Expected:\n%s\n" (cort-pp expect))))
-
-          (with-ansi-princ
-           (if err
-               (format "Unexpected-error: %s\n" (cort-pp err))
-             (format "Returned:\n%s\n" (cort-pp (eval given)))))
 
           (princ "\n"))))))
 

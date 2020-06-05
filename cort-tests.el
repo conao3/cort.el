@@ -52,7 +52,7 @@
     (:= (mod 4 5) 4)))
 
 (cort-deftest string-concat
-  '((:string= (concat "aaa" "bbb") "aaabsbb")
+  '((:string= (concat "aaa" "bbb") "aaabbb")
     (:string= (mapconcat #'identity '("aaa" "bbb" "ccc") ",")
               "aaa,bbb,ccc")))
 
