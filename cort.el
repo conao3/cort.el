@@ -81,31 +81,28 @@ ERR is error message."
         (method  (nth 1 test))
         (given   (nth 2 test))
         (expect  (nth 3 test)))
-    (let* ((failp           (not err))
-           (errorp          (not failp))
-           (method-errorp   (eq method :cort-error))
-           (method-defaultp (not method-errorp))
-           mesheader mesmethod mesgiven mesreturned mesexpect
-           meserror mesbacktrace)
+    (let ((method-errorp   (eq method :cort-error))
+          mesheader mesmethod mesgiven mesreturned mesexpect
+          meserror mesbacktrace)
       (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
       (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
 
       (cond
-       (errorp
+       (err
         (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
         (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
-       (failp
+       ((not err)
         (setq mesheader (with-ansi (red "[FAILED]") " " (format "%s" name) "\n"))))
 
       (cond
-       (method-defaultp
-        (setq mesmethod (format "< Tested with %s >\n" method))
-        (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
-        (when failp
-          (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given))))))
        (method-errorp
         (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
-        (setq mesexpect (format "Expected-error:   %s\n" (cort-pp expect)))))
+        (setq mesexpect (format "Expected-error:   %s\n" (cort-pp expect))))
+       ((not method-errorp)
+        (setq mesmethod (format "< Tested with %s >\n" method))
+        (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
+        (when (not err)
+          (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given)))))))
 
       (princ (concat
               mesheader
