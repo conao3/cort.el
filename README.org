@@ -36,15 +36,9 @@
   - [[#special-thanks][Special Thanks]]
 
 * Description
-~cort.el~ is one-file simply Emacs Lisp unit test package,
-there're so many merits.
-- It works with Emacs-22 or above.
-- Not need to download big package, many files before testing. Only 1 file.
-- You can test your package as close to vanilla's Emacs.
-- If it fails or error tests, it would output the simple and intuitive error message.
+~cort.el~ is lightweight Emacs Lisp unit test package.
 
 (~ert.el~ is attached as standard to Emacs,
-operates from Emacs-24 and I think that
 it is difficult to understand the displayed error.)
 
 * Install
@@ -172,7 +166,7 @@ it is difficult to understand the displayed error.)
 #+end_src
 
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration-list~,
-and ~add-to-list~ to ~cort-test-cases~ defined at inside of ~cort.el~.
+and ~add-to-list~ to ~cort-cases~ defined at inside of ~cort.el~.
 
 Therefore, define same test case by ~cort-deftest~, not running test twice.
 Dupulicated ~test-name~ is allowed.
@@ -254,9 +248,6 @@ Therefore, we usually recommend using macros.)
 * Migration
 ** v5.0 to v6.0
 - Add ~cort-test~ prefix to all functions macros and change below function names.
-  - ~cort-run-tests~ changed to ~cort-test-run~
-  - ~cort-prune-tests~ changed to ~cort-test-prune~
-
 - Remove environment keyword such as ~:cort-if~, ~:cort-emacs<~,,,
 
   Use normal condition functions in test definition.
