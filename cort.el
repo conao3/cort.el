@@ -117,7 +117,8 @@ Return list of (testc failc errorc)"
          ((not res) (cl-incf failc)))
 
         (if res
-            (with-ansi-princ (cyan "[PASSED]") " " (format "%s" name) "\n")
+            (with-ansi-princ
+             (format "%s %s\n" (cyan "[PASSED]") name))
           (with-ansi-princ
            (if err
                (format "%s %s\n" (magenta "<<ERROR>>") name)
