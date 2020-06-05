@@ -30,26 +30,26 @@
 
 (require 'ansi)
 
-(defgroup cort-test nil
+(defgroup cort nil
   "Simplify elisp test framework."
   :group 'lisp)
 
-(defvar cort-test-test-cases nil
+(defvar cort-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
-(defcustom cort-test-show-backtrace nil
+(defcustom cort-show-backtrace nil
   "If non nil, show backtrace when fail test case."
   :type 'boolean
-  :group 'cort-test)
+  :group 'cort)
 
 
 ;;; functions
 
-(defsubst cort-test-pp (sexp)
+(defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
   (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
 
-(defun cort-test-test (test)
+(defun cort-test (test)
   "Actually execute TEST.  TEST expect (METHOD EXPECT GIVEN).
 Evaluate GIVEN to check it match EXPECT.
 If match, return t, otherwise return nil."
@@ -66,7 +66,7 @@ If match, return t, otherwise return nil."
                 (substring (symbol-name method) 1))
                (eval given) (eval expect)))))
 
-(defun cort-test-testpass (test)
+(defun cort-testpass (test)
   "Output messages for passed TEST."
   (let* ((name    (nth 0 test))
          (_method (nth 1 test))
@@ -74,7 +74,7 @@ If match, return t, otherwise return nil."
          (_expect (nth 3 test)))
     (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))))
 
-(defun cort-test-testfail (test &optional err)
+(defun cort-testfail (test &optional err)
   "Output messages for failed TEST.
 ERR is error message."
   (let ((name    (nth 0 test))
@@ -87,24 +87,24 @@ ERR is error message."
            (method-defaultp (not method-errorp)))
       (let (mesheader mesmethod mesgiven mesreturned mesexpect
                       meserror mesbacktrace)
-        (setq mesgiven (format "Given:\n%s\n" (cort-test-pp given)))
+        (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
         (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
         (progn
           (when errorp
             (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
-            (setq meserror  (format "Unexpected-error: %s\n" (cort-test-pp err))))
+            (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
           (when failp
             (setq mesheader (with-ansi (red "[FAILED]") " " (format "%s" name) "\n"))))
 
         (progn
           (when method-defaultp
             (setq mesmethod (format "< Tested with %s >\n" method))
-            (setq mesexpect (format "Expected:\n%s\n" (cort-test-pp expect)))
+            (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
             (when failp
-              (setq mesreturned (format "Returned:\n%s\n" (cort-test-pp (eval given))))))
+              (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given))))))
           (when method-errorp
-            (setq meserror  (format "Unexpected-error: %s\n" (cort-test-pp err)))
-            (setq mesexpect (format "Expected-error:   %s\n" (cort-test-pp expect)))))
+            (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
+            (setq mesexpect (format "Expected-error:   %s\n" (cort-pp expect)))))
 
         (princ (concat
                 mesheader
@@ -113,7 +113,7 @@ ERR is error message."
                 (when mesreturned mesreturned)
                 (when mesexpect   mesexpect)
                 (when meserror    meserror)
-                (when cort-test-show-backtrace
+                (when cort-show-backtrace
                   (when mesbacktrace mesbacktrace))
                 "\n"))))))
 
@@ -132,7 +132,7 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
     `(progn
        ,@(mapcar (lambda (test)
                    (setq count (1+ count))
-                   `(add-to-list 'cort-test-test-cases
+                   `(add-to-list 'cort-test-cases
                                  '(,(if suffixp
                                          (make-symbol
                                           (format "%s-%s" (symbol-name name) count))
@@ -146,26 +146,26 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
 (defun cort-test-prune ()
   "Prune all test."
   (interactive)
-  (setq cort-test-test-cases nil)
+  (setq cort-test-cases nil)
   (message "prune tests completed."))
 
 (defun cort-test-run ()
   "Run all test."
-  (let ((testc  (length cort-test-test-cases))
+  (let ((testc  (length cort-test-cases))
         (failc  0)
         (errorc 0))
     (with-ansi-princ
      "\n" (yellow (format "Running %d tests..." testc)) "\n")
     (princ (format "%s\n" (emacs-version)))
 
-    (dolist (test (reverse cort-test-test-cases))
+    (dolist (test (reverse cort-test-cases))
       (condition-case err
-          (if (cort-test-test test)
-              (cort-test-testpass test)
-            (cort-test-testfail test)
+          (if (cort-test test)
+              (cort-testpass test)
+            (cort-testfail test)
             (setq failc (1+ failc)))
         (error
-         (cort-test-testfail test err)
+         (cort-testfail test err)
          (setq errorc (1+ errorc)))))
 
     (princ "\n\n")
