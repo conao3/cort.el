@@ -5,12 +5,9 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.0.2
+;; Version: 7.0.3
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.0"))
-
-;;   Abobe declared this package requires Emacs-24, but it's for warning
-;;   suppression, and will actually work from Emacs-22.
+;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -31,6 +28,8 @@
 
 ;;; Code:
 
+(require 'ansi)
+
 (defgroup cort-test nil
   "Simplify elisp test framework."
   :group 'lisp)
@@ -50,79 +49,12 @@
   :type 'boolean
   :group 'cort-test)
 
-(defcustom cort-test-enable-color noninteractive
-  "If non nil, enable color message to output with meta character.
-Default, enable color if run test on CUI.
-`noninteractive' returns t on --batch mode"
-  :type 'boolean
-  :group 'cort-test)
-
-(defcustom cort-test-header-message
-  (if cort-test-enable-color
-      "\n\e[33mRunning %d tests...\e[m\n"
-    "\nRunning %d tests...\n")
-  "Header message."
-  :type 'string
-  :group 'cort-test)
-
-(defcustom cort-test-passed-label
-  (if cort-test-enable-color
-      "\e[36m[PASSED] \e[m"
-    "[PASSED] ")
-  "Passed label."
-  :type 'string
-  :group 'cort-test)
-
-(defcustom cort-test-fail-label
-  (if cort-test-enable-color
-      "\e[31m[FAILED] \e[m"
-    "[FAILED] ")
-  "Fail label."
-  :type 'string
-  :group 'cort-test)
-
-(defcustom cort-test-error-label
-  (if cort-test-enable-color
-      "\e[35m<ERROR>  \e[m"
-    "<<ERROR>>")
-  "Fail label."
-  :type 'string
-  :group 'cort-test)
-
-(defcustom cort-test-error-message
-  (if cort-test-enable-color
-      "\e[31m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
-    "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
-  "Error message."
-  :type 'string
-  :group 'cort-test)
-
-(defcustom cort-test-passed-message
-  (if cort-test-enable-color
-      "\e[34m===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\e[m\n\n"
-    "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s =====\n\n")
-  "Error message."
-  :type 'string
-  :group 'cort-test)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  for old Emacs
-;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  small functions
-;;
+
+;;; functions
 
 (defsubst cort-test-pp (sexp)
   "Return pretty printed SEXP string."
   (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  support functions
-;;
 
 (defun cort-test-test (test)
   "Actually execute TEST.  TEST expect (METHOD EXPECT GIVEN).
@@ -147,7 +79,7 @@ If match, return t, otherwise return nil."
          (_method (nth 1 test))
          (_expect (nth 2 test))
          (_given  (nth 3 test)))
-    (princ (format "%s %s\n" cort-test-passed-label name))))
+    (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))))
 
 (defun cort-test-testfail (test &optional err)
   "Output messages for failed TEST.
@@ -168,10 +100,10 @@ ERR is error message."
                                      (backtrace))))
         (progn
           (when errorp
-            (setq mesheader (format "%s %s\n" cort-test-error-label name))
+            (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
             (setq meserror  (format "Unexpected-error: %s\n" (cort-test-pp err))))
           (when failp
-            (setq mesheader (format "%s %s\n" cort-test-fail-label name))))
+            (setq mesheader (with-ansi (red "[FAILED]") " " (format "%s" name) "\n"))))
 
         (progn
           (when method-defaultp
@@ -193,10 +125,8 @@ ERR is error message."
                          (when mesbacktrace mesbacktrace))
                        "\n"))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Define test phase
-;;
+
+;;; deftest
 
 (defmacro cort-deftest (name testlst)
   "Define a test case with the NAME.
@@ -218,10 +148,8 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
                                     ,@test)))
                  (eval testlst)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  Run test phase
-;;
+
+;;; main
 
 (defun cort-test-prune ()
   "Prune all test."
@@ -234,7 +162,8 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
   (let ((testc  (length cort-test-test-cases))
         (failc  0)
         (errorc 0))
-    (princ (format cort-test-header-message testc))
+    (with-ansi-princ
+     "\n" (yellow (format "Running %d tests..." testc)) "\n")
     (princ (format "%s\n" (emacs-version)))
 
     (dolist (test (reverse cort-test-test-cases))
@@ -251,10 +180,15 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
     (if (or (< 0 failc) (< 0 errorc))
         (if cort-test-debug
             (princ "Test failed!!\n")
-          (error (format cort-test-error-message
-                         testc (- testc failc errorc) failc errorc emacs-version)))
-      (princ (format cort-test-passed-message
-                     testc (- testc failc errorc) failc errorc emacs-version)))))
+          (error
+           (with-ansi
+            (red (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
+                         testc (- testc failc errorc) failc errorc emacs-version))
+            "\n\n")))
+      (with-ansi-princ
+       (blue (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
+                     testc (- testc failc errorc) failc errorc emacs-version))
+       "\n\n"))))
 
 (provide 'cort)
 ;;; cort.el ends here
