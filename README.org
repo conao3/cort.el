@@ -25,7 +25,7 @@
 - [[#migration][Migration]]
   - [[#srt-v2-0-to-cort-v3-0][srt v2.0 to cort v3.0]]
   - [[#srt-v1-0-to-v2-0][srt v1.0 to v2.0]]
-- Information
+- [[#information][Information]]
   - [[#why-we-support-emacs-22][Why We support Emacs-22?]]
   - [[#donation][Donation]]
   - [[#commynity][Community]]
@@ -122,41 +122,53 @@ it is difficult to understand the displayed error.)
     'a)
 
   ;; define test cases.
+  (cort-deftest simple
+    '((:equal var
+              'a)
+      (:= 100
+          100)))
+
   (cort-deftest quote-a
     '((:eq 'a 'a)
       (:eq (quote-a) 'a)
       (:eq 'a (quote-a))
       (:eq (quote-a) (quote-a))))
-  
+
   (cort-deftest arith
-    '((:= 9   (+ 4 5))
-      (:= -1  (- 4 5))
-      (:= 20  (* 4 5))
-      (:= 0   (/ 4 5))
-      (:= 0.8 (/ 4.0 5))
-      (:= 4   (mod 4 5))))
-  
+    '((:= (+ 4 5)   9)
+      (:= (- 4 5)   -1)
+      (:= (* 4 5)   20)
+      (:= (/ 4 5)   0)
+      (:= (/ 4.0 5) 0.8)
+      (:= (mod 4 5) 4)))
+
   (cort-deftest string-concat
-    '((:string= "aaabbb" (concat "aaa" "bbb"))
-      (:string= "aaa,bbb,ccc"
-                (mapconcat #'identity '("aaa" "bbb" "ccc") ","))))
-  
+    '((:string= (concat "aaa" "bbb") "aaabbb")
+      (:string= (mapconcat #'identity '("aaa" "bbb" "ccc") ",")
+                "aaa,bbb,ccc")))
+
   (cort-deftest string-split
-    '((:equal '("aaa" "bbb" "ccc") (split-string "aaa,bbb,ccc" ","))))
-  
+    '((:equal (split-string "aaa,bbb,ccc" ",") '("aaa" "bbb" "ccc"))))
+
   (cort-deftest string-length
-    '((:= 5  (length "asdfg"))
-      (:= 5  (length "あいうえお"))
-      (:= 10 (string-width "あいうえお"))))
-  
+    '((:= (length "asdfg")  5)
+      (:= (length "あいうえお")  5)
+      (:= (string-width "あいうえお") 10)))
+
   (cort-deftest string-pickup
-    '((:string= "ab"    (substring "abcdef" 0 2))
-      (:string= "abcd"  (substring "abcdef" 0 -2))
-      (:string= "abcde" (substring "abcdef" 0 -1))
-      (:string= "cdef"  (substring "abcdef" 2))))
-  
+    '((:string= (substring "abcdef" 0 2)  "ab")
+      (:string= (substring "abcdef" 0 -2) "abcd")
+      (:string= (substring "abcdef" 0 -1) "abcde")
+      (:string= (substring "abcdef" 2)    "cdef")))
+
   (cort-deftest string-serch
-    '((:= 1 (string-match "bc" "abcd"))))
+    '((:= (string-match "bc" "abcd") 1)))
+
+  (cort-deftest err
+    '((:cort-error 'void-function (a 'a))
+      (:cort-error 'error (a 'a))
+      (:cort-error 'arith-error (/ 1 0))
+      (:cort-error 'void-variable (+ 1 a))))
 #+end_src
 
 ~cort-deftest~ will receive ~test-name~ and ~test-configuration-list~,
