@@ -38,11 +38,6 @@
 (defvar cort-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
-(defcustom cort-show-backtrace nil
-  "If non nil, show backtrace when fail test case."
-  :type 'boolean
-  :group 'cort)
-
 
 ;;; functions
 
@@ -122,10 +117,8 @@ Return list of (testc failc errorc)"
         (if res
             (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))
           (let (mesheader
-                mesmethod mesgiven mesreturned mesexpect
-                meserror mesbacktrace)
-            (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
-            (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
+                mesmethod mesgiven mesreturned mesexpect meserror)
+            (setq mesheader (format "Given:\n%s\n" (cort-pp given)))
 
             (cond
              (err
@@ -151,8 +144,6 @@ Return list of (testc failc errorc)"
                     (when mesreturned mesreturned)
                     (when mesexpect   mesexpect)
                     (when meserror    meserror)
-                    (when cort-show-backtrace
-                      (when mesbacktrace mesbacktrace))
                     "\n"))))))))
 
 (defun cort-test-run ()
