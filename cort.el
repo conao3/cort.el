@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.0.5
+;; Version: 7.0.6
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
@@ -85,12 +85,10 @@ ERR is error message."
            (errorp          (not failp))
            (method-errorp   (eq method :cort-error))
            (method-defaultp (not method-errorp)))
-      (let ((mesheader) (mesmethod) (mesgiven) (mesreturned) (mesexpect)
-            (meserror) (mesbacktrace))
-        (setq mesgiven  (format "Given:\n%s\n" (cort-test-pp given)))
-        (setq mesbacktrace (format "Backtrace:\n%s\n"
-                                   (with-output-to-string
-                                     (backtrace))))
+      (let (mesheader mesmethod mesgiven mesreturned mesexpect
+                      meserror mesbacktrace)
+        (setq mesgiven (format "Given:\n%s\n" (cort-test-pp given)))
+        (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
         (progn
           (when errorp
             (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
@@ -108,15 +106,16 @@ ERR is error message."
             (setq meserror  (format "Unexpected-error: %s\n" (cort-test-pp err)))
             (setq mesexpect (format "Expected-error:   %s\n" (cort-test-pp expect)))))
 
-        (princ (concat mesheader
-                       (when mesmethod   mesmethod)
-                       (when mesgiven    mesgiven)
-                       (when mesreturned mesreturned)
-                       (when mesexpect   mesexpect)
-                       (when meserror    meserror)
-                       (when cort-test-show-backtrace
-                         (when mesbacktrace mesbacktrace))
-                       "\n"))))))
+        (princ (concat
+                mesheader
+                (when mesmethod   mesmethod)
+                (when mesgiven    mesgiven)
+                (when mesreturned mesreturned)
+                (when mesexpect   mesexpect)
+                (when meserror    meserror)
+                (when cort-test-show-backtrace
+                  (when mesbacktrace mesbacktrace))
+                "\n"))))))
 
 
 ;;; deftest
