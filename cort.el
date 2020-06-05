@@ -43,7 +43,9 @@
 
 (defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
-  (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
+  (if (stringp sexp)
+      sexp
+    (replace-regexp-in-string "\n+$" "" (pp-to-string sexp))))
 
 
 ;;; deftest
