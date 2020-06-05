@@ -27,27 +27,8 @@
 
 (require 'cort)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;;  temp functions, macros
-;;
-
 (defun quote-a ()
   'a)
-
-(defmacro sym (x)
-  `',x)
-
-(defmacro match-expansion (form expect)
-  `(:equal (macroexpand ',form) ,expect))
-
-(defun match-expansion-fn (form expect)
-  `(:equal ',(macroexpand form) ',expect))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
-;; define tests
-;;
 
 (defvar var 'a)
 (cort-deftest simple

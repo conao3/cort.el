@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ansi)
 
 (defgroup cort nil
@@ -49,72 +50,6 @@
   "Return pretty printed SEXP string."
   (replace-regexp-in-string "\n+$" "" (pp-to-string sexp)))
 
-(defun cort-test (test)
-  "Actually execute TEST.  TEST expect (METHOD EXPECT GIVEN).
-Evaluate GIVEN to check it match EXPECT.
-If match, return t, otherwise return nil."
-  (let ((_name  (nth 0 test))
-        (method (nth 1 test))
-        (given  (nth 2 test))
-        (expect (nth 3 test)))
-    (if (eq method :cort-error)
-        (eval
-         `(condition-case err
-              (eval ,(nth 3 test))
-            (,(nth 2 test) t)))
-      (funcall (intern
-                (substring (symbol-name method) 1))
-               (eval given) (eval expect)))))
-
-(defun cort-testpass (test)
-  "Output messages for passed TEST."
-  (let* ((name    (nth 0 test))
-         (_method (nth 1 test))
-         (_given  (nth 2 test))
-         (_expect (nth 3 test)))
-    (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))))
-
-(defun cort-testfail (test &optional err)
-  "Output messages for failed TEST.
-ERR is error message."
-  (let ((name    (nth 0 test))
-        (method  (nth 1 test))
-        (given   (nth 2 test))
-        (expect  (nth 3 test)))
-    (let ((method-errorp (eq method :cort-error))
-          mesheader mesmethod mesgiven mesreturned mesexpect
-          meserror mesbacktrace)
-      (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
-      (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
-
-      (cond
-       (err
-        (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
-        (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
-       ((not err)
-        (setq mesheader (with-ansi (red "[FAILED]") " " (format "%s" name) "\n"))))
-
-      (cond
-       (method-errorp
-        (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
-        (setq mesexpect (format "Expected-error:   %s\n" (cort-pp expect))))
-       ((not method-errorp)
-        (setq mesmethod (format "< Tested with %s >\n" method))
-        (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
-        (when (not err)
-          (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given)))))))
-
-      (princ (concat
-              mesheader
-              (when mesmethod   mesmethod)
-              (when mesgiven    mesgiven)
-              (when mesreturned mesreturned)
-              (when mesexpect   mesexpect)
-              (when meserror    meserror)
-              (when cort-show-backtrace
-                (when mesbacktrace mesbacktrace))
-              "\n")))))
-
 
 ;;; deftest
 
@@ -132,10 +67,10 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
                    (setq count (1+ count))
                    `(add-to-list 'cort-test-cases
                                  '(,(if suffixp
-                                         (make-symbol
-                                          (format "%s-%s" (symbol-name name) count))
-                                       name)
-                                    ,@test)))
+                                        (make-symbol
+                                         (format "%s-%s" (symbol-name name) count))
+                                      name)
+                                   ,@test)))
                  (eval testlst)))))
 
 
@@ -147,24 +82,90 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
   (setq cort-test-cases nil)
   (message "prune tests completed."))
 
-(defun cort-test-run ()
-  "Run all test."
+(defun cort-test-run-1 ()
+  "Actually execute test of `cort-test-cases'.
+TEST expect (METHOD EXPECT GIVEN).
+Evaluate GIVEN to check it match EXPECT.
+Return list of (testc failc errorc)"
   (let ((testc  (length cort-test-cases))
         (failc  0)
         (errorc 0))
-    (with-ansi-princ
-     "\n" (yellow (format "Running %d tests..." testc)) "\n")
-    (princ (format "%s\n" (emacs-version)))
+    (dolist (test (reverse cort-test-cases)
+                  (list testc failc errorc))
+      (let* ((name   (nth 0 test))
+             (method (nth 1 test))
+             (given  (nth 2 test))
+             (expect (nth 3 test))
+             (method-errorp (eq method :cort-error))
+             err res ret)
+        (setq res
+              (condition-case e
+                  (cond
+                   (method-errorp
+                    (eval
+                     `(condition-case err
+                          (eval ,(nth 3 test))
+                        (,(nth 2 test) t))))
+                   (t
+                    (setq ret (eval given))
+                    (funcall
+                     (intern (substring (symbol-name method) 1))
+                     (eval expect)
+                     ret)))
+                (error
+                 (setq err e))))
 
-    (dolist (test (reverse cort-test-cases))
-      (condition-case err
-          (if (cort-test test)
-              (cort-testpass test)
-            (cort-testfail test)
-            (setq failc (1+ failc)))
-        (error
-         (cort-testfail test err)
-         (setq errorc (1+ errorc)))))
+        (cond
+         ((not res) (cl-incf failc))
+         (err (cl-incf errorc)))
+
+        (if res
+            (princ (with-ansi (cyan "[PASSED]") " " (format "%s" name) "\n"))
+          (let (mesheader
+                mesmethod mesgiven mesreturned mesexpect
+                meserror mesbacktrace)
+            (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
+            (setq mesbacktrace (format "Backtrace:\n%s\n" (with-output-to-string (backtrace))))
+
+            (cond
+             (err
+              (setq mesheader (with-ansi (magenta "<<ERROR>>") " " (format "%s" name) "\n"))
+              (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err))))
+             ((not err)
+              (setq mesheader (with-ansi (red "[FAILED]") " " (format "%s" name) "\n"))))
+
+            (cond
+             (method-errorp
+              (setq meserror  (format "Unexpected-error: %s\n" (cort-pp err)))
+              (setq mesexpect (format "Expected-error:   %s\n" (cort-pp expect))))
+             ((not method-errorp)
+              (setq mesmethod (format "< Tested with %s >\n" method))
+              (setq mesexpect (format "Expected:\n%s\n" (cort-pp expect)))
+              (when (not err)
+                (setq mesreturned (format "Returned:\n%s\n" (cort-pp (eval given)))))))
+
+            (princ (concat
+                    mesheader
+                    (when mesmethod   mesmethod)
+                    (when mesgiven    mesgiven)
+                    (when mesreturned mesreturned)
+                    (when mesexpect   mesexpect)
+                    (when meserror    meserror)
+                    (when cort-show-backtrace
+                      (when mesbacktrace mesbacktrace))
+                    "\n"))))))))
+
+(defun cort-test-run ()
+  "Run all test."
+  (with-ansi-princ
+   "\n"
+   (yellow (format "Running %d tests..." (length cort-test-cases))) "\n"
+   (format "%s\n" (emacs-version)))
+
+  (let* ((res    (cort-test-run-1))
+         (testc  (nth 0 res))
+         (failc  (nth 1 res))
+         (errorc (nth 2 res)))
 
     (princ "\n\n")
     (if (or (< 0 failc) (< 0 errorc))
