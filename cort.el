@@ -81,7 +81,7 @@ ERR is error message."
         (method  (nth 1 test))
         (given   (nth 2 test))
         (expect  (nth 3 test)))
-    (let ((method-errorp   (eq method :cort-error))
+    (let ((method-errorp (eq method :cort-error))
           mesheader mesmethod mesgiven mesreturned mesexpect
           meserror mesbacktrace)
       (setq mesgiven (format "Given:\n%s\n" (cort-pp given)))
