@@ -37,13 +37,6 @@
 (defvar cort-test-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
-(defcustom cort-test-debug nil
-  "If non nil, turn on debug mode.
-
-- don't throw annoying error when test fail, just output message."
-  :type 'boolean
-  :group 'cort-test)
-
 (defcustom cort-test-show-backtrace nil
   "If non nil, show backtrace when fail test case."
   :type 'boolean
@@ -178,13 +171,11 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
 
     (princ "\n\n")
     (if (or (< 0 failc) (< 0 errorc))
-        (if cort-test-debug
-            (princ "Test failed!!\n")
-          (error
-           (with-ansi
-            (red (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
-                         testc (- testc failc errorc) failc errorc emacs-version))
-            "\n\n")))
+        (error
+         (with-ansi
+          (red (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
+                       testc (- testc failc errorc) failc errorc emacs-version))
+          "\n\n"))
       (with-ansi-princ
        (blue (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
                      testc (- testc failc errorc) failc errorc emacs-version))
