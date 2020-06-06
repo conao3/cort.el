@@ -79,5 +79,10 @@
     (:cort-error 'arith-error (/ 1 0))
     (:cort-error 'void-variable (+ 1 a))))
 
+(cort-deftest generate
+  (cort-generate equal
+    '(((+ 4 5) 9)
+      ((- 4 5) -1))))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here

@@ -63,8 +63,9 @@ TESTLST is list of forms as below.
 basic         : (:COMPFUN GIVEN EXPECT BEFOREFN AFTERFN)
 error testcase: (:cort-error EXPECTED-ERROR FORM)"
   (declare (indent 1))
-  (let ((count 0)
-        (suffixp (< 1 (length (cadr testlst)))))
+  (let* ((count 0)
+         (testlst* (eval testlst))
+         (suffixp (< 1 (length testlst*))))
     `(progn
        ,@(mapcar (lambda (test)
                    (setq count (1+ count))
@@ -74,43 +75,19 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                                          (format "%s-%s" (symbol-name name) count))
                                       name)
                                    ,@test)))
-                 (eval testlst)))))
+                 testlst*))))
 
-(defmacro cort-deftest-with-equal (name form)
-  "Return `cort-deftest' compare by `equal' for NAME, FORM.
+
+;;; generate
 
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf-fn)
-      (uiop uiop-fn)))
-
-   => (cort-deftest leaf/disabled
-        '((:equal 'asdf-fn asdf)
-          (:equal 'uiop-fn uiop)))"
+(defmacro cort-generate (op form)
+  "Return `cort-deftest' compare by OP for FORM."
   (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal ,(car elm) ,(cadr elm)))
-               (cadr form))))
+  `',(mapcar (lambda (elm)
+               `(,(intern (format ":%s" op)) ,(car elm) ,(cadr elm)))
+             (cadr form)))
 
-(defmacro cort-deftest-with-string= (name form)
-  "Return `cort-deftest' compare by `string=' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf-fn)
-      (uiop uiop-fn)))
-
-   => (cort-deftest leaf/disabled
-        '((:string= 'asdf-fn asdf)
-          (:string= 'uiop-fn uiop)))"
-  (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:string= ,(car elm) ,(cadr elm)))
-               (cadr form))))
-
-(defmacro cort-deftest-with-macroexpand (name form)
+(defmacro cort-generate--macroexpand (form)
   "Return `cort-deftest' compare by `equal' for NAME, FORM.
 
 Example:
@@ -123,15 +100,13 @@ Example:
                   asdf)
           (:equal '(macroexpand-1 'uiop)
                   uiop)))"
-  (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal
-                   (macroexpand-1 ',(car elm))
-                   ',(cadr elm)))
-               (cadr form))))
+  `',(mapcar (lambda (elm)
+               `(:equal
+                 (macroexpand-1 ',(car elm))
+                 ',(cadr elm)))
+             (cadr form)))
 
-(defmacro cort-deftest-with-macroexpand-let (name letform form)
+(defmacro cort-generate--macroexpand-let (letform form)
   "Return `cort-deftest' compare by `equal' for NAME, LETFORM FORM.
 
 Example:
@@ -152,15 +127,13 @@ Example:
            (prog1 'leaf
               (leaf-handler-leaf-protect leaf
                 (leaf-init))))))"
-  (declare (indent 2))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal
-                   (let ,letform (macroexpand-1 ',(car elm)))
-                   ',(cadr elm)))
-               (cadr form))))
+  `',(mapcar (lambda (elm)
+               `(:equal
+                 (let ,letform (macroexpand-1 ',(car elm)))
+                 ',(cadr elm)))
+             (cadr form)))
 
-(defmacro cort-deftest-with-shell-command (name form)
+(defmacro cort-generate--shell-command (form)
   "Return `cort-deftest' compare with `string=' for NAME, FORM.
 
 Example:
@@ -177,13 +150,11 @@ Example:
          (:string= (string-trim-right
                     (shell-command-to-string \"keg files\"))
                    \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))"
-(declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:string=
-                   (string-trim-right (shell-command-to-string ,(car elm)))
-                   ,(cadr elm)))
-               (cadr form))))
+  `',(mapcar (lambda (elm)
+               `(:string=
+                 (string-trim-right (shell-command-to-string ,(car elm)))
+                 ,(cadr elm)))
+             (cadr form)))
 
 
 ;;; main
