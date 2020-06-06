@@ -119,5 +119,15 @@
         '((cort-var2 'cort-test)))
     (:equal cort-var2 0)))
 
+(cort-deftest-generate-with-hook :equal cort-generate-with-hook
+  (lambda ()
+    (setq cort-var3 'cort-test))
+  (lambda ()
+    (setq cort-var3 0))
+  '((cort-var3 'cort-test)))
+
+(cort-deftest cort-generate-with-hook-after-check
+  '((:equal cort-var3 0)))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here

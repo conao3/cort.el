@@ -155,6 +155,16 @@ Example:
      (cort-generate ,op
        ,form)))
 
+(defmacro cort-deftest-generate-with-hook (op name beforefn afterfn form)
+  "Define test named as NAME for FORM compare with OP.
+Eval BEFOREFN and AFTERFN."
+  (declare (indent 2))
+  `(cort-deftest ,name
+     (cort-generate-with-hook ,op
+       ,beforefn
+       ,afterfn
+       ,form)))
+
 
 ;;; main
 
