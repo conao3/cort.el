@@ -91,23 +91,23 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
 ;;; generate
 
 (defvar cort-generate-fn
-  '((macroexpand . (lambda (elm)
-                     `(:equal
-                       (macroexpand-1 ',(car elm))
-                       ',(cadr elm))))
-    (shell-command . (lambda (elm)
-                       `(:string=
-                         (replace-regexp-in-string
-                          "[ \t\n\r]+\\'" ""
-                          (shell-command-to-string ,(car elm)))
-                         ',(cadr elm))))))
+  '((:macroexpand . (lambda (elm)
+                      `(:equal
+                        (macroexpand-1 ',(car elm))
+                        ',(cadr elm))))
+    (:shell-command . (lambda (elm)
+                        `(:string=
+                          (replace-regexp-in-string
+                           "[ \t\n\r]+\\'" ""
+                           (shell-command-to-string ,(car elm)))
+                          ',(cadr elm))))))
 
 (defmacro cort-generate (op form)
   "Return `cort-deftest' compare by OP for FORM."
   (declare (indent 1))
   (let ((fn (or (cort--alist-get op cort-generate-fn)
                 (lambda (elm)
-                  `(,(intern (format ":%s" op)) ,(car elm) ,(cadr elm))))))
+                  `(,op ,(car elm) ,(cadr elm))))))
     `',(mapcar fn (eval form))))
 
 (defmacro cort-generate--macroexpand-let (letform form)
