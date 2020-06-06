@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.0
+;; Version: 7.1.1
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
@@ -60,7 +60,7 @@ Output just dot when success test."
   "Define a test case with the NAME.
 TESTLST is list of forms as below.
 
-basic         : (:COMPFUN GIVEN EXPECT)
+basic         : (:COMPFUN GIVEN EXPECT BEFOREFN AFTERFN)
 error testcase: (:cort-error EXPECTED-ERROR FORM)"
   (declare (indent 1))
   (let ((count 0)
@@ -209,8 +209,14 @@ Return list of (testc failc errorc)"
              (method (nth 1 test))
              (given  (nth 2 test))
              (expect (nth 3 test))
+             (beforefn (nth 4 test))
+             (afterfn  (nth 5 test))
              (method-errorp (eq method :cort-error))
+             err-before err-after
              err res ret exp)
+        (when beforefn
+          (condition-case e (funcall beforefn) (error (setq err-before e))))
+
         (setq res
               (condition-case e
                   (cond
@@ -225,6 +231,9 @@ Return list of (testc failc errorc)"
                     (funcall (intern (substring (symbol-name method) 1)) exp ret)))
                 (error
                  (setq err e) nil)))
+
+        (when afterfn
+          (condition-case e (funcall afterfn res err) (error (setq err-after e))))
 
         (cond
          (err (cl-incf errorc))
@@ -270,7 +279,11 @@ Return list of (testc failc errorc)"
                                (call-process "diff" nil standard-output nil
                                              "-u" retfile expfile)))
                    (delete-file retfile)
-                   (delete-file expfile))))))
+                   (delete-file expfile))))
+             (when err-before
+               (format "%s %s\n" (yellow "Error-before-hook:") (cort-pp err-before)))
+             (when err-after
+               (format "%s %s\n" (yellow "Error-after-hook:") (cort-pp err-after)))))
 
           (princ "\n"))))))
 
