@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.1
+;; Version: 7.1.2
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
@@ -47,6 +47,16 @@ Output just dot when success test."
 
 ;;; functions
 
+(defun cort--alist-get (key alist &optional default)
+  "Find the first element of ALIST whose `car' equals KEY and return its `cdr'.
+If KEY is not found in ALIST, return DEFAULT.
+For backward compatibility, TESTFN is always `eq'.
+
+This function is `alist-get' polifill for Emacs < 25.1."
+  (declare (indent 1))
+  (let ((x (assq key alist)))
+    (if x (cdr x) default)))
+
 (defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
   (if (stringp sexp)
@@ -63,8 +73,9 @@ TESTLST is list of forms as below.
 basic         : (:COMPFUN GIVEN EXPECT BEFOREFN AFTERFN)
 error testcase: (:cort-error EXPECTED-ERROR FORM)"
   (declare (indent 1))
-  (let ((count 0)
-        (suffixp (< 1 (length (cadr testlst)))))
+  (let* ((count 0)
+         (testlst* (eval testlst))
+         (suffixp (< 1 (length testlst*))))
     `(progn
        ,@(mapcar (lambda (test)
                    (setq count (1+ count))
@@ -74,64 +85,43 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                                          (format "%s-%s" (symbol-name name) count))
                                       name)
                                    ,@test)))
-                 (eval testlst)))))
+                 testlst*))))
 
-(defmacro cort-deftest-with-equal (name form)
-  "Return `cort-deftest' compare by `equal' for NAME, FORM.
+
+;;; generate
 
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf-fn)
-      (uiop uiop-fn)))
+(defvar cort-generate-fn
+  '((:macroexpand . (lambda (elm)
+                      `(:equal
+                        (macroexpand-1 ',(car elm))
+                        ',(cadr elm))))
+    (:shell-command . (lambda (elm)
+                        `(:string=
+                          (replace-regexp-in-string
+                           "[ \t\n\r]+\\'" ""
+                           (shell-command-to-string ,(car elm)))
+                          ',(cadr elm))))))
 
-   => (cort-deftest leaf/disabled
-        '((:equal 'asdf-fn asdf)
-          (:equal 'uiop-fn uiop)))"
+(defmacro cort-generate (op form)
+  "Return `cort-deftest' compare by OP for FORM."
   (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal ,(car elm) ,(cadr elm)))
-               (cadr form))))
+  (let ((fn (or (cort--alist-get op cort-generate-fn)
+                (lambda (elm)
+                  `(,op ,(car elm) ,(cadr elm))))))
+    `',(mapcar fn (eval form))))
 
-(defmacro cort-deftest-with-string= (name form)
-  "Return `cort-deftest' compare by `string=' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf-fn)
-      (uiop uiop-fn)))
-
-   => (cort-deftest leaf/disabled
-        '((:string= 'asdf-fn asdf)
-          (:string= 'uiop-fn uiop)))"
+(defmacro cort-generate-with-hook (op beforefn afterfn form)
+  "Return `cort-deftest' compare by OP for FORM.
+Eval BEFOREFN and AFTERFN."
   (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:string= ,(car elm) ,(cadr elm)))
-               (cadr form))))
+  (let ((fn (or (cort--alist-get op cort-generate-fn)
+                (lambda (elm)
+                  `(,op ,(car elm) ,(cadr elm))))))
+    `'((:eq nil nil ,beforefn)
+       ,@(mapcar fn (eval form))
+       (:eq nil nil ,afterfn))))
 
-(defmacro cort-deftest-with-macroexpand (name form)
-  "Return `cort-deftest' compare by `equal' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf)
-      (uiop uiop)))
-
-   => (cort-deftest leaf/disabled
-        '((:equal '(macroexpand-1 'asdf)
-                  asdf)
-          (:equal '(macroexpand-1 'uiop)
-                  uiop)))"
-  (declare (indent 1))
-  `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal
-                   (macroexpand-1 ',(car elm))
-                   ',(cadr elm)))
-               (cadr form))))
-
-(defmacro cort-deftest-with-macroexpand-let (name letform form)
+(defmacro cort-generate--macroexpand-let (letform form)
   "Return `cort-deftest' compare by `equal' for NAME, LETFORM FORM.
 
 Example:
@@ -152,38 +142,28 @@ Example:
            (prog1 'leaf
               (leaf-handler-leaf-protect leaf
                 (leaf-init))))))"
+  `',(mapcar (lambda (elm)
+               `(:equal
+                 (let ,letform (macroexpand-1 ',(car elm)))
+                 ',(cadr elm)))
+             (cadr form)))
+
+(defmacro cort-deftest-generate (op name form)
+  "Define test named as NAME for FORM compare with OP."
   (declare (indent 2))
   `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:equal
-                   (let ,letform (macroexpand-1 ',(car elm)))
-                   ',(cadr elm)))
-               (cadr form))))
+     (cort-generate ,op
+       ,form)))
 
-(defmacro cort-deftest-with-shell-command (name form)
-  "Return `cort-deftest' compare with `string=' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-shell-command keg/subcommand-help
-    '((\"keg version\"
-       \"Keg 0.0.1 running on Emacs 26.3\")
-      (\"keg files\"
-       \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))
-
-  => (cort-deftest keg/subcommand-help
-       '((:string= (string-trim-right
-                    (shell-command-to-string \"keg version\"))
-                   \"Keg 0.0.1 running on Emacs 26.3\")
-         (:string= (string-trim-right
-                    (shell-command-to-string \"keg files\"))
-                   \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))"
-(declare (indent 1))
+(defmacro cort-deftest-generate-with-hook (op name beforefn afterfn form)
+  "Define test named as NAME for FORM compare with OP.
+Eval BEFOREFN and AFTERFN."
+  (declare (indent 2))
   `(cort-deftest ,name
-     ',(mapcar (lambda (elm)
-                 `(:string=
-                   (string-trim-right (shell-command-to-string ,(car elm)))
-                   ,(cadr elm)))
-               (cadr form))))
+     (cort-generate-with-hook ,op
+       ,beforefn
+       ,afterfn
+       ,form)))
 
 
 ;;; main
@@ -233,7 +213,7 @@ Return list of (testc failc errorc)"
                  (setq err e) nil)))
 
         (when afterfn
-          (condition-case e (funcall afterfn res err) (error (setq err-after e))))
+          (condition-case e (funcall afterfn res err ret exp) (error (setq err-after e))))
 
         (cond
          (err (cl-incf errorc))

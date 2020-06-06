@@ -79,5 +79,56 @@
     (:cort-error 'arith-error (/ 1 0))
     (:cort-error 'void-variable (+ 1 a))))
 
+(cort-deftest generate
+  (cort-generate :equal
+    '(((+ 4 5) 9)
+      ((- 4 5) -1))))
+
+(when (version<= "25.1" emacs-version)
+  (cort-deftest generate-macroexpand
+    (cort-generate :macroexpand
+      '(((defun test ()
+           (message "test"))
+         (defalias 'test
+           (function
+            (lambda nil
+              (message "test")))))))))
+
+(cort-deftest generate-shell
+  (cort-generate :shell-command
+    '(("expr 1 + 10"
+       "11"))))
+
+(cort-deftest-generate :equal deftest-generate
+  '(((+ 4 5) 9)
+    ((- 4 5) -1)))
+
+(cort-deftest hook
+  '((:equal cort-var 'cort-test           ; (2) could use cort-var
+            (lambda ()
+              (setq cort-var 'cort-test)) ; (1) set cort-var
+            (lambda (&rest _args)
+              (setq cort-var 0)))         ; (3) reset cort-var
+    (:equal cort-var 0)))                 ; (4) now cort-var is 0
+
+(cort-deftest hook-generate
+  `(,@(cort-generate-with-hook :equal
+        (lambda ()
+          (setq cort-var2 'cort-test))
+        (lambda ()
+          (setq cort-var2 0))
+        '((cort-var2 'cort-test)))
+    (:equal cort-var2 0)))
+
+(cort-deftest-generate-with-hook :equal cort-generate-with-hook
+  (lambda ()
+    (setq cort-var3 'cort-test))
+  (lambda ()
+    (setq cort-var3 0))
+  '((cort-var3 'cort-test)))
+
+(cort-deftest cort-generate-with-hook-after-check
+  '((:equal cort-var3 0)))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here
