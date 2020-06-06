@@ -35,6 +35,12 @@
   "Simplify elisp test framework."
   :group 'lisp)
 
+(defcustom cort-silence nil
+  "Do test with silence.
+Output just dot when success test."
+  :group 'cort
+  :type 'boolean)
+
 (defvar cort-test-cases nil
   "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
 
@@ -86,7 +92,8 @@ Evaluate GIVEN to check it match EXPECT.
 Return list of (testc failc errorc)"
   (let ((testc  (length cort-test-cases))
         (failc  0)
-        (errorc 0))
+        (errorc 0)
+        (dots 0))
     (dolist (test (reverse cort-test-cases)
                   (list testc failc errorc))
       (let* ((name   (nth 0 test))
@@ -115,8 +122,14 @@ Return list of (testc failc errorc)"
          ((not res) (cl-incf failc)))
 
         (if res
-            (with-ansi-princ
-             (format "%s %s\n" (cyan "[PASSED]") name))
+            (if (not cort-silence)
+                (with-ansi-princ
+                 (format "%s %s\n" (cyan "[PASSED]") name))
+              (princ ".")
+              (cl-incf dots)
+              (when (<= 60 dots) (princ "\n") (setq dots 0)))
+          (unless (= -1 dots) (princ "\n") (setq dots -1))
+
           (with-ansi-princ
            (if err
                (format "%s %s\n" (magenta "<<ERROR>>") name)
@@ -175,6 +188,11 @@ Return list of (testc failc errorc)"
        (blue (format "===== Run %2d Tests, %2d Expected, %2d Failed, %2d Errored on Emacs-%s ====="
                      testc (- testc failc errorc) failc errorc emacs-version))
        "\n\n"))))
+
+(defun cort-test-run-silence ()
+  "Run all test with silence."
+  (let ((cort-silence t))
+    (cort-test-run)))
 
 (provide 'cort)
 ;;; cort.el ends here
