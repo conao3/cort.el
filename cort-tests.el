@@ -102,5 +102,22 @@
   '(((+ 4 5) 9)
     ((- 4 5) -1)))
 
+(cort-deftest hook
+  '((:equal cort-var 'cort-test           ; (2) could use cort-var
+            (lambda ()
+              (setq cort-var 'cort-test)) ; (1) set cort-var
+            (lambda (&rest _args)
+              (setq cort-var 0)))         ; (3) reset cort-var
+    (:equal cort-var 0)))                 ; (4) now cort-var is 0
+
+(cort-deftest hook-generate
+  `(,@(cort-generate-with-hook :equal
+        (lambda ()
+          (setq cort-var2 'cort-test))
+        (lambda ()
+          (setq cort-var2 0))
+        '((cort-var2 'cort-test)))
+    (:equal cort-var2 0)))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here

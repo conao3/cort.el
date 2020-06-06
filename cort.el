@@ -110,6 +110,17 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                   `(,op ,(car elm) ,(cadr elm))))))
     `',(mapcar fn (eval form))))
 
+(defmacro cort-generate-with-hook (op beforefn afterfn form)
+  "Return `cort-deftest' compare by OP for FORM.
+Eval BEFOREFN and AFTERFN."
+  (declare (indent 1))
+  (let ((fn (or (cort--alist-get op cort-generate-fn)
+                (lambda (elm)
+                  `(,op ,(car elm) ,(cadr elm))))))
+    `'((:eq nil nil ,beforefn)
+       ,@(mapcar fn (eval form))
+       (:eq nil nil ,afterfn))))
+
 (defmacro cort-generate--macroexpand-let (letform form)
   "Return `cort-deftest' compare by `equal' for NAME, LETFORM FORM.
 
@@ -192,7 +203,7 @@ Return list of (testc failc errorc)"
                  (setq err e) nil)))
 
         (when afterfn
-          (condition-case e (funcall afterfn res err) (error (setq err-after e))))
+          (condition-case e (funcall afterfn res err ret exp) (error (setq err-after e))))
 
         (cond
          (err (cl-incf errorc))
