@@ -84,5 +84,19 @@
     '(((+ 4 5) 9)
       ((- 4 5) -1))))
 
+(cort-deftest generate-macroexpand
+  (cort-generate macroexpand
+    '(((defun test ()
+         (message "test"))
+       (defalias 'test
+         (function
+          (lambda nil
+            (message "test"))))))))
+
+(cort-deftest generate-shell
+  (cort-generate shell-command
+    '(("expr 1 + 10"
+       "11"))))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here

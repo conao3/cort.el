@@ -47,6 +47,16 @@ Output just dot when success test."
 
 ;;; functions
 
+(defun cort--alist-get (key alist &optional default)
+  "Find the first element of ALIST whose `car' equals KEY and return its `cdr'.
+If KEY is not found in ALIST, return DEFAULT.
+For backward compatibility, TESTFN is always `eq'.
+
+This function is `alist-get' polifill for Emacs < 25.1."
+  (declare (indent 1))
+  (let ((x (assq key alist)))
+    (if x (cdr x) default)))
+
 (defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
   (if (stringp sexp)
@@ -80,31 +90,25 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
 
 ;;; generate
 
+(defvar cort-generate-fn
+  '((macroexpand . (lambda (elm)
+                     `(:equal
+                       (macroexpand-1 ',(car elm))
+                       ',(cadr elm))))
+    (shell-command . (lambda (elm)
+                       `(:string=
+                         (replace-regexp-in-string
+                          "[ \t\n\r]+\\'" ""
+                          (shell-command-to-string ,(car elm)))
+                         ',(cadr elm))))))
+
 (defmacro cort-generate (op form)
   "Return `cort-deftest' compare by OP for FORM."
   (declare (indent 1))
-  `',(mapcar (lambda (elm)
-               `(,(intern (format ":%s" op)) ,(car elm) ,(cadr elm)))
-             (cadr form)))
-
-(defmacro cort-generate--macroexpand (form)
-  "Return `cort-deftest' compare by `equal' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-equal leaf/disabled
-    '((asdf asdf)
-      (uiop uiop)))
-
-   => (cort-deftest leaf/disabled
-        '((:equal '(macroexpand-1 'asdf)
-                  asdf)
-          (:equal '(macroexpand-1 'uiop)
-                  uiop)))"
-  `',(mapcar (lambda (elm)
-               `(:equal
-                 (macroexpand-1 ',(car elm))
-                 ',(cadr elm)))
-             (cadr form)))
+  (let ((fn (or (cort--alist-get op cort-generate-fn)
+                (lambda (elm)
+                  `(,(intern (format ":%s" op)) ,(car elm) ,(cadr elm))))))
+    `',(mapcar fn (eval form))))
 
 (defmacro cort-generate--macroexpand-let (letform form)
   "Return `cort-deftest' compare by `equal' for NAME, LETFORM FORM.
@@ -131,29 +135,6 @@ Example:
                `(:equal
                  (let ,letform (macroexpand-1 ',(car elm)))
                  ',(cadr elm)))
-             (cadr form)))
-
-(defmacro cort-generate--shell-command (form)
-  "Return `cort-deftest' compare with `string=' for NAME, FORM.
-
-Example:
-  (cort-deftest-with-shell-command keg/subcommand-help
-    '((\"keg version\"
-       \"Keg 0.0.1 running on Emacs 26.3\")
-      (\"keg files\"
-       \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))
-
-  => (cort-deftest keg/subcommand-help
-       '((:string= (string-trim-right
-                    (shell-command-to-string \"keg version\"))
-                   \"Keg 0.0.1 running on Emacs 26.3\")
-         (:string= (string-trim-right
-                    (shell-command-to-string \"keg files\"))
-                   \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))"
-  `',(mapcar (lambda (elm)
-               `(:string=
-                 (string-trim-right (shell-command-to-string ,(car elm)))
-                 ,(cadr elm)))
              (cadr form)))
 
 
