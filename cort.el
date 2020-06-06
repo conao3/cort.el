@@ -124,16 +124,16 @@ Return list of (testc failc errorc)"
 
           (if method-errorp
               (with-ansi-princ
-               (format "Given:\n%s\n" (cort-pp expect))
-               (format "Expected-error:   %s\n" (cort-pp given))
-               (format "Unexpected-error: %s\n" (cort-pp err)))
+               (format "%s\n%s\n" (yellow "Given:") (cort-pp expect))
+               (format "%s   %s\n" (yellow "Expected-error:") (cort-pp given))
+               (format "%s %s\n" (yellow "Unexpected-error:") (cort-pp err)))
             (with-ansi-princ
              (format "< Tested with %s >\n" (yellow (prin1-to-string method)))
-             (format "Given:\n%s\n" (cort-pp given))
+             (format "%s\n%s\n" (yellow "Given:") (cort-pp given))
              (if err
-                 (format "Unexpected-error: %s\n" (cort-pp err))
-               (format "Returned:\n%s\n" (cort-pp ret)))
-             (format "Expected:\n%s\n" (cort-pp expect))
+                 (format "%s %s\n" (yellow "Unexpected-error:") (cort-pp err))
+               (format "%s\n%s\n" (yellow "Returned:") (cort-pp ret)))
+             (format "%s\n%s\n" (yellow "Expected:") (cort-pp expect))
              (when (and (not err) (executable-find "diff"))
                (let ((retfile (make-temp-file
                                "cort-returned-" nil nil
@@ -142,7 +142,8 @@ Return list of (testc failc errorc)"
                                "cort-expected-" nil nil
                                (format "%s\n" (cort-pp exp)))))
                  (unwind-protect
-                     (format "Diff:\n%s"
+                     (format "%s\n%s"
+                             (yellow "Diff:")
                              (with-output-to-string
                                (call-process "diff" nil standard-output nil
                                              "-u" retfile expfile)))
