@@ -94,7 +94,7 @@ Return list of (testc failc errorc)"
              (given  (nth 2 test))
              (expect (nth 3 test))
              (method-errorp (eq method :cort-error))
-             err res ret)
+             err res ret exp)
         (setq res
               (condition-case e
                   (cond
@@ -105,10 +105,8 @@ Return list of (testc failc errorc)"
                         (,(nth 2 test) t))))
                    (t
                     (setq ret (eval given))
-                    (funcall
-                     (intern (substring (symbol-name method) 1))
-                     (eval expect)
-                     ret)))
+                    (setq exp (eval expect))
+                    (funcall (intern (substring (symbol-name method) 1)) exp ret)))
                 (error
                  (setq err e) nil)))
 
@@ -135,7 +133,21 @@ Return list of (testc failc errorc)"
              (if err
                  (format "Unexpected-error: %s\n" (cort-pp err))
                (format "Returned:\n%s\n" (cort-pp ret)))
-             (format "Expected:\n%s\n" (cort-pp expect))))
+             (format "Expected:\n%s\n" (cort-pp expect))
+             (when (and (not err) (executable-find "diff"))
+               (let ((retfile (make-temp-file
+                               "cort-returned-" nil nil
+                               (format "%s\n" (cort-pp ret))))
+                     (expfile (make-temp-file
+                               "cort-expected-" nil nil
+                               (format "%s\n" (cort-pp exp)))))
+                 (unwind-protect
+                     (format "Diff:\n%s"
+                             (with-output-to-string
+                               (call-process "diff" nil standard-output nil
+                                             "-u" retfile expfile)))
+                   (delete-file retfile)
+                   (delete-file expfile))))))
 
           (princ "\n"))))))
 
