@@ -42,7 +42,7 @@ Output just dot when success test."
   :type 'boolean)
 
 (defvar cort-test-cases nil
-  "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
+  "Test list such as ((TEST-NAME VALUE)...).")
 
 
 ;;; functions
@@ -60,8 +60,8 @@ Output just dot when success test."
   "Define a test case with the NAME.
 TESTLST is list of forms as below.
 
-basic         : (:COMPFUN EXPECT GIVEN)
-error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
+basic         : (:COMPFUN GIVEN EXPECT)
+error testcase: (:cort-error EXPECTED-ERROR FORM)"
   (declare (indent 1))
   (let ((count 0)
         (suffixp (< 1 (length (cadr testlst)))))
