@@ -137,6 +137,13 @@ Example:
                  ',(cadr elm)))
              (cadr form)))
 
+(defmacro cort-deftest-generate (op name form)
+  "Define test named as NAME for FORM compare with OP."
+  (declare (indent 2))
+  `(cort-deftest ,name
+     (cort-generate ,op
+       ,form)))
+
 
 ;;; main
 

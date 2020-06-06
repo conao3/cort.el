@@ -98,5 +98,9 @@
     '(("expr 1 + 10"
        "11"))))
 
+(cort-deftest-generate equal deftest-generate
+  '(((+ 4 5) 9)
+    ((- 4 5) -1)))
+
 ;; (provide 'cort-tests)
 ;;; cort-tests.el ends here
