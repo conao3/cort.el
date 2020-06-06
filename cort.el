@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.0.9
+;; Version: 7.1.0
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
 
@@ -42,7 +42,7 @@ Output just dot when success test."
   :type 'boolean)
 
 (defvar cort-test-cases nil
-  "Test list such as ((TEST-NAME VALUE) (TEST-NAME VALUE) ...).")
+  "Test list such as ((TEST-NAME VALUE)...).")
 
 
 ;;; functions
@@ -60,8 +60,8 @@ Output just dot when success test."
   "Define a test case with the NAME.
 TESTLST is list of forms as below.
 
-basic         : (:COMPFUN EXPECT GIVEN)
-error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
+basic         : (:COMPFUN GIVEN EXPECT)
+error testcase: (:cort-error EXPECTED-ERROR FORM)"
   (declare (indent 1))
   (let ((count 0)
         (suffixp (< 1 (length (cadr testlst)))))
@@ -75,6 +75,115 @@ error testcase: (:cort-error EXPECTED-ERROR:ROR-TYPE FORM)"
                                       name)
                                    ,@test)))
                  (eval testlst)))))
+
+(defmacro cort-deftest-with-equal (name form)
+  "Return `cort-deftest' compare by `equal' for NAME, FORM.
+
+Example:
+  (cort-deftest-with-equal leaf/disabled
+    '((asdf asdf-fn)
+      (uiop uiop-fn)))
+
+   => (cort-deftest leaf/disabled
+        '((:equal 'asdf-fn asdf)
+          (:equal 'uiop-fn uiop)))"
+  (declare (indent 1))
+  `(cort-deftest ,name
+     ',(mapcar (lambda (elm)
+                 `(:equal ,(car elm) ,(cadr elm)))
+               (cadr form))))
+
+(defmacro cort-deftest-with-string= (name form)
+  "Return `cort-deftest' compare by `string=' for NAME, FORM.
+
+Example:
+  (cort-deftest-with-equal leaf/disabled
+    '((asdf asdf-fn)
+      (uiop uiop-fn)))
+
+   => (cort-deftest leaf/disabled
+        '((:string= 'asdf-fn asdf)
+          (:string= 'uiop-fn uiop)))"
+  (declare (indent 1))
+  `(cort-deftest ,name
+     ',(mapcar (lambda (elm)
+                 `(:string= ,(car elm) ,(cadr elm)))
+               (cadr form))))
+
+(defmacro cort-deftest-with-macroexpand (name form)
+  "Return `cort-deftest' compare by `equal' for NAME, FORM.
+
+Example:
+  (cort-deftest-with-equal leaf/disabled
+    '((asdf asdf)
+      (uiop uiop)))
+
+   => (cort-deftest leaf/disabled
+        '((:equal '(macroexpand-1 'asdf)
+                  asdf)
+          (:equal '(macroexpand-1 'uiop)
+                  uiop)))"
+  (declare (indent 1))
+  `(cort-deftest ,name
+     ',(mapcar (lambda (elm)
+                 `(:equal
+                   (macroexpand-1 ',(car elm))
+                   ',(cadr elm)))
+               (cadr form))))
+
+(defmacro cort-deftest-with-macroexpand-let (name letform form)
+  "Return `cort-deftest' compare by `equal' for NAME, LETFORM FORM.
+
+Example:
+  (cort-deftest-with-macroexpand-let leaf/leaf
+      ((leaf-expand-leaf-protect t))
+    '(((prog1 'leaf
+         (leaf-handler-leaf-protect leaf
+           (leaf-init)))
+       (leaf leaf
+         :config (leaf-init)))))
+
+   => (cort-deftest leaf/leaf
+        '((:equal
+           '(let ((leaf-expand-leaf-protect t))
+             (macroexpand-1
+              '(leaf leaf
+                 :config (leaf-init))))
+           (prog1 'leaf
+              (leaf-handler-leaf-protect leaf
+                (leaf-init))))))"
+  (declare (indent 2))
+  `(cort-deftest ,name
+     ',(mapcar (lambda (elm)
+                 `(:equal
+                   (let ,letform (macroexpand-1 ',(car elm)))
+                   ',(cadr elm)))
+               (cadr form))))
+
+(defmacro cort-deftest-with-shell-command (name form)
+  "Return `cort-deftest' compare with `string=' for NAME, FORM.
+
+Example:
+  (cort-deftest-with-shell-command keg/subcommand-help
+    '((\"keg version\"
+       \"Keg 0.0.1 running on Emacs 26.3\")
+      (\"keg files\"
+       \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))
+
+  => (cort-deftest keg/subcommand-help
+       '((:string= (string-trim-right
+                    (shell-command-to-string \"keg version\"))
+                   \"Keg 0.0.1 running on Emacs 26.3\")
+         (:string= (string-trim-right
+                    (shell-command-to-string \"keg files\"))
+                   \"keg-ansi.el\\nkeg-mode.el\\nkeg.el\")))"
+(declare (indent 1))
+  `(cort-deftest ,name
+     ',(mapcar (lambda (elm)
+                 `(:string=
+                   (string-trim-right (shell-command-to-string ,(car elm)))
+                   ,(cadr elm)))
+               (cadr form))))
 
 
 ;;; main
