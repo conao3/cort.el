@@ -5,9 +5,9 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.2
+;; Version: 7.1.3
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.4") (ansi "0.4"))
+;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -64,6 +64,76 @@ This function is `alist-get' polifill for Emacs < 25.1."
     (replace-regexp-in-string "\n+$" "" (pp-to-string sexp))))
 
 
+;;; Polifill
+
+(defun cort--autoload-do-load (fundef &optional funname macro-only)
+  "Polifill function for `autoload-do-load'.
+Please see original function for FUNDEF, FUNNAME, MACRO-ONLY usage."
+  (if (or (not (consp fundef)) (not (eq 'autoload (car fundef))))
+      fundef
+    (when (eq macro-only 'macro)
+      (let ((kind (nth 4 fundef)))
+        (when (not (or (eq kind t) (eq kind 'macro)))
+          fundef)))
+    (when purify-flag
+      (error "Attempt to autoload %s while preparing to dump" (symbol-name funname)))
+    (let ((kind (nth 4 fundef)))
+      (unwind-protect
+          (let ((ignore-errors (if (or (eq kind t) (eq kind 'macro)) nil macro-only)))
+            (load (cadr fundef) ignore-errors t nil t))
+        ;; FIXME: revert partially performed defuns
+        ))
+    (if (null funname)
+        nil
+      (let ((fun (indirect-function funname)))
+        (if (equal fun fundef)
+            (error "Autoloading file %s failed to define function %s"
+                   (caar load-history)
+                   (symbol-name funname))
+          fun)))))
+
+(defun cort--autoloadp (object)
+  "Non-nil if OBJECT is an autoload.
+see `autoloadp'."
+  (eq 'autoload (car-safe object)))
+
+(defun cort--macrop (object)
+  "Non-nil if and only if OBJECT is a macro.
+see `macrop'."
+  (let ((def (indirect-function object)))
+    (when (consp def)
+      (or (eq 'macro (car def))
+          (and (cort--autoloadp def) (memq (nth 4 def) '(macro t)))))))
+
+(defun cort---macroexpand-1 (form &optional environment)
+  "Polifill function for `macroexpand-1'.
+Please see original function for FORM, ENVIRONMENT usage."
+  (cond
+   ((consp form)
+    (let* ((head (car form))
+           (env-expander (assq head environment)))
+      (if env-expander
+          (if (cdr env-expander)
+              (apply (cdr env-expander) (cdr form))
+            form)
+        (if (not (and (symbolp head) (fboundp head)))
+            form
+          (let ((def (cort--autoload-do-load (symbol-function head) head 'macro)))
+            (cond
+             ;; Follow alias, but only for macros, otherwise we may end up
+             ;; skipping an important compiler-macro (e.g. cl--block-wrapper).
+             ((and (symbolp def) (cort--macrop def)) (cons def (cdr form)))
+             ((not (consp def)) form)
+             (t
+              (if (eq 'macro (car def))
+                  (apply (cdr def) (cdr form))
+                form))))))))
+   (t form)))
+
+(defalias 'cort--macroexpand-1
+  (if (fboundp 'macroexpand-1) 'macroexpand-1 'cort---macroexpand-1))
+
+
 ;;; deftest
 
 (defmacro cort-deftest (name testlst)
@@ -93,7 +163,7 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
 (defvar cort-generate-fn
   '((:macroexpand . (lambda (elm)
                       `(:equal
-                        (macroexpand-1 ',(car elm))
+                        (cort--macroexpand-1 ',(car elm))
                         ',(cadr elm))))
     (:shell-command . (lambda (elm)
                         `(:string=
