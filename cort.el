@@ -57,6 +57,14 @@ This function is `alist-get' polifill for Emacs < 25.1."
   (let ((x (assq key alist)))
     (if x (cdr x) default)))
 
+(defun cort--string-trim (str)
+  "Trim STR of leading and trailing space like strings.
+
+TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\".
+Original function is `string-trim'.
+This function is polyfill for Emacs<24.4."
+  (replace-regexp-in-string "\\`[ \t\n\r]*\\|[ \t\n\r]*\\'" "" str))
+
 (defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
   (if (stringp sexp)
@@ -167,8 +175,7 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                         ',(cadr elm))))
     (:shell-command . (lambda (elm)
                         `(:string=
-                          (replace-regexp-in-string
-                           "[ \t\n\r]+\\'" ""
+                          (cort--string-trim
                            (shell-command-to-string ,(car elm)))
                           ',(cadr elm))))))
 
