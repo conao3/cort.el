@@ -97,7 +97,9 @@
 (cort-deftest generate-shell
   (cort-generate :shell-command
     '(("expr 1 + 10"
-       "11"))))
+       "11")
+      ("printf \"\\n\\n\\t \\nhello world\\n\\t\\n \\n\""
+       "hello world"))))
 
 (cort-deftest-generate :equal deftest-generate
   '(((+ 4 5) 9)
@@ -131,4 +133,5 @@
   '((:equal cort-var3 0)))
 
 ;; (provide 'cort-tests)
+
 ;;; cort-tests.el ends here

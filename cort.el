@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.4
+;; Version: 7.1.5
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
 
@@ -56,6 +56,14 @@ This function is `alist-get' polifill for Emacs < 25.1."
   (declare (indent 1))
   (let ((x (assq key alist)))
     (if x (cdr x) default)))
+
+(defun cort--string-trim (str)
+  "Trim STR of leading and trailing space like strings.
+
+TRIM-LEFT and TRIM-RIGHT default to \"[ \\t\\n\\r]+\".
+Original function is `string-trim'.
+This function is polyfill for Emacs<24.4."
+  (replace-regexp-in-string "\\`[ \t\n\r]*\\|[ \t\n\r]*\\'" "" str))
 
 (defsubst cort-pp (sexp)
   "Return pretty printed SEXP string."
@@ -167,8 +175,7 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                         ',(cadr elm))))
     (:shell-command . (lambda (elm)
                         `(:string=
-                          (replace-regexp-in-string
-                           "[ \t\n\r]+\\'" ""
+                          (cort--string-trim
                            (shell-command-to-string ,(car elm)))
                           ',(cadr elm))))))
 
