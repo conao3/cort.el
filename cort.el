@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.8
+;; Version: 7.1.9
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
 
@@ -177,7 +177,11 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                         `(:string=
                           (cort--string-trim
                            (shell-command-to-string ,(car elm)))
-                          ',(cadr elm))))))
+                          ',(cadr elm))))
+    (:string-match . (lambda (elm)
+                         `(:string-match ,(cadr elm) ,(car elm))))
+    (:string-match-p . (lambda (elm)
+                         `(:string-match-p ,(cadr elm) ,(car elm))))))
 
 (defmacro cort-generate (op form)
   "Return `cort-deftest' compare by OP for FORM."

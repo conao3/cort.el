@@ -106,6 +106,9 @@
   '(((+ 4 5) 9)
     ((- 4 5) -1)))
 
+(cort-deftest-generate :string-match-p deftest-generate-string-match
+  '(("emacs-27.1" "emacs-[0-9]+\\.[0-9]+")))
+
 (cort-deftest hook
   '((:equal cort-var 'cort-test           ; (2) could use cort-var
             (lambda ()
