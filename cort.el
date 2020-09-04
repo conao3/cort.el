@@ -177,7 +177,11 @@ error testcase: (:cort-error EXPECTED-ERROR FORM)"
                         `(:string=
                           (cort--string-trim
                            (shell-command-to-string ,(car elm)))
-                          ',(cadr elm))))))
+                          ',(cadr elm))))
+    (:string-match . (lambda (elm)
+                         `(:string-match ,(cadr elm) ,(car elm))))
+    (:string-match-p . (lambda (elm)
+                         `(:string-match-p ,(cadr elm) ,(car elm))))))
 
 (defmacro cort-generate (op form)
   "Return `cort-deftest' compare by OP for FORM."
