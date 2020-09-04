@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.9
+;; Version: 7.2.0
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
 
@@ -229,14 +229,14 @@ Example:
                  ',(cadr elm)))
              (cadr form)))
 
-(defmacro cort-deftest-generate (op name form)
+(defmacro cort-deftest-generate (name op form)
   "Define test named as NAME for FORM compare with OP."
   (declare (indent 2))
   `(cort-deftest ,name
      (cort-generate ,op
        ,form)))
 
-(defmacro cort-deftest-generate-with-hook (op name beforefn afterfn form)
+(defmacro cort-deftest-generate-with-hook (name op beforefn afterfn form)
   "Define test named as NAME for FORM compare with OP.
 Eval BEFOREFN and AFTERFN."
   (declare (indent 2))
