@@ -5,7 +5,7 @@
 ;; Author: Naoya Yamashita <conao3@gmail.com>
 ;; Maintainer: Naoya Yamashita <conao3@gmail.com>
 ;; Keywords: test lisp
-;; Version: 7.1.7
+;; Version: 7.1.8
 ;; URL: https://github.com/conao3/cort.el
 ;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
 
@@ -285,7 +285,7 @@ Return list of (testc failc errorc)"
                    (t
                     (setq ret (eval given))
                     (setq exp (eval expect))
-                    (funcall (intern (substring (symbol-name method) 1)) exp ret)))
+                    (funcall (intern (substring (symbol-name method) 1)) ret exp)))
                 (error
                  (setq err e) nil)))
 
