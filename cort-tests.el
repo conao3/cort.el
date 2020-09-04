@@ -49,7 +49,8 @@
     (:= (* 4 5)   20)
     (:= (/ 4 5)   0)
     (:= (/ 4.0 5) 0.8)
-    (:= (mod 4 5) 4)))
+    (:= (mod 4 5) 4)
+    (:< 40 42)))
 
 (cort-deftest string-concat
   '((:string= (concat "aaa" "bbb") "aaabbb")

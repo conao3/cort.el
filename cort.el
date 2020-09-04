@@ -285,7 +285,7 @@ Return list of (testc failc errorc)"
                    (t
                     (setq ret (eval given))
                     (setq exp (eval expect))
-                    (funcall (intern (substring (symbol-name method) 1)) exp ret)))
+                    (funcall (intern (substring (symbol-name method) 1)) ret exp)))
                 (error
                  (setq err e) nil)))
 
