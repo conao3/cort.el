@@ -229,14 +229,14 @@ Example:
                  ',(cadr elm)))
              (cadr form)))
 
-(defmacro cort-deftest-generate (op name form)
+(defmacro cort-deftest-generate (name op form)
   "Define test named as NAME for FORM compare with OP."
   (declare (indent 2))
   `(cort-deftest ,name
      (cort-generate ,op
        ,form)))
 
-(defmacro cort-deftest-generate-with-hook (op name beforefn afterfn form)
+(defmacro cort-deftest-generate-with-hook (name op beforefn afterfn form)
   "Define test named as NAME for FORM compare with OP.
 Eval BEFOREFN and AFTERFN."
   (declare (indent 2))

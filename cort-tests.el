@@ -102,11 +102,11 @@
       ("printf \"\\n\\n\\t \\nhello world\\n\\t\\n \\n\""
        "hello world"))))
 
-(cort-deftest-generate :equal deftest-generate
+(cort-deftest-generate deftest-generate :equal
   '(((+ 4 5) 9)
     ((- 4 5) -1)))
 
-(cort-deftest-generate :string-match-p deftest-generate-string-match
+(cort-deftest-generate deftest-generate-string-match :string-match-p
   '(("emacs-27.1" "emacs-[0-9]+\\.[0-9]+")))
 
 (cort-deftest hook
@@ -126,7 +126,7 @@
         '((cort-var2 'cort-test)))
     (:equal cort-var2 0)))
 
-(cort-deftest-generate-with-hook :equal cort-generate-with-hook
+(cort-deftest-generate-with-hook cort-generate-with-hook :equal
   (lambda ()
     (setq cort-var3 'cort-test))
   (lambda ()
