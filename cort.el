@@ -328,11 +328,13 @@ Return list of (testc failc errorc)"
              (format "%s\n%s\n" (yellow "Expected:") (cort-pp expect))
              (when (and (not err) (executable-find "diff"))
                (let ((retfile (make-temp-file
-                               "cort-returned-" nil nil
-                               (format "%s\n" (cort-pp ret))))
+                               "cort-returned-" nil nil))
                      (expfile (make-temp-file
-                               "cort-expected-" nil nil
-                               (format "%s\n" (cort-pp exp)))))
+                               "cort-expected-" nil nil)))
+                 (with-temp-file retfile
+                   (insert (format "%s\n" (cort-pp ret))))
+                 (with-temp-file expfile
+                   (insert (format "%s\n" (cort-pp exp))))
                  (unwind-protect
                      (format "%s\n%s"
                              (yellow "Diff:")
