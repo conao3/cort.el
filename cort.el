@@ -208,19 +208,19 @@ Eval BEFOREFN and AFTERFN."
 Example:
   (cort-deftest-with-macroexpand-let leaf/leaf
       ((leaf-expand-leaf-protect t))
-    '(((prog1 'leaf
+    \='(((prog1 \='leaf
          (leaf-handler-leaf-protect leaf
            (leaf-init)))
        (leaf leaf
          :config (leaf-init)))))
 
    => (cort-deftest leaf/leaf
-        '((:equal
-           '(let ((leaf-expand-leaf-protect t))
+        \='((:equal
+           \='(let ((leaf-expand-leaf-protect t))
              (macroexpand-1
-              '(leaf leaf
+              \='(leaf leaf
                  :config (leaf-init))))
-           (prog1 'leaf
+           (prog1 \='leaf
               (leaf-handler-leaf-protect leaf
                 (leaf-init))))))"
   `',(mapcar (lambda (elm)
