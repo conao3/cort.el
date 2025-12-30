@@ -1,19 +1,22 @@
 name: Main workflow
+
 on:
-  push: {branches: [master]}
-  pull_request: {branches: [master]}
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: purcell/setup-emacs@master
-      with:
-        version: '27.1'
-    - uses: conao3/setup-keg@master
-    - name: Run lint
-      run: 'make lint'
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: '29.4'
+      - uses: conao3/setup-keg@master
+      - name: Run lint
+        run: make lint
 
   test:
     runs-on: ubuntu-latest
@@ -21,33 +24,31 @@ jobs:
       fail-fast: false
       matrix:
         emacs_version:
-          - '24.1'
-          - '24.2'
-          - '24.3'
-          - '24.4'
-          - '24.5'
-          - '25.1'
-          - '25.2'
-          - '25.3'
-          - '26.1'
-          - '26.2'
           - '26.3'
           - '27.1'
+          - '27.2'
+          - '28.1'
+          - '28.2'
+          - '29.1'
+          - '29.2'
+          - '29.3'
+          - '29.4'
           - 'snapshot'
         include:
           - emacs_version: 'snapshot'
             allow_failure: true
     steps:
-    - uses: actions/checkout@v1
-    - uses: purcell/setup-emacs@master
-      with:
-        version: ${{ matrix.emacs_version }}
-    - uses: conao3/setup-keg@master
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: conao3/setup-keg@master
 
-    - name: Run tests
-      if: matrix.allow_failure != true
-      run: 'make test'
+      - name: Run tests
+        if: matrix.allow_failure != true
+        run: make test
 
-    - name: Run tests (allow failure)
-      if: matrix.allow_failure == true
-      run: 'make test || true'
+      - name: Run tests (allow failure)
+        if: matrix.allow_failure == true
+        run: make test
+        continue-on-error: true
