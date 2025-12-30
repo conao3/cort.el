@@ -1,332 +1,214 @@
-#+author: conao
-#+date: <2018-10-25 Thu>
+#+title: cort.el
+#+author: conao3
 
 [[https://github.com/conao3/cort.el][https://raw.githubusercontent.com/conao3/files/master/blob/headers/png/cort.el.png]]
+
 [[https://github.com/conao3/cort.el/blob/master/LICENSE][https://img.shields.io/github/license/conao3/cort.el.svg?style=flat-square]]
 [[https://github.com/conao3/cort.el/releases][https://img.shields.io/github/tag/conao3/cort.el.svg?style=flat-square]]
-[[https://travis-ci.org/conao3/cort.el][https://img.shields.io/travis/conao3/cort.el/master.svg?style=flat-square]]
-[[https://app.codacy.com/project/conao3/cort.el/dashboard][https://img.shields.io/codacy/grade/f37ea5ce921f4d05b4f900945c2121c2.svg?logo=codacy&style=flat-square]]
-[[https://www.patreon.com/conao3][https://img.shields.io/badge/patreon-become%20a%20patron-orange.svg?logo=patreon&style=flat-square]]
-[[https://twitter.com/conao_3][https://img.shields.io/badge/twitter-@conao__3-blue.svg?logo=twitter&style=flat-square]]
-[[https://join.slack.com/t/conao3-support/shared_invite/enQtNjUzMDMxODcyMjE1LTA4ZGRmOWYwZWE3NmE5NTkyZjk3M2JhYzU2ZmRkMzdiMDdlYTQ0ODMyM2ExOGY0OTkzMzZiMTNmZjJjY2I5NTM][https://img.shields.io/badge/chat-on_slack-blue.svg?logo=slack&style=flat-square]]
+[[https://melpa.org/#/cort][https://melpa.org/packages/cort-badge.svg]]
+
+A lightweight and flexible unit testing framework for Emacs Lisp.
 
 [[./imgs/capture.png]]
 
-* Table of Contents
-- [[#description][Background]]
-- [[#install][Install]]
-  - [[#makefile][Makefile]]
-  - [[#travis-yml][.travis.yml]]
-  - [[#cort-el][cort.el]]
-- [[#usage][Usage]]
-  - [[#basic-test-case][Basic test case]]
-  - [[#cort-error-keyword][:cort-error keyword]]
-- [[#create-test-case-by-macro][Create test case by macro]]
-- [[#migration][Migration]]
-  - [[#srt-v2-0-to-cort-v3-0][srt v2.0 to cort v3.0]]
-  - [[#srt-v1-0-to-v2-0][srt v1.0 to v2.0]]
-- [[#information][Information]]
-  - [[#why-we-support-emacs-22][Why We support Emacs-22?]]
-  - [[#donation][Donation]]
-  - [[#commynity][Community]]
-  - [[#contribution][Contribution]]
-  - [[#license][License]]
-  - [[#author][Author]]
-  - [[#contributors][Contributors]]
-  - [[#special-thanks][Special Thanks]]
+* Overview
 
-* Description
-~cort.el~ is lightweight Emacs Lisp unit test package.
+cort.el provides a simple yet powerful way to write unit tests for your Emacs Lisp packages. Unlike the built-in ~ert.el~, cort.el focuses on clear, readable error messages and a straightforward testing syntax.
 
-(~ert.el~ is attached as standard to Emacs,
-it is difficult to understand the displayed error.)
+Key features:
+- Simple, intuitive test definition syntax
+- Support for any comparison function (~eq~, ~equal~, ~=~, etc.)
+- Built-in error testing with ~:cort-error~
+- Compatible with Emacs 22 and later
 
-* Install
-1. Put ~cort.el~ your package root folder.
-2. Create ~Makefile~, ~.travis.yml~ if you need.
-3. Create test cases definition file as ~[package-name]-tests.el~.
+* Installation
 
-(Please look at the file of this repository for a practical example.)
-
-** Makefile
-~Makefile~ sample is shown below.
-
-#+begin_src makefile-bsdmake
-  TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
-
-  EMACS     ?= emacs
-
-  LOAD_PATH := -L $(TOP)
-  BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
-
-  ELS       := cort.el         # compiling .el list
-  ELCS      := $(ELS:.el=.elc)
-
-  all: build
-
-  build: $(ELCS)
-
-  %.elc: %.el
-      @printf "Compiling $<\n"
-      @$(BATCH) -f batch-byte-compile $<
-
-  check: build
-  # If byte compile for specific emacs,
-  # set EMACS such as `EMACS=26.1 make check`.
-      $(BATCH) -l corts.el -f cort-tests-run
-
-  clean:
-      -find . -type f -name "*.elc" | xargs rm
-#+end_src
-
-** .travis.yml
-~.travis.yml~ sumple is shown below.
-#+begin_src fundamental
-  language: generic
-  sudo: false
-
-  env:
-    global:
-      - CURL="curl -fsSkL --retry 9 --retry-delay 9"
-    matrix:
-    - EMACS_VERSION=23.4
-    - EMACS_VERSION=24.5
-    - EMACS_VERSION=25.3
-    - EMACS_VERSION=26.1
-    - EMACS_VERSION=master
-  install:
-    - $CURL -O https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
-    - tar xf emacs-bin-${EMACS_VERSION}.tar.gz -C /
-    - export EMACS=/tmp/emacs/bin/emacs
-
-  script:
-    - make
-    - make check
-#+end_src
-
-** cort.el
-~cort.el~ sumple is shown below.
+** From MELPA
 
 #+begin_src emacs-lisp
-  ;; require depends package
-  (require 'cort)
-
-  ;; if you need temporary functions for a test, define this.
-  (defun quote-a ()
-    'a)
-
-  ;; define test cases.
-  (cort-deftest simple
-    '((:equal var
-              'a)
-      (:= 100
-          100)))
-
-  (cort-deftest quote-a
-    '((:eq 'a 'a)
-      (:eq (quote-a) 'a)
-      (:eq 'a (quote-a))
-      (:eq (quote-a) (quote-a))))
-
-  (cort-deftest arith
-    '((:= (+ 4 5)   9)
-      (:= (- 4 5)   -1)
-      (:= (* 4 5)   20)
-      (:= (/ 4 5)   0)
-      (:= (/ 4.0 5) 0.8)
-      (:= (mod 4 5) 4)))
-
-  (cort-deftest string-concat
-    '((:string= (concat "aaa" "bbb") "aaabbb")
-      (:string= (mapconcat #'identity '("aaa" "bbb" "ccc") ",")
-                "aaa,bbb,ccc")))
-
-  (cort-deftest string-split
-    '((:equal (split-string "aaa,bbb,ccc" ",") '("aaa" "bbb" "ccc"))))
-
-  (cort-deftest string-length
-    '((:= (length "asdfg")  5)
-      (:= (length "あいうえお")  5)
-      (:= (string-width "あいうえお") 10)))
-
-  (cort-deftest string-pickup
-    '((:string= (substring "abcdef" 0 2)  "ab")
-      (:string= (substring "abcdef" 0 -2) "abcd")
-      (:string= (substring "abcdef" 0 -1) "abcde")
-      (:string= (substring "abcdef" 2)    "cdef")))
-
-  (cort-deftest string-serch
-    '((:= (string-match "bc" "abcd") 1)))
-
-  (cort-deftest err
-    '((:cort-error 'void-function (a 'a))
-      (:cort-error 'error (a 'a))
-      (:cort-error 'arith-error (/ 1 0))
-      (:cort-error 'void-variable (+ 1 a))))
+(require 'cort)
 #+end_src
 
-~cort-deftest~ will receive ~test-name~ and ~test-configuration-list~,
-and ~add-to-list~ to ~cort-cases~ defined at inside of ~cort.el~.
+Or with ~use-package~:
 
-Therefore, define same test case by ~cort-deftest~, not running test twice.
-Dupulicated ~test-name~ is allowed.
+#+begin_src emacs-lisp
+(use-package cort)
+#+end_src
+
+** Manual Installation
+
+1. Place ~cort.el~ in your package root folder
+2. Create a test file named ~[package-name]-tests.el~
+3. Optionally set up a ~Makefile~ for automated testing
+
+* Quick Start
+
+Define your tests using ~cort-deftest~:
+
+#+begin_src emacs-lisp
+(require 'cort)
+
+(cort-deftest simple-arithmetic
+  '((:= (+ 4 5) 9)
+    (:= (- 4 5) -1)
+    (:= (* 4 5) 20)))
+
+(cort-deftest string-operations
+  '((:string= (concat "foo" "bar") "foobar")
+    (:equal (split-string "a,b,c" ",") '("a" "b" "c"))))
+#+end_src
+
+Run your tests with:
+
+#+begin_src emacs-lisp
+(cort-test-run)
+#+end_src
 
 * Usage
-** Basic test case
-~test-configuration~ accept list of the form ~(:KEY GIVEN EXPECT)~,
-expect to return ~t~ when eval ~(KEY GIVEN EXPECT)~.
 
-By defining like this, any comparison function can use that returns a boolean value
-such as ~eq~, ~equal~, or ~=~.
+** Basic Test Cases
 
-This flexible test notation is one of the important merits of ~cort.el~.
-
-** :cort-error keyword
-If you pass a list of the form ~(:cort-error 'ERROR-TYPE FORM)~ to ~cort-deftest~,
-~'ERROR-TYPE~ accepts symbol such as [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]] and
-expects ~'ERROR-TYPE~ error to occur when evaluating ~(FORM)~.
-
-** Create test case by macro
-When writing many test cases, it is troublesome to write common parts many times.
-
-Therefore, you can let the macro make the test case as shown below.
+Test configurations accept lists of the form ~(:KEY GIVEN EXPECT)~, where ~KEY~ is any comparison function that returns a boolean:
 
 #+begin_src emacs-lisp
-  (cort-deftest leaf-test/:if-1
-    (:equal
-     (macroexpand-1 '(leaf foo :if t))
-     '(if t
-          (progn
-            (require (quote foo) nil nil)))))
-
-  (cort-deftest leaf-test/:if-2
-    (:equal
-     (macroexpand-1 '(leaf foo :if (and t t)))
-     '(if (and t t)
-          (progn
-            (require (quote foo) nil nil)))))
-
-  (cort-deftest leaf-test/:if-3
-    (:equal
-     (macroexpand-1 '(leaf foo :if nil))
-     '(if nil
-          (progn
-            (require (quote foo) nil nil)))))
-
-  ;; ...
-
-  ;; Almost test case is (cort-deftest NAME (:equal (macroexpand 'FORM) 'EXPECT))
-  ;; -> Create macro to (FORM 'EXPECT) convert to (:equal (macroexpand 'FORM) 'EXPECT)
-
-  ;; test target macro
-  (defmacro package-require (package)
-    `(require ,package))
-
-  ;; Macro to expand FORM and compare it with EXPECT for equal test case
-  (defmacro match-expansion (form expect)
-    `(:equal (macroexpand ',form) ,expect))
-
-  (cort-deftest match-expansion0
-    (match-expansion
-     (package-require 'use-package)
-     '(require 'use-package)))
-
-  (cort-deftest match-expansion1
-    (:equal (macroexpand '(package-require 'use-package))
-            '(require 'use-package)))
+(cort-deftest comparison-examples
+  '((:eq 'a 'a)              ; symbol equality
+    (:equal '(1 2) '(1 2))   ; structural equality
+    (:= 100 100)             ; numeric equality
+    (:string= "foo" "foo"))) ; string equality
 #+end_src
 
-~match-expansion0~ and ~match-expansion1~ are equivalent since macros are expanded.
+This flexibility allows you to use any comparison function, making your tests expressive and readable.
 
-(You can also use a function that returns a list to be accepted by ~cort-deftest~ see cort.el.
+** Testing for Errors
 
-However, test definitions and test runs should usually be separated, 
-and you should not run all forms to immediate when you define a test.
+Use ~:cort-error~ to verify that code raises expected errors:
 
-Therefore, we usually recommend using macros.)
+#+begin_src emacs-lisp
+(cort-deftest error-handling
+  '((:cort-error 'void-function (undefined-func 'a))
+    (:cort-error 'arith-error (/ 1 0))
+    (:cort-error 'void-variable (+ 1 undefined-var))))
+#+end_src
 
-* Migration
+The first argument should be an [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Standard-Errors.html#Standard-Errors][error symbol]], and the second is the form expected to raise that error.
+
+** Using Macros for Test Generation
+
+When writing many similar tests, use macros to reduce repetition:
+
+#+begin_src emacs-lisp
+;; Define a helper macro for macro expansion tests
+(defmacro match-expansion (form expect)
+  `(:equal (macroexpand ',form) ,expect))
+
+;; Use it in your tests
+(cort-deftest my-macro-test
+  (match-expansion
+   (my-package-require 'use-package)
+   '(require 'use-package)))
+#+end_src
+
+This approach keeps your test definitions concise and maintainable.
+
+* CI Integration
+
+** Makefile Example
+
+#+begin_src makefile
+TOP       := $(dir $(lastword $(MAKEFILE_LIST)))
+EMACS     ?= emacs
+LOAD_PATH := -L $(TOP)
+BATCH     := $(EMACS) -Q --batch $(LOAD_PATH)
+
+ELS       := cort.el
+ELCS      := $(ELS:.el=.elc)
+
+all: build
+
+build: $(ELCS)
+
+%.elc: %.el
+	@printf "Compiling $<\n"
+	@$(BATCH) -f batch-byte-compile $<
+
+check: build
+	$(BATCH) -l cort-tests.el -f cort-test-run
+
+clean:
+	-find . -type f -name "*.elc" | xargs rm
+#+end_src
+
+** GitHub Actions
+
+#+begin_src yaml
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs-version: ['27.2', '28.2', '29.1']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs-version }}
+      - run: make check
+#+end_src
+
+* Migration Guide
+
 ** v5.0 to v6.0
-- Add ~cort-test~ prefix to all functions macros and change below function names.
-- Remove environment keyword such as ~:cort-if~, ~:cort-emacs<~,,,
 
-  Use normal condition functions in test definition.
+- All functions and macros now use the ~cort-test~ prefix
+- Removed environment keywords (~:cort-if~, ~:cort-emacs<~, etc.)
+- Use standard condition functions in test definitions instead
 
 ** v4.0 to v5.0
-- A now expects a list of forms as the second argument.
 
-  With this change, short and easy to understand
-  test definition is now possible.
+- The second argument to ~cort-deftest~ now expects a list of forms
+- This change enables shorter, cleaner test definitions
 
-** cort v3.0 to cort-test v4.0
-- ~cort~ has renamed to ~cort-test~
+** v3.0 to v4.0
 
-  MELPA ignore ~*-test.el~ and ~*-tests.el~ by default.
-  With rename ~cort.el~ to ~cort-test.el~, MELPA can ignore this test framework by default.
+- Renamed from ~cort~ to ~cort-test~
+- MELPA ignores ~*-test.el~ and ~*-tests.el~ by default, so this naming works well with package distribution
 
-  However, since this prefix has not changed, this effect is minimal.
+** v2.0 to v3.0
 
-** srt v2.0 to cort v3.0
-- ~srt~ has renamed to ~cort~
+- Renamed from ~srt~ to ~cort~
+- All ~srt~ prefixes changed to ~cort~
 
-  All ~srt~ suffix flag is renamed to ~cort~ suffix.
+** v1.0 to v2.0
 
-** srt v1.0 to v2.0
-- :error flag has changed to :srt-error
+- The ~:error~ flag changed to ~:srt-error~
 
-  ~:error~ flag has changed to ~:srt-error~ so please fix testcase.
-  #+begin_src emacs-lisp
-    ;; srt v1.0 notation
-    (srt-deftest err:1
-      (:error 'void-function
-              (a 'a)))
-  
-    ;; srt v2.0 notation
-    (srt-deftest err:1
-      (:srt-error 'void-function
-                  (a 'a)))
-  #+end_src
+* Contributing
 
-* Information
-** Why We support Emacs-22?
-Bundling Emacs-22.1 on macOS 10.13 (High Sierra), we support this.
+Contributions are welcome. Feel free to open issues or submit pull requests on [[https://github.com/conao3/cort.el][GitHub]].
 
-** Donation
-I love OSS and I am dreaming of working on it as *full-time* job.
+The test suite runs across multiple Emacs versions, so don't worry about setting up a complete local testing environment. Submit your PR and the CI will verify compatibility.
 
-*With your support*, I will be able to spend more time at OSS!
+* License
 
-[[https://www.patreon.com/conao3][https://c5.patreon.com/external/logo/become_a_patron_button.png]]
-
-** Community
-All feedback and suggestions are welcome!
-
-You can use github issues, but you can also use [[https://join.slack.com/t/conao3-support/shared_invite/enQtNjUzMDMxODcyMjE1LTA4ZGRmOWYwZWE3NmE5NTkyZjk3M2JhYzU2ZmRkMzdiMDdlYTQ0ODMyM2ExOGY0OTkzMzZiMTNmZjJjY2I5NTM][Slack]]
-if you want a more casual conversation.
-
-** Contribution
-travis CI test ~cort-test.el~ with oll Emacs version 22 or above.
-
-I think that it is difficult to prepare the environment locally, 
-so I think that it is good to throw PR and test travis for the time being!
-
-Feel free to send PR!
-
-** License
 #+begin_example
-  Affero General Public License Version 3 (AGPLv3)
-  Copyright (c) Naoya Yamashita - https://conao3.com
-  https://github.com/conao3/cort-test.el/blob/master/LICENSE
+GNU General Public License v3.0
+Copyright (c) Naoya Yamashita - https://conao3.com
+https://github.com/conao3/cort.el/blob/master/LICENSE
 #+end_example
 
-** Author
+* Author
+
 - Naoya Yamashita ([[https://github.com/conao3][conao3]])
 
-** Contributors
+* Contributors
+
 - Kazuya Sugiyama ([[https://github.com/Kzflute][Kzflute]])
 
-** Special Thanks
-Advice and comments given by [[http://emacs-jp.github.io/][Emacs-JP]]'s forum member has been a great help
-in developing ~cort-test.el~.
+* Acknowledgments
 
-Thank you very much!!
+Thanks to the [[http://emacs-jp.github.io/][Emacs-JP]] community for their valuable feedback and suggestions during development.
