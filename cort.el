@@ -79,26 +79,25 @@ This function is polyfill for Emacs<24.4."
 Please see original function for FUNDEF, FUNNAME, MACRO-ONLY usage."
   (if (or (not (consp fundef)) (not (eq 'autoload (car fundef))))
       fundef
-    (when (eq macro-only 'macro)
-      (let ((kind (nth 4 fundef)))
-        (when (not (or (eq kind t) (eq kind 'macro)))
-          fundef)))
-    (when purify-flag
-      (error "Attempt to autoload %s while preparing to dump" (symbol-name funname)))
     (let ((kind (nth 4 fundef)))
-      (unwind-protect
-          (let ((ignore-errors (if (or (eq kind t) (eq kind 'macro)) nil macro-only)))
-            (load (cadr fundef) ignore-errors t nil t))
-        ;; FIXME: revert partially performed defuns
-        ))
-    (if (null funname)
-        nil
-      (let ((fun (indirect-function funname)))
-        (if (equal fun fundef)
-            (error "Autoloading file %s failed to define function %s"
-                   (caar load-history)
-                   (symbol-name funname))
-          fun)))))
+      (if (and (eq macro-only 'macro)
+               (not (or (eq kind t) (eq kind 'macro))))
+          fundef
+        (when purify-flag
+          (error "Attempt to autoload %s while preparing to dump" (symbol-name funname)))
+        (unwind-protect
+            (let ((ignore-errors (if (or (eq kind t) (eq kind 'macro)) nil macro-only)))
+              (load (cadr fundef) ignore-errors t nil t))
+          ;; FIXME: revert partially performed defuns
+          )
+        (if (null funname)
+            nil
+          (let ((fun (indirect-function funname)))
+            (if (equal fun fundef)
+                (error "Autoloading file %s failed to define function %s"
+                       (caar load-history)
+                       (symbol-name funname))
+              fun)))))))
 
 (defun cort--autoloadp (object)
   "Non-nil if OBJECT is an autoload.
