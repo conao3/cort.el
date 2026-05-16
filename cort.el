@@ -7,7 +7,7 @@
 ;; Keywords: test lisp
 ;; Version: 7.2.0
 ;; URL: https://github.com/conao3/cort.el
-;; Package-Requires: ((emacs "24.1") (ansi "0.4") (cl-lib "0.6"))
+;; Package-Requires: ((emacs "24.1") (ansi "0.4.1") (cl-lib "0.7.1"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
